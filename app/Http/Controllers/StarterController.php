@@ -52,13 +52,14 @@ class StarterController extends Controller
     private function manifest(Selection $sel): JsonResponse
     {
         // The generated composer.json carries the Hyvä composer-repo URL
-        // (when a project slug is configured) but never the license token —
-        // that goes in auth.json, surfaced via `notes` below.
+        // (only when the selection pulls a hyva-themes/* package) but never
+        // the license token — that goes in auth.json, surfaced via `notes`
+        // below, and only when a Hyvä package is actually required.
         $hyvaProject = (string) (config('mageos.hyva_project') ?? '');
         $composer = $this->configurator->build($sel, $hyvaProject);
 
         $notes = [];
-        if (str_contains((string) json_encode($composer), 'hyva')) {
+        if (ConfiguratorService::requiresHyva($composer)) {
             $notes[] = 'Hyvä packages need a license token in auth.json: '
                 .'`composer config --global --auth '
                 .'http-basic.hyva-themes.repo.packagist.com token <YOUR_KEY>`.';
