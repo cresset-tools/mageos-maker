@@ -37,12 +37,6 @@ class Configurator
         $composer = $this->baseComposer($selection->version);
 
         $hyvaProject = trim($hyvaProject);
-        if ($hyvaProject !== '') {
-            $composer['repositories'][] = [
-                'type' => 'composer',
-                'url' => "https://hyva-themes.repo.packagist.com/{$hyvaProject}/",
-            ];
-        }
 
         // Gate context — `requires:` blocks on individual package entries are
         // checked against this. Built once up front; the `package` gate reads
@@ -137,7 +131,40 @@ class Configurator
             $composer['replace'] = $replace;
         }
 
+        // Hyvä's theme packages live in a licensed composer repo. Only wire
+        // it in when the selection actually pulls a `hyva-themes/*` package —
+        // otherwise the generated composer.json would carry a private repo
+        // (and the auth requirement it implies) for nothing.
+        if ($hyvaProject !== '' && self::requiresHyva($composer)) {
+            $repo = [
+                'type' => 'composer',
+                'url' => "https://hyva-themes.repo.packagist.com/{$hyvaProject}/",
+            ];
+            $composer['repositories'] ??= [];
+            if (! in_array($repo, $composer['repositories'], true)) {
+                $composer['repositories'][] = $repo;
+            }
+        }
+
         return $composer;
+    }
+
+    /**
+     * Whether a built composer.json actually requires a Hyvä package
+     * (vendor `hyva-themes/`). Drives both the licensed-repo injection above
+     * and the auth-token note the starter manifest surfaces to the user.
+     *
+     * @param  array<string,mixed>  $composer
+     */
+    public static function requiresHyva(array $composer): bool
+    {
+        foreach (array_keys($composer['require'] ?? []) as $pkg) {
+            if (str_starts_with((string) $pkg, 'hyva-themes/')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
