@@ -12,12 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Hosted behind a TLS-terminating nginx reverse proxy that
-        // forwards to FrankenPHP on loopback. Trust the proxy so
-        // X-Forwarded-Proto/Host are honored — otherwise Laravel sees
-        // plain http and Livewire builds http:// endpoints that the
-        // https page blocks. Safe to trust any proxy here: FrankenPHP
-        // only listens on 127.0.0.1, so nginx is the only client.
-        $middleware->trustProxies(at: '*');
+        // forwards to FrankenPHP on loopback. Trust just that loopback
+        // peer so X-Forwarded-Proto/Host are honored — otherwise Laravel
+        // sees plain http and Livewire builds http:// endpoints the https
+        // page blocks. Scoped to loopback (not `*`) so forwarded headers
+        // are never trusted from anywhere but nginx.
+        $middleware->trustProxies(at: ['127.0.0.1', '::1']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
