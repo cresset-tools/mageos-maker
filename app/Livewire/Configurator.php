@@ -56,6 +56,15 @@ class Configurator extends Component
 
     public ?string $savedAt = null;
 
+    /**
+     * Canonicalized snapshot of the selection at the moment the saved config
+     * was loaded. Used to detect when the user has mutated state away from the
+     * saved version — in which case the shareable `/c/{id}` link and "Saved"
+     * indicator are no longer truthful and we fall back to the unsaved UX.
+     */
+    #[Locked]
+    public ?string $savedSnapshot = null;
+
     // Hyvä credentials are intentionally NOT part of Selection — they must never be
     // persisted to SavedConfig or echoed back via the shared /c/{id} link.
 
@@ -90,6 +99,35 @@ class Configurator extends Component
         }
 
         $this->hydrateFromSelection($sel, $defs, $configurator);
+
+        if ($this->savedId !== null) {
+            $this->savedSnapshot = $this->snapshotSelection();
+        }
+    }
+
+    /**
+     * Canonical JSON form of the current selection, used as the dirty-check
+     * baseline against {@see $savedSnapshot}. Arrays are sorted so a checkbox
+     * toggled off and back on doesn't read as dirty just because of insertion
+     * order.
+     */
+    private function snapshotSelection(): string
+    {
+        $arr = $this->selection()->toArray();
+        $sort = function (&$v) use (&$sort) {
+            if (is_array($v)) {
+                foreach ($v as &$inner) {
+                    $sort($inner);
+                }
+                if (array_is_list($v)) {
+                    sort($v);
+                } else {
+                    ksort($v);
+                }
+            }
+        };
+        $sort($arr);
+        return json_encode($arr);
     }
 
     /**
@@ -390,9 +428,24 @@ class Configurator extends Component
     #[Computed]
     public function starterArg(): string
     {
-        return $this->savedId !== null
-            ? url("/c/{$this->savedId}")
+        return $this->effectiveSavedId !== null
+            ? url("/c/{$this->effectiveSavedId}")
             : 'mageos';
+    }
+
+    /**
+     * `$savedId` only counts while the current state still matches what was
+     * saved. As soon as the user changes anything, the shareable link would
+     * be a lie — bougie would resolve it to the old config — so we drop back
+     * to the unsaved UX (default starter + "Save & share" hint).
+     */
+    #[Computed]
+    public function effectiveSavedId(): ?string
+    {
+        if ($this->savedId === null || $this->savedSnapshot === null) {
+            return $this->savedId;
+        }
+        return $this->snapshotSelection() === $this->savedSnapshot ? $this->savedId : null;
     }
 
     #[Computed]

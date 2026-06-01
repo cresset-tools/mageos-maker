@@ -5,8 +5,10 @@
 @endphp
 <header>
     <h1>mageos-maker</h1>
-    @if ($savedId)
-        <span class="saved">Saved config: <code>{{ $savedId }}</code> ({{ $savedAt }})</span>
+    @if ($this->effectiveSavedId)
+        <span class="saved">Saved config: <code>{{ $this->effectiveSavedId }}</code> ({{ $savedAt }})</span>
+    @elseif ($savedId)
+        <span class="saved">Saved config: <code>{{ $savedId }}</code> — modified, save again to share</span>
     @endif
 </header>
 <main>
@@ -319,13 +321,13 @@
         <div class="panel bougie-panel">
             <h2>Try it with bougie</h2>
             <p>You can try out this Mage-OS configuration with
-                <a href="https://bougie.tools" target="_blank" rel="noopener">bougie</a> —
+                <a href="https://bougie.tools" target="_blank" rel="noopener">bougie</a>,
                 a Composer-compatible package manager and PHP toolchain. There's only one command you need to run:</p>
             <div class="cmd-row"><pre class="cmd"><code># Install bougie if you don't have it yet
 curl -LsSf https://bougie.tools/install.sh | sh
 # Start it up!
 bougie init --starter {{ $this->starterArg }} --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
-            @unless ($savedId)
+            @unless ($this->effectiveSavedId)
                 <small>This uses the default Mage-OS starter. Hit <strong>Save&nbsp;&amp;&nbsp;share</strong> to get a one-command link for <em>this</em> configuration.</small>
             @endunless
         </div>
