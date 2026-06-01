@@ -316,21 +316,25 @@
     </div>
 
     <div class="right">
+        <div class="panel bougie-panel">
+            <h2>⚡ Try it with bougie</h2>
+            <p>You can try out this Mage-OS configuration right now with
+                <a href="https://bougie.tools" target="_blank" rel="noopener">bougie</a> —
+                a Composer-compatible package manager and PHP toolchain. One command
+                takes you from zero to a running store:</p>
+            <div class="cmd-row"><pre class="cmd"><code># Install bougie if you don't have it yet
+curl -LsSf https://bougie.tools/install.sh | sh
+# Start it up!
+bougie init --starter {{ $this->starterArg }} --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
+            @unless ($savedId)
+                <small>This uses the default Mage-OS starter. Hit <strong>Save&nbsp;&amp;&nbsp;share</strong> to get a one-command link for <em>this</em> configuration.</small>
+            @endunless
+        </div>
         <div class="panel" style="background:#1e1e23;border-color:#1e1e23;">
             <div class="toolbar">
                 <button onclick="copyComposer()">Copy</button>
                 <button class="secondary" wire:click="save">Save & share</button>
                 <span class="stats">require: {{ $this->requireCount }} · replace: {{ $this->replaceCount }}</span>
-            </div>
-            <div class="bougie-cta">
-                <p>You can try out this Mage-OS configuration right now with <a href="https://bougie.tools" target="_blank" rel="noopener">bougie</a>!</p>
-                <div class="cmd-row"><pre class="cmd"><code># Install bougie if you don't have it yet
-curl -LsSf https://bougie.tools/install.sh | sh
-# Start it up!
-bougie init --starter {{ $this->starterArg }} --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
-                @unless ($savedId)
-                    <small>This uses the default Mage-OS starter. Hit <strong>Save&nbsp;&amp;&nbsp;share</strong> above to get a one-command link for <em>this</em> configuration.</small>
-                @endunless
             </div>
             <pre class="composer" wire:ignore><code id="composer-out" class="language-json">{{ $this->composerJson }}</code></pre>
         </div>

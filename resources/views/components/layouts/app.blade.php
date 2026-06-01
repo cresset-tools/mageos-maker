@@ -66,10 +66,12 @@
         .cmd-row .cmd-copy.copied { width: auto; padding: 0 8px; }
         .hyva-steps small { display: block; margin-top: 4px; color: #777; font-size: 11px; }
         .hyva-steps small code { background: #f0f0f4; padding: 1px 4px; border-radius: 3px; }
-        .bougie-cta { margin: 0 0 12px; }
-        .bougie-cta p { font-size: 13px; color: #e6e6e6; margin: 0 0 8px; }
-        .bougie-cta p a { color: #8ab4ff; }
-        .bougie-cta small { display: block; margin-top: 6px; font-size: 11px; color: #9a9aa2; }
+        .bougie-panel { border-color: #c7d2fe; background: #f5f7ff; border-left: 4px solid #4f46e5; }
+        .bougie-panel h2 { color: #4338ca; }
+        .bougie-panel p { font-size: 13px; color: #444; margin: 0 0 12px; }
+        .bougie-panel p a { color: #4f46e5; font-weight: 600; }
+        .bougie-panel small { display: block; margin-top: 6px; font-size: 11px; color: #6b7280; }
+        .bougie-panel small code { background: #e8ebff; padding: 1px 4px; border-radius: 3px; }
     </style>
     @livewireStyles
 </head>
