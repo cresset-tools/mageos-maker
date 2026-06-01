@@ -66,6 +66,10 @@
         .cmd-row .cmd-copy.copied { width: auto; padding: 0 8px; }
         .hyva-steps small { display: block; margin-top: 4px; color: #777; font-size: 11px; }
         .hyva-steps small code { background: #f0f0f4; padding: 1px 4px; border-radius: 3px; }
+        .bougie-cta { margin: 0 0 12px; }
+        .bougie-cta p { font-size: 13px; color: #e6e6e6; margin: 0 0 8px; }
+        .bougie-cta p a { color: #8ab4ff; }
+        .bougie-cta small { display: block; margin-top: 6px; font-size: 11px; color: #9a9aa2; }
     </style>
     @livewireStyles
 </head>

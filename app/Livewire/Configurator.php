@@ -379,6 +379,22 @@ class Configurator extends Component
         return count($this->composer['replace'] ?? []);
     }
 
+    /**
+     * The `--starter` argument for the "try it with bougie" callout. Once a
+     * config is saved it's the shareable `/c/{id}` URL (bougie appends
+     * `/starter.json` to a base URL, so the page URL resolves to this
+     * config's manifest). On the unsaved default page it's the `mageos`
+     * alias, which maps to the default starter — the note in the view says
+     * as much and points the user at "Save & share" for their exact config.
+     */
+    #[Computed]
+    public function starterArg(): string
+    {
+        return $this->savedId !== null
+            ? url("/c/{$this->savedId}")
+            : 'mageos';
+    }
+
     #[Computed]
     public function forcedAddons(): array
     {
