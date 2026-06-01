@@ -317,11 +317,10 @@
 
     <div class="right">
         <div class="panel bougie-panel">
-            <h2>⚡ Try it with bougie</h2>
-            <p>You can try out this Mage-OS configuration right now with
+            <h2>Try it with bougie</h2>
+            <p>You can try out this Mage-OS configuration with
                 <a href="https://bougie.tools" target="_blank" rel="noopener">bougie</a> —
-                a Composer-compatible package manager and PHP toolchain. One command
-                takes you from zero to a running store:</p>
+                a Composer-compatible package manager and PHP toolchain. There's only one command you need to run:</p>
             <div class="cmd-row"><pre class="cmd"><code># Install bougie if you don't have it yet
 curl -LsSf https://bougie.tools/install.sh | sh
 # Start it up!
