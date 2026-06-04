@@ -1,0 +1,8 @@
+name: nebula
+label: Nebula Admin Theme
+description: Modern Magento admin theme by qoliber (Alpine.js + Tailwind, replaces the legacy RequireJS/Knockout admin)
+packages:
+  - qoliber/nebula-admin-theme
+repositories:
+  - type: composer
+    url: https://repo.packagist.org
