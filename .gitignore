@@ -5,6 +5,7 @@
 .env.production
 .phpactor.json
 .phpunit.result.cache
+/.bougie
 /.codex
 /.cursor/
 /.idea
@@ -16,6 +17,7 @@
 /node_modules
 /public/build
 /public/hot
+/public/phpinfo.php
 /public/storage
 /storage/*.key
 /storage/pail
