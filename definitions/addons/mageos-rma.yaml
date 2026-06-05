@@ -1,0 +1,9 @@
+name: mageos-rma
+label: Mage-OS RMA
+description: Return Merchandise Authorization module (Mage-OS Lab) — opt-in for Mage-OS before 3.0.0, where it isn't bundled in the stock distribution.
+until: "3.0.0"
+packages:
+  - mage-os/module-rma
+repositories:
+  - type: composer
+    url: https://repo.packagist.org

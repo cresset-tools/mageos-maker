@@ -193,7 +193,7 @@ class ConfigureCommand extends Command
         }
 
         $enabledAddons = $selection->enabledAddons;
-        $userPickableAddons = array_diff_key($defs->addons, array_flip($forcedAddons));
+        $userPickableAddons = array_diff_key($defs->addonsForVersion($version), array_flip($forcedAddons));
         if ($userPickableAddons !== []) {
             $addonOptions = [];
             foreach ($userPickableAddons as $name => $addon) {

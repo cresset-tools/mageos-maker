@@ -53,6 +53,11 @@ class Configurator
         // (resolved offline by mageos:catalog:update). Falls back to "*" when
         // a package wasn't in the cached version map.
         foreach ($effectiveAddons as $addon) {
+            // Version-gated add-ons (e.g. RMA, opt-in only before 3.0.0) don't
+            // apply outside their range — skip so they aren't added to require.
+            if (! $this->defs->isAddonAvailable($addon, $selection->version)) {
+                continue;
+            }
             foreach ($this->defs->addonPackageEntries($addon) as $entry) {
                 if (! $this->packageAllowed($entry, $ctx, $composer['require'])) {
                     continue;

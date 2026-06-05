@@ -134,6 +134,7 @@ class Configurator extends Component
             }
         };
         $sort($arr);
+
         return json_encode($arr);
     }
 
@@ -474,6 +475,7 @@ class Configurator extends Component
         if ($this->savedId === null || $this->savedSnapshot === null) {
             return $this->savedId;
         }
+
         return $this->snapshotSelection() === $this->savedSnapshot ? $this->savedId : null;
     }
 
@@ -588,7 +590,9 @@ class Configurator extends Component
             'setRemovable' => $setRemovable,
             'layerRemovable' => $layerRemovable,
             'layerDefs' => $defs->layers,
-            'addonDefs' => $defs->addons,
+            // Version-gated add-ons (e.g. RMA, opt-in only before 3.0.0) are
+            // filtered out so they don't show alongside their set form.
+            'addonDefs' => $defs->addonsForVersion($this->version ?? ''),
             'profileDefs' => $defs->profiles,
             'profileGroupDefs' => $defs->profileGroups,
             'versions' => $catalog->availableVersions() ?: [$this->version],
