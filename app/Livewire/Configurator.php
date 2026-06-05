@@ -19,12 +19,19 @@ use Livewire\Component;
  * The view models stock items as ENABLED-by-default (lists hold "currently checked"
  * items), which makes Livewire's array-style checkbox bindings the natural fit:
  * a checkbox is checked iff its value is in the bound array. The Selection passed
- * to ConfiguratorService is built in {@see selection()} by computing the disabled
+ * to ConfiguratorService is built in {@see Selection()} by computing the disabled
  * complements over the universe of stock names.
  */
 class Configurator extends Component
 {
     public ?string $version = null;
+
+    /**
+     * Version in effect before the most recent change, so {@see updatedVersion()}
+     * can tell which version-gated sets just became available and default them on.
+     */
+    #[Locked]
+    public ?string $previousVersion = null;
 
     public ?string $profile = null;
 
@@ -148,6 +155,24 @@ class Configurator extends Component
             $this->syncOptionVariants();
             $this->reapplySoftDefaults();
         }
+    }
+
+    /**
+     * Version picker changed. Sets are enabled-by-default, but a version-gated
+     * set (e.g. RMA before 3.0.0) has no prior "checked" state from the versions
+     * where it didn't exist — so when bumping into a version that ships it, add
+     * it to the checked list so it defaults on rather than rendering unchecked
+     * (which would silently drop a stock module).
+     */
+    public function updatedVersion(string $value): void
+    {
+        $defs = app(Definitions::class);
+        $newlyAvailable = array_diff(
+            array_keys($defs->setsForVersion($value)),
+            array_keys($defs->setsForVersion($this->previousVersion ?? $value)),
+        );
+        $this->enabledSets = array_values(array_unique(array_merge($this->enabledSets, $newlyAvailable)));
+        $this->previousVersion = $value;
     }
 
     /**
@@ -286,7 +311,7 @@ class Configurator extends Component
         return $this->previousEnabledAddons ?? $current;
     }
 
-    /** @var list<string>|null Snapshot of $enabledAddons taken at the start of each request, used by the diff logic in updatedEnabledAddons(). */
+    /** @var list<string>|null Snapshot of taken at the start of each request, used by the diff logic in updatedEnabledAddons(). */
     private ?array $previousEnabledAddons = null;
 
     public function hydrate(): void
@@ -349,6 +374,7 @@ class Configurator extends Component
             'mageos_version' => $this->version,
             'selection' => $this->selection()->toArray(),
         ]);
+
         return $this->redirect(route('configurator.show', $cfg->id), navigate: true);
     }
 
@@ -363,7 +389,10 @@ class Configurator extends Component
     public function selection(): Selection
     {
         $defs = app(Definitions::class);
-        $allSetNames = array_keys($defs->sets);
+        // Only version-applicable sets participate: a version-gated set (e.g. RMA
+        // before 3.0.0) must never be computed into disabledSets, or it would
+        // emit a phantom replace entry for a package the base doesn't ship.
+        $allSetNames = array_keys($defs->setsForVersion($this->version ?? ''));
         $stockLayerNames = array_values(array_filter(
             array_keys($defs->layers),
             fn ($n) => $defs->isLayerStock($n),
@@ -488,18 +517,20 @@ class Configurator extends Component
                 }
             }
         }
+
         return false;
     }
 
     private function hydrateFromSelection(Selection $sel, Definitions $defs, ConfiguratorService $configurator): void
     {
-        $allSets = array_keys($defs->sets);
+        $allSets = array_keys($defs->setsForVersion($sel->version));
         $stockLayers = array_values(array_filter(
             array_keys($defs->layers),
             fn ($n) => $defs->isLayerStock($n),
         ));
 
         $this->version = $sel->version;
+        $this->previousVersion = $sel->version;
         $this->profile = $sel->profile;
         // Force non-removable sets on, even if a saved/profile selection tried to
         // disable them. The view also greys their checkboxes out.
@@ -535,12 +566,15 @@ class Configurator extends Component
 
         // Partition sets by category so the view can render Modules and
         // Languages in separate panels. The underlying disable-by-replace
-        // mechanism is unchanged — they're all just sets.
-        $modules = array_filter($defs->sets, fn ($s) => ($s['category'] ?? 'module') === 'module');
-        $languages = array_filter($defs->sets, fn ($s) => ($s['category'] ?? 'module') === 'language');
+        // mechanism is unchanged — they're all just sets. Version-gated sets
+        // (e.g. RMA before 3.0.0) are filtered out so they only appear for the
+        // versions whose stock distribution actually ships them.
+        $versionSets = $defs->setsForVersion($this->version ?? '');
+        $modules = array_filter($versionSets, fn ($s) => ($s['category'] ?? 'module') === 'module');
+        $languages = array_filter($versionSets, fn ($s) => ($s['category'] ?? 'module') === 'language');
 
         $setRemovable = [];
-        foreach (array_keys($defs->sets) as $name) {
+        foreach (array_keys($versionSets) as $name) {
             $setRemovable[$name] = $defs->isSetRemovable($name);
         }
         $layerRemovable = [];

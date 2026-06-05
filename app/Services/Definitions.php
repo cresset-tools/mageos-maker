@@ -2,13 +2,16 @@
 
 namespace App\Services;
 
+use Composer\Semver\Comparator;
+use Composer\Semver\VersionParser;
+
 /**
  * Strongly-typed view of the YAML definitions: sets, layers, profile-groups, profiles.
  */
 class Definitions
 {
     /**
-     * @param  array<string, array{name:string, label:string, description?:string, packages:list<string>}>  $sets  Stock module groups; only meaningful when DISABLED (added to `replace`).
+     * @param  array<string, array{name:string, label:string, description?:string, since?:string, packages:list<string>}>  $sets  Stock module groups; only meaningful when DISABLED (added to `replace`). An optional `since` pins the set to Mage-OS versions ≥ that version (e.g. RMA, bundled from 3.0.0 on).
      * @param  array<string, array{name:string, label:string, description?:string, stock?:bool, packages:list<string>, repositories?:list<array<string,mixed>>}>  $layers  Stock cross-cutting concerns; only meaningful when DISABLED. Non-stock layers may declare extra composer repositories.
      * @param  array<string, array{name:string, label:string, description?:string, packages:list<string>, repositories?:list<array<string,mixed>>}>  $addons  Extra packages NOT in stock Mage-OS; only meaningful when ENABLED (added to `require`). May declare extra composer repositories.
      * @param  array<string, array{name:string, label:string, description?:string, options:list<array<string,mixed>>}>  $profileGroups
@@ -191,7 +194,50 @@ class Definitions
         if (! array_key_exists($name, $this->sets)) {
             return true;
         }
+
         return ($this->sets[$name]['removable'] ?? true) !== false;
+    }
+
+    /**
+     * Whether a set applies to a given Mage-OS version. A set may declare a
+     * `since:` version (inclusive lower bound) when its packages only ship in
+     * the stock distribution from that release on — e.g. RMA, which the
+     * `mage-os/product-community-edition` metapackage requires from 3.0.0.
+     * Sets without `since` apply to every version. An unknown set or empty
+     * version string is treated as available (don't gate on missing data).
+     */
+    public function isSetAvailable(string $name, string $version): bool
+    {
+        if (! array_key_exists($name, $this->sets)) {
+            return false;
+        }
+        $since = $this->sets[$name]['since'] ?? null;
+        if ($since === null || $version === '') {
+            return true;
+        }
+
+        $parser = new VersionParser;
+        try {
+            return ! Comparator::lessThan($parser->normalize($version), $parser->normalize((string) $since));
+        } catch (\UnexpectedValueException) {
+            return true;
+        }
+    }
+
+    /**
+     * Sets that apply to a given Mage-OS version, preserving key order. Used by
+     * the UIs so version-gated sets (e.g. RMA before 3.0.0) don't surface as
+     * toggleable modules where they aren't part of the stock distribution.
+     *
+     * @return array<string, array<string,mixed>>
+     */
+    public function setsForVersion(string $version): array
+    {
+        return array_filter(
+            $this->sets,
+            fn ($_set, $name) => $this->isSetAvailable($name, $version),
+            ARRAY_FILTER_USE_BOTH,
+        );
     }
 
     public function isLayerStock(string $name): bool
@@ -213,6 +259,7 @@ class Definitions
         if (! array_key_exists($name, $this->layers)) {
             return true;
         }
+
         return ($this->layers[$name]['removable'] ?? true) !== false;
     }
 

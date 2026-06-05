@@ -42,6 +42,7 @@ class ConfigureCommand extends Command
             $name = $this->option('profile');
             if (! isset($defs->profiles[$name])) {
                 $this->error("Unknown profile: $name");
+
                 return self::FAILURE;
             }
             $selection = Selection::default($version, $defs)->applyProfile($defs->profiles[$name]);
@@ -98,6 +99,7 @@ class ConfigureCommand extends Command
                 }
             }
         }
+
         return $out;
     }
 
@@ -136,7 +138,7 @@ class ConfigureCommand extends Command
         }
 
         $setOptions = [];
-        foreach ($defs->sets as $name => $set) {
+        foreach ($defs->setsForVersion($version) as $name => $set) {
             $setOptions[$name] = $set['label'];
         }
         $enabledSetNames = array_diff(array_keys($setOptions), $selection->disabledSets);
