@@ -11,9 +11,9 @@ use Composer\Semver\VersionParser;
 class Definitions
 {
     /**
-     * @param  array<string, array{name:string, label:string, description?:string, since?:string, packages:list<string>}>  $sets  Stock module groups; only meaningful when DISABLED (added to `replace`). An optional `since` pins the set to Mage-OS versions ≥ that version (e.g. RMA, bundled from 3.0.0 on).
+     * @param  array<string, array{name:string, label:string, description?:string, since?:string, until?:string, packages:list<string>}>  $sets  Stock module groups; only meaningful when DISABLED (added to `replace`). Optional `since`/`until` (inclusive lower / exclusive upper) gate the set to a version range — e.g. RMA, bundled as a removable set from 3.0.0 on.
      * @param  array<string, array{name:string, label:string, description?:string, stock?:bool, packages:list<string>, repositories?:list<array<string,mixed>>}>  $layers  Stock cross-cutting concerns; only meaningful when DISABLED. Non-stock layers may declare extra composer repositories.
-     * @param  array<string, array{name:string, label:string, description?:string, packages:list<string>, repositories?:list<array<string,mixed>>}>  $addons  Extra packages NOT in stock Mage-OS; only meaningful when ENABLED (added to `require`). May declare extra composer repositories.
+     * @param  array<string, array{name:string, label:string, description?:string, since?:string, until?:string, packages:list<string>, repositories?:list<array<string,mixed>>}>  $addons  Extra packages NOT in stock Mage-OS; only meaningful when ENABLED (added to `require`). May declare extra composer repositories. Optional `since`/`until` gate the add-on to a version range — e.g. RMA, opt-in only before 3.0.0.
      * @param  array<string, array{name:string, label:string, description?:string, options:list<array<string,mixed>>}>  $profileGroups
      * @param  array<string, array{name:string, label:string, description?:string, default?:bool, selection:array<string,mixed>}>  $profiles
      */
@@ -199,29 +199,53 @@ class Definitions
     }
 
     /**
-     * Whether a set applies to a given Mage-OS version. A set may declare a
-     * `since:` version (inclusive lower bound) when its packages only ship in
-     * the stock distribution from that release on — e.g. RMA, which the
-     * `mage-os/product-community-edition` metapackage requires from 3.0.0.
-     * Sets without `since` apply to every version. An unknown set or empty
-     * version string is treated as available (don't gate on missing data).
+     * Whether a definition applies to a given Mage-OS version, per its optional
+     * `since` (inclusive lower bound) / `until` (exclusive upper bound) fields.
+     * This is how the same feature can be modeled two ways across the version
+     * line — e.g. RMA is an opt-in add-on `until: 3.0.0`, then a default-on
+     * removable set `since: 3.0.0` (the metapackage bundles it from 3.0.0).
+     * A definition with neither bound applies to every version; an empty or
+     * unparseable version string is treated as available (don't gate on missing
+     * data).
+     *
+     * @param  array<string,mixed>  $def
      */
-    public function isSetAvailable(string $name, string $version): bool
+    private function versionInRange(array $def, string $version): bool
     {
-        if (! array_key_exists($name, $this->sets)) {
-            return false;
-        }
-        $since = $this->sets[$name]['since'] ?? null;
-        if ($since === null || $version === '') {
+        $since = $def['since'] ?? null;
+        $until = $def['until'] ?? null;
+        if (($since === null && $until === null) || $version === '') {
             return true;
         }
 
         $parser = new VersionParser;
         try {
-            return ! Comparator::lessThan($parser->normalize($version), $parser->normalize((string) $since));
+            $v = $parser->normalize($version);
+            if ($since !== null && Comparator::lessThan($v, $parser->normalize((string) $since))) {
+                return false;
+            }
+            if ($until !== null && ! Comparator::lessThan($v, $parser->normalize((string) $until))) {
+                return false;
+            }
+
+            return true;
         } catch (\UnexpectedValueException) {
             return true;
         }
+    }
+
+    /** Whether a set applies to a given Mage-OS version (see {@see versionInRange()}). */
+    public function isSetAvailable(string $name, string $version): bool
+    {
+        return array_key_exists($name, $this->sets)
+            && $this->versionInRange($this->sets[$name], $version);
+    }
+
+    /** Whether an add-on applies to a given Mage-OS version (see {@see versionInRange()}). */
+    public function isAddonAvailable(string $name, string $version): bool
+    {
+        return array_key_exists($name, $this->addons)
+            && $this->versionInRange($this->addons[$name], $version);
     }
 
     /**
@@ -236,6 +260,22 @@ class Definitions
         return array_filter(
             $this->sets,
             fn ($_set, $name) => $this->isSetAvailable($name, $version),
+            ARRAY_FILTER_USE_BOTH,
+        );
+    }
+
+    /**
+     * Add-ons that apply to a given Mage-OS version, preserving key order. Used
+     * by the UIs so a version-gated add-on (e.g. RMA, opt-in only before 3.0.0)
+     * isn't offered on versions where it doesn't belong.
+     *
+     * @return array<string, array<string,mixed>>
+     */
+    public function addonsForVersion(string $version): array
+    {
+        return array_filter(
+            $this->addons,
+            fn ($_addon, $name) => $this->isAddonAvailable($name, $version),
             ARRAY_FILTER_USE_BOTH,
         );
     }
