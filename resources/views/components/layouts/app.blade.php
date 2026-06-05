@@ -72,6 +72,21 @@
         .bougie-panel p a { color: #4f46e5; font-weight: 600; }
         .bougie-panel small { display: block; margin-top: 6px; font-size: 11px; color: #6b7280; }
         .bougie-panel small code { background: #e8ebff; padding: 1px 4px; border-radius: 3px; }
+
+        /* --- Mobile / narrow screens ---
+           The two-column grid needs ~910px before it overflows, so below that we
+           collapse to a single stacked column. `display: contents` on .right lifts
+           its panels into main's flex flow so we can reorder them individually; the
+           generated composer.json is pushed last (order: 1) since it's a result to
+           read, not a control to act on — config + the bougie one-liner come first. */
+        @media (max-width: 960px) {
+            main { display: flex; flex-direction: column; gap: 16px; padding: 16px; }
+            main > .right { display: contents; }
+            .composer-panel { order: 1; }
+            pre.composer { max-height: 65vh; }
+            header { padding: 14px 16px; }
+            .hyva-fields { grid-template-columns: 1fr; }
+        }
     </style>
     @livewireStyles
 </head>
