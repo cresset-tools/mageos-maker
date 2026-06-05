@@ -331,7 +331,7 @@ bougie init --starter {{ $this->starterArg }} --start</code></pre><button type="
                 <small>This uses the default Mage-OS starter. Hit <strong>Save&nbsp;&amp;&nbsp;share</strong> to get a one-command link for <em>this</em> configuration.</small>
             @endunless
         </div>
-        <div class="panel" style="background:#1e1e23;border-color:#1e1e23;">
+        <div class="panel composer-panel" style="background:#1e1e23;border-color:#1e1e23;">
             <div class="toolbar">
                 <button onclick="copyComposer()">Copy</button>
                 <button class="secondary" wire:click="save">Save & share</button>
