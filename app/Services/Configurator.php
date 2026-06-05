@@ -85,6 +85,12 @@ class Configurator
         // that would otherwise be installed.
         $replace = $composer['replace'] ?? [];
         foreach ($disabledSets as $set) {
+            // Version-gated sets (e.g. RMA before 3.0.0) aren't in the stock
+            // distribution for this version, so disabling them is a no-op —
+            // skip to keep the replace map free of phantom entries.
+            if (! $this->defs->isSetAvailable($set, $selection->version)) {
+                continue;
+            }
             foreach ($this->defs->setPackageEntries($set) as $entry) {
                 if (! $this->packageAllowed($entry, $ctx, $composer['require'])) {
                     continue;

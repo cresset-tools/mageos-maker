@@ -1,0 +1,7 @@
+name: mageos-rma
+label: Mage-OS RMA
+description: Return Merchandise Authorization — bundled in stock Mage-OS from 3.0.0; disable to strip it out.
+category: module
+since: 3.0.0
+packages:
+  - mage-os/module-rma
