@@ -37,10 +37,13 @@ class VersionGatedSetTest extends TestCase
             ],
             layers: [],
             addons: [
-                // Same feature, opt-in form for the versions that don't bundle it.
+                // Same feature, opt-in form for the versions that don't bundle it
+                // but can still install it ([2.2.2, 3.0.0) — see the YAML for the
+                // magento/module-webapi shim reasoning behind the lower bound).
                 'mageos-rma' => [
                     'name' => 'mageos-rma',
                     'label' => 'Mage-OS RMA',
+                    'since' => '2.2.2',
                     'until' => '3.0.0',
                     'packages' => ['mage-os/module-rma'],
                 ],
@@ -73,10 +76,13 @@ class VersionGatedSetTest extends TestCase
         $this->assertTrue($defs->isSetAvailable('paypal', '2.3.0'));
     }
 
-    public function test_addon_until_bound(): void
+    public function test_addon_since_and_until_bounds(): void
     {
         $defs = $this->defs();
 
+        // Below the lower bound: not offered (RMA can't resolve there).
+        $this->assertFalse($defs->isAddonAvailable('mageos-rma', '2.2.1'));
+        // Within [2.2.2, 3.0.0): offered.
         $this->assertTrue($defs->isAddonAvailable('mageos-rma', '2.2.2'));
         $this->assertTrue($defs->isAddonAvailable('mageos-rma', '2.3.0'));
         // `until` is exclusive — at the bound it's the set's job, not the add-on's.
@@ -87,7 +93,11 @@ class VersionGatedSetTest extends TestCase
     {
         $defs = $this->defs();
 
-        // Below 3.0.0: add-on offered, set hidden.
+        // Below 2.2.2: neither offered (RMA unsupported there).
+        $this->assertArrayNotHasKey('mageos-rma', $defs->addonsForVersion('2.2.1'));
+        $this->assertArrayNotHasKey('mageos-rma', $defs->setsForVersion('2.2.1'));
+
+        // [2.2.2, 3.0.0): add-on offered, set hidden.
         $this->assertArrayHasKey('mageos-rma', $defs->addonsForVersion('2.3.0'));
         $this->assertArrayNotHasKey('mageos-rma', $defs->setsForVersion('2.3.0'));
 

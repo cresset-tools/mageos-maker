@@ -1,6 +1,13 @@
 name: mageos-rma
 label: Mage-OS RMA
-description: Return Merchandise Authorization module (Mage-OS Lab) — opt-in for Mage-OS before 3.0.0, where it isn't bundled in the stock distribution.
+# Opt-in for Mage-OS versions that don't bundle RMA but can still install it.
+# Lower bound is 2.2.2, not "any pre-3.0.0": mage-os/module-rma depends on the
+# magento/module-webapi compat shim, which Mage-OS only publishes for a sparse
+# set of module-webapi versions — so RMA won't resolve on the in-between
+# releases (1.0.2–2.2.1). In [2.2.2, 3.0.0) the catalog has 2.2.2 and 2.3.0,
+# both of which resolve + di:compile cleanly. From 3.0.0 it's the bundled set.
+description: Return Merchandise Authorization module (Mage-OS Lab) — opt-in for Mage-OS 2.2.2 up to (not including) 3.0.0, where it isn't bundled but can still be installed.
+since: "2.2.2"
 until: "3.0.0"
 packages:
   - mage-os/module-rma
