@@ -13,11 +13,15 @@ namespace App\Services;
  */
 class Configurator
 {
+    /**
+     * @param  array{repository_url?:string, edition_package?:string, version?:string, php_constraint?:string}  $modulargento
+     */
     public function __construct(
         private readonly Definitions $defs,
         private readonly CatalogRepository $catalog,
         private readonly AddonVersionResolver $addonVersions,
         private readonly string $repositoryUrl,
+        private readonly array $modulargento = [],
     ) {}
 
     public function build(Selection $selection, string $hyvaProject = ''): array
@@ -34,7 +38,10 @@ class Configurator
         )));
         $effectiveEnabledLayers = array_values(array_unique(array_merge($resolved['forceLayers'], $selection->enabledLayers)));
 
-        $composer = $this->baseComposer($selection->version);
+        $modulargento = $selection->isModulargento();
+        $composer = $modulargento
+            ? $this->modulargentoBaseComposer($selection->version)
+            : $this->baseComposer($selection->version);
 
         $hyvaProject = trim($hyvaProject);
 
@@ -100,7 +107,9 @@ class Configurator
                 if (! $this->packageAllowed($entry, $ctx, $composer['require'])) {
                     continue;
                 }
-                $replace[$entry['name']] = '*';
+                foreach ($this->replacePackageNames($entry['name'], $modulargento) as $replaceName) {
+                    $replace[$replaceName] = '*';
+                }
             }
             // Parent disabled → subtoggle packages also go to replace.
             foreach ($this->defs->setSubtoggles($set) as $sub) {
@@ -108,7 +117,9 @@ class Configurator
                     if (! $this->packageAllowed($entry, $ctx, $composer['require'])) {
                         continue;
                     }
-                    $replace[$entry['name']] = '*';
+                    foreach ($this->replacePackageNames($entry['name'], $modulargento) as $replaceName) {
+                    $replace[$replaceName] = '*';
+                }
                 }
             }
         }
@@ -123,7 +134,9 @@ class Configurator
                 if (! $this->packageAllowed($entry, $ctx, $composer['require'])) {
                     continue;
                 }
-                $replace[$entry['name']] = '*';
+                foreach ($this->replacePackageNames($entry['name'], $modulargento) as $replaceName) {
+                    $replace[$replaceName] = '*';
+                }
             }
         }
         foreach ($disabledLayers as $layer) {
@@ -134,7 +147,9 @@ class Configurator
                 if (! $this->packageAllowed($entry, $ctx, $composer['require'])) {
                     continue;
                 }
-                $replace[$entry['name']] = '*';
+                foreach ($this->replacePackageNames($entry['name'], $modulargento) as $replaceName) {
+                    $replace[$replaceName] = '*';
+                }
             }
         }
         if ($replace !== []) {
@@ -272,6 +287,67 @@ class Configurator
                 $composer['repositories'][] = $repo;
             }
         }
+    }
+
+    /**
+     * The package name(s) to drop from a project's `replace` map when removing a
+     * set/layer. Under modulargento a stock `mage-os/*` set package may be
+     * installed either as `modulargento/*` (the monorepo + inventory +
+     * page-builder, vendor-renamed) or kept as `mage-os/*` (the standalone
+     * module forks the distribution pulls as-is). The maker can't tell which per
+     * package, so it replaces both names — the one that isn't installed is a
+     * harmless no-op — guaranteeing the module is removed either way.
+     *
+     * @return list<string>
+     */
+    private function replacePackageNames(string $name, bool $modulargento): array
+    {
+        if ($modulargento && str_starts_with($name, 'mage-os/')) {
+            return [$name, 'modulargento/'.substr($name, strlen('mage-os/'))];
+        }
+
+        return [$name];
+    }
+
+    /**
+     * Base composer.json for the fully-modular (modulargento) distribution: a
+     * project requiring the modulargento edition metapackage from its own
+     * Composer repo, pinned to the configured version, with a `require.php`
+     * constraint for bougie's runtime. Mirrors the shape of the stock fallback
+     * in {@see baseComposer()}; disabled sets are layered on as `replace`
+     * entries (remapped to `modulargento/*`) by {@see build()}.
+     */
+    private function modulargentoBaseComposer(string $version): array
+    {
+        $edition = $this->modulargento['edition_package'] ?? 'modulargento/project-community-edition';
+        $repoUrl = $this->modulargento['repository_url'] ?? 'https://modulargento.cresset.tools/';
+        $editionVersion = $this->modulargento['version'] ?? $version;
+        $phpConstraint = $this->modulargento['php_constraint'] ?? null;
+
+        $require = [$edition => $editionVersion];
+        if (is_string($phpConstraint) && $phpConstraint !== '') {
+            $require['php'] = $phpConstraint;
+        }
+
+        return [
+            'name' => $edition,
+            'description' => 'Mage-OS project tailored with mageos-maker (fully-modular distribution)',
+            'type' => 'project',
+            'require' => $require,
+            'repositories' => [
+                ['type' => 'composer', 'url' => $repoUrl],
+            ],
+            'minimum-stability' => 'stable',
+            'prefer-stable' => true,
+            'config' => [
+                'allow-plugins' => [
+                    'php-http/discovery' => true,
+                    'dealerdirect/phpcodesniffer-composer-installer' => true,
+                    'laminas/laminas-dependency-plugin' => true,
+                    'modulargento/*' => true,
+                ],
+            ],
+        ];
     }
 
     /**

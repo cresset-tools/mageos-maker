@@ -10,6 +10,22 @@ return [
     // The package whose versions are exposed in the version dropdown.
     'edition_package' => 'mage-os/project-community-edition',
 
+    // The "fully modular" (modulargento) distribution — a flavor of the Mage-OS
+    // release named in `version` below, served from its own Composer repo. When
+    // the user picks it in the configurator (offered only when the selected
+    // version equals `version`), every otherwise-locked set becomes removable
+    // because the modulargento packages are decoupled. See the Configurator and
+    // Definitions::isSetRemovable() for how the backing swaps.
+    'modulargento' => [
+        'repository_url' => env('MAGEOS_MODULARGENTO_REPOSITORY_URL', 'https://modulargento.cresset.tools/'),
+        'edition_package' => 'modulargento/project-community-edition',
+        // The Mage-OS release this flavor tracks; the distribution toggle only
+        // appears when the selected version matches.
+        'version' => env('MAGEOS_MODULARGENTO_VERSION', '3.0.0'),
+        // Pinned for bougie's PHP runtime; emitted as a `require.php` constraint.
+        'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.3.0||~8.4.0||~8.5.0'),
+    ],
+
     // Filesystem paths (under storage/app/private when using the local disk)
     'cache_dir' => 'mageos-catalog',
     'graphs_dir' => 'graphs',

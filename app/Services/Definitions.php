@@ -188,11 +188,20 @@ class Definitions
      * are forced on — used for sets that have hard cross-module dependencies
      * in stock Mage-OS and break di:compile / setup:install when removed.
      * Defaults to true when the YAML omits the flag.
+     *
+     * Under the fully-modular (modulargento) distribution every set the removal
+     * matrix covers is decoupled, so a set that's locked in stock Mage-OS
+     * becomes removable — unless it explicitly opts out via
+     * `removable_modulargento: false`.
      */
-    public function isSetRemovable(string $name): bool
+    public function isSetRemovable(string $name, string $distribution = 'standard'): bool
     {
         if (! array_key_exists($name, $this->sets)) {
             return true;
+        }
+
+        if ($distribution === 'modulargento') {
+            return ($this->sets[$name]['removable_modulargento'] ?? true) !== false;
         }
 
         return ($this->sets[$name]['removable'] ?? true) !== false;

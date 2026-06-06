@@ -45,7 +45,21 @@ class Selection
          * @var array<string,string>
          */
         public readonly array $optionVariants = [],
+        /**
+         * Which distribution backs the project: 'standard' (stock Mage-OS) or
+         * 'modulargento' (the fully-modular flavor, where every set is
+         * removable). Only meaningful when {@see $version} matches the
+         * configured modulargento version; the configurator forces it back to
+         * 'standard' otherwise.
+         */
+        public readonly string $distribution = 'standard',
     ) {}
+
+    /** Whether this selection targets the fully-modular (modulargento) distribution. */
+    public function isModulargento(): bool
+    {
+        return $this->distribution === 'modulargento';
+    }
 
     public static function default(string $version, Definitions $defs): self
     {
@@ -68,6 +82,7 @@ class Selection
             disabledSubtoggles: [],
             enabledOptionSubtoggles: $defs->defaultOnOptionSubtoggleKeys(),
             optionVariants: [],
+            distribution: 'standard',
         );
 
         if ($self->profile !== null && isset($defs->profiles[$self->profile])) {
@@ -90,6 +105,7 @@ class Selection
             disabledSubtoggles: array_values($data['disabledSubtoggles'] ?? []),
             enabledOptionSubtoggles: array_values($data['enabledOptionSubtoggles'] ?? $defs->defaultOnOptionSubtoggleKeys()),
             optionVariants: $data['optionVariants'] ?? [],
+            distribution: $data['distribution'] ?? 'standard',
         );
     }
 
@@ -106,6 +122,7 @@ class Selection
             'disabledSubtoggles' => $this->disabledSubtoggles,
             'enabledOptionSubtoggles' => $this->enabledOptionSubtoggles,
             'optionVariants' => $this->optionVariants,
+            'distribution' => $this->distribution,
         ];
     }
 
@@ -123,6 +140,7 @@ class Selection
             disabledSubtoggles: array_values(array_unique(array_merge($this->disabledSubtoggles, $sel['disabledSubtoggles'] ?? []))),
             enabledOptionSubtoggles: array_values(array_unique(array_merge($this->enabledOptionSubtoggles, $sel['enabledOptionSubtoggles'] ?? []))),
             optionVariants: array_merge($this->optionVariants, $sel['optionVariants'] ?? []),
+            distribution: $sel['distribution'] ?? $this->distribution,
         );
     }
 }
