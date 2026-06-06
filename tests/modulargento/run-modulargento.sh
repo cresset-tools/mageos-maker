@@ -83,7 +83,7 @@ mkdir -p "$results_dir" "$per_set_dir" "$sandboxes_dir"
 # diff is composer.json metadata requiring the extracted framework-graph-ql
 # sub-packages; no code change, and the framework GraphQl classes still come
 # from stock vendor magento/framework, so overlaying it has no runtime effect.)
-DECOUPLED_MODULES=(AdminAnalytics Bundle Catalog CatalogWidget Checkout Customer CustomerGraphQl GiftMessage GiftMessageGraphQl GroupedProduct MediaGalleryApi MediaGalleryCatalogIntegration MediaGalleryIntegration MediaGallerySynchronization MediaGalleryUi Msrp Newsletter Paypal PaypalInstantPurchase ProductAlert QuoteGraphQl ReleaseNotification Reports Review Sales Weee Wishlist)
+DECOUPLED_MODULES=(AdminAnalytics Bundle Catalog CatalogImportExport CatalogWidget Checkout Customer CustomerGraphQl GiftMessage GiftMessageGraphQl GroupedProduct MediaGalleryApi MediaGalleryCatalogIntegration MediaGalleryIntegration MediaGallerySynchronization MediaGalleryUi Msrp Newsletter Paypal PaypalInstantPurchase ProductAlert QuoteGraphQl ReleaseNotification Reports Review Sales Weee Wishlist)
 # Bridge modules added by modulargento — restore reporting/glue that the decoupling
 # stripped out of staying modules. Each needs the feature(s) it bridges present:
 # Review/Wishlist reporting, and the Weee<->Swatches listing glue (WeeeSwatches).

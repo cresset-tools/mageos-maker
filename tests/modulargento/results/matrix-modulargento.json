@@ -8,7 +8,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/_baseline.log",
-      "duration_s": 59,
+      "duration_s": 58,
       "composer_diff_baseline": "unknown",
       "phase": "compile"
     },
@@ -32,12 +32,12 @@
     },
     {
       "set": "downloadable",
-      "status": "install-failed",
-      "fingerprint": "Class \"Magento\\Downloadable\\Model\\Product\\Type\" not found",
+      "status": "pass",
+      "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/downloadable.log",
-      "duration_s": 48,
+      "duration_s": 56,
       "composer_diff_baseline": "true",
-      "phase": "install"
+      "phase": "compile"
     },
     {
       "set": "gift-message",
@@ -53,7 +53,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/grouped.log",
-      "duration_s": 62,
+      "duration_s": 66,
       "composer_diff_baseline": "true",
       "phase": "compile"
     },
