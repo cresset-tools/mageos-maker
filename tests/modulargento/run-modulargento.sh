@@ -121,15 +121,17 @@ overlay_for_disabled() {
 # Patched vendor add-on forks (cresset-tools) that decouple themselves from a
 # core module being removed. page-builder-widget + admin-activity-log are
 # decoupled from Review and stay installed regardless, so overlay them always;
-# inventory-product-alert is removed together with product-alert, so only overlay
-# it when product-alert is NOT being removed (otherwise it shouldn't be present).
+# inventory-product-alert is an MSI module — removed with product-alert AND with the
+# whole MSI (inventory) set — so only overlay it when neither is being removed
+# (otherwise it shouldn't be present and would leave a dangling vendor dir).
 VENDOR_FORKS="${VENDOR_FORKS:-$HOME/vendor-forks}"
 vendor_overlay_args() {
   local disabled_csv=",${1},"
   local -a a=()
   [[ -d "$VENDOR_FORKS/module-page-builder-widget" ]] && a+=(--vendor-overlay "$VENDOR_FORKS/module-page-builder-widget:vendor/mage-os/module-page-builder-widget")
   [[ -d "$VENDOR_FORKS/module-admin-activity-log" ]] && a+=(--vendor-overlay "$VENDOR_FORKS/module-admin-activity-log:vendor/mage-os/module-admin-activity-log")
-  if [[ "$disabled_csv" != *",product-alert,"* && -d "$VENDOR_FORKS/module-inventory-product-alert" ]]; then
+  if [[ "$disabled_csv" != *",product-alert,"* && "$disabled_csv" != *",inventory,"* \
+        && -d "$VENDOR_FORKS/module-inventory-product-alert" ]]; then
     a+=(--vendor-overlay "$VENDOR_FORKS/module-inventory-product-alert:vendor/mage-os/module-inventory-product-alert")
   fi
   printf '%s\n' "${a[@]}"
