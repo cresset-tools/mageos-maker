@@ -8,7 +8,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/_baseline.log",
-      "duration_s": 58,
+      "duration_s": 59,
       "composer_diff_baseline": "unknown",
       "phase": "compile"
     },
@@ -44,7 +44,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/gift-message.log",
-      "duration_s": 57,
+      "duration_s": 59,
       "composer_diff_baseline": "true",
       "phase": "compile"
     },
@@ -104,10 +104,10 @@
     },
     {
       "set": "release-notification",
-      "status": "fail",
-      "fingerprint": " s not exist setup:di:compile ",
+      "status": "pass",
+      "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/release-notification.log",
-      "duration_s": 64,
+      "duration_s": 70,
       "composer_diff_baseline": "true",
       "phase": "compile"
     },
@@ -125,7 +125,7 @@
       "status": "fail",
       "fingerprint": "Class \"Magento\\Swatches\\Helper\\Media\" does not exist",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/swatches.log",
-      "duration_s": 64,
+      "duration_s": 65,
       "composer_diff_baseline": "true",
       "phase": "compile"
     },

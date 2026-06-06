@@ -4,9 +4,9 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 
 **Baseline** (full modulargento overlay, nothing removed): PASS — installs + compiles clean.
 
-**Removable with modulargento: 8 / 13** — newly unlocked vs stock: `gift-message`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `reviews`, `wishlist`.
+**Removable with modulargento: 9 / 13** — newly unlocked vs stock: `gift-message`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `wishlist`.
 
-**Maximal achievable reduction** (every individually-removable set removed together: `gift-message`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `reviews`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
+**Maximal achievable reduction** (every individually-removable set removed together: `gift-message`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
 
 ## Per-set: stock vs modulargento
 
@@ -21,12 +21,12 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 | `msrp` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `newsletter` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `product-alert` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
-| `release-notification` | ❌ fail | ❌ fail | same |
+| `release-notification` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `reviews` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `swatches` | ❌ fail | ❌ fail | same |
 | `wishlist` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 
-## Remaining worklist — still blocked (5 sets)
+## Remaining worklist — still blocked (4 sets)
 
 These need further decoupling in modulargento before they're removable.
 
@@ -41,10 +41,6 @@ These need further decoupling in modulargento before they're removable.
 ### `Constant "\Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE" is not defined`
 
 - `grouped`  ([log](raw/grouped.log))
-
-### `s not exist setup:di:compile`
-
-- `release-notification`  ([log](raw/release-notification.log))
 
 ### `Class "Magento\Swatches\Helper\Media" does not exist`
 
