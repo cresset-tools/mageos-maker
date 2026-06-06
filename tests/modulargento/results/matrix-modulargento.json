@@ -50,12 +50,12 @@
     },
     {
       "set": "grouped",
-      "status": "install-failed",
-      "fingerprint": "Constant \"\\Magento\\GroupedProduct\\Model\\Product\\Type\\Grouped::TYPE_CODE\" is not defined",
+      "status": "pass",
+      "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/grouped.log",
-      "duration_s": 19,
+      "duration_s": 62,
       "composer_diff_baseline": "true",
-      "phase": "install"
+      "phase": "compile"
     },
     {
       "set": "instant-purchase",
