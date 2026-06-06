@@ -4,16 +4,16 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 
 **Baseline** (full modulargento overlay, nothing removed): PASS — installs + compiles clean.
 
-**Removable with modulargento: 11 / 13** — newly unlocked vs stock: `gift-message`, `grouped`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`.
+**Removable with modulargento: 12 / 13** — newly unlocked vs stock: `downloadable`, `gift-message`, `grouped`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`.
 
-**Maximal achievable reduction** (every individually-removable set removed together: `gift-message`, `grouped`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
+**Maximal achievable reduction** (every individually-removable set removed together: `downloadable`, `gift-message`, `grouped`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
 
 ## Per-set: stock vs modulargento
 
 | Set | Stock | Modulargento | Change |
 |---|---|---|---|
 | `bundle` | ❌ install-failed | ❌ install-failed | same |
-| `downloadable` | ❌ install-failed | ❌ install-failed | same |
+| `downloadable` | ❌ install-failed | ✅ pass | **fail → pass** 🎉 |
 | `gift-message` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `grouped` | ❌ install-failed | ✅ pass | **fail → pass** 🎉 |
 | `instant-purchase` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
@@ -26,15 +26,11 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 | `swatches` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `wishlist` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 
-## Remaining worklist — still blocked (2 sets)
+## Remaining worklist — still blocked (1 sets)
 
 These need further decoupling in modulargento before they're removable.
 
 ### `SQLSTATE[42S02]: Base table or view not found: 1146 Table 'modulargento_mag`
 
 - `bundle`  ([log](raw/bundle.log))
-
-### `Class "Magento\Downloadable\Model\Product\Type" not found`
-
-- `downloadable`  ([log](raw/downloadable.log))
 
