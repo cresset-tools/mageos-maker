@@ -419,6 +419,14 @@ class Configurator extends Component
             return;
         }
         $sel = Selection::default($this->version, $defs)->applyProfile($defs->profiles[$name]);
+        // Carry the current distribution across the reseed so picking a profile
+        // doesn't silently drop the fully-modular flavor — and so removability
+        // (which sets actually get stripped) is evaluated for it.
+        $sel = Selection::fromArray(
+            ['distribution' => $this->distribution] + $sel->toArray(),
+            $this->version,
+            $defs,
+        );
         $this->hydrateFromSelection($sel, $defs, $configurator);
     }
 

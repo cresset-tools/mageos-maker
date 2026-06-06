@@ -37,6 +37,12 @@ class ModulargentoDistributionTest extends TestCase
                     'removable_modulargento' => false,
                     'packages' => ['mage-os/module-core-thing'],
                 ],
+                // Removable under both distributions (an optional feature).
+                'paypal' => [
+                    'name' => 'paypal',
+                    'label' => 'PayPal',
+                    'packages' => ['mage-os/module-paypal'],
+                ],
             ],
             layers: [],
             addons: [],
@@ -122,15 +128,47 @@ class ModulargentoDistributionTest extends TestCase
     {
         $cfg = $this->configurator($this->defs());
 
-        // Configurator.build trusts disabledSets (force-on lives in the UI layer),
-        // so disabling here exercises the standard-distribution name path.
+        // A set removable on stock Mage-OS exercises the standard name path.
         $composer = $cfg->build(new Selection(
+            version: '3.0.0', profile: null,
+            disabledSets: ['paypal'], disabledLayers: [], enabledLayers: [], enabledAddons: [], profileGroups: [],
+            distribution: 'standard',
+        ));
+
+        $this->assertArrayHasKey('mage-os/module-paypal', $composer['replace'] ?? []);
+        $this->assertArrayNotHasKey('modulargento/module-paypal', $composer['replace'] ?? []);
+    }
+
+    public function test_build_skips_locked_sets_under_standard_but_strips_them_under_modulargento(): void
+    {
+        $cfg = $this->configurator($this->defs());
+
+        // gift-message is removable: false. Disabling it on standard Mage-OS is a
+        // no-op (can't be cleanly removed) so it must NOT enter the replace map —
+        // this guards profiles that list locked sets for the modulargento case.
+        $std = $cfg->build(new Selection(
             version: '3.0.0', profile: null,
             disabledSets: ['gift-message'], disabledLayers: [], enabledLayers: [], enabledAddons: [], profileGroups: [],
             distribution: 'standard',
         ));
+        $this->assertArrayNotHasKey('mage-os/module-gift-message', $std['replace'] ?? []);
+        $this->assertArrayNotHasKey('modulargento/module-gift-message', $std['replace'] ?? []);
 
-        $this->assertArrayHasKey('mage-os/module-gift-message', $composer['replace'] ?? []);
-        $this->assertArrayNotHasKey('modulargento/module-gift-message', $composer['replace'] ?? []);
+        // The same disable under modulargento actually strips it.
+        $mg = $cfg->build(new Selection(
+            version: '3.0.0', profile: null,
+            disabledSets: ['gift-message'], disabledLayers: [], enabledLayers: [], enabledAddons: [], profileGroups: [],
+            distribution: 'modulargento',
+        ));
+        $this->assertArrayHasKey('modulargento/module-gift-message', $mg['replace'] ?? []);
+
+        // A modulargento opt-out set stays put even under modulargento.
+        $mgOptOut = $cfg->build(new Selection(
+            version: '3.0.0', profile: null,
+            disabledSets: ['core-thing'], disabledLayers: [], enabledLayers: [], enabledAddons: [], profileGroups: [],
+            distribution: 'modulargento',
+        ));
+        $this->assertArrayNotHasKey('modulargento/module-core-thing', $mgOptOut['replace'] ?? []);
+        $this->assertArrayNotHasKey('mage-os/module-core-thing', $mgOptOut['replace'] ?? []);
     }
 }

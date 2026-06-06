@@ -34,6 +34,24 @@ selection:
     - ups
     - usps
     - weee
+    # Sets stock Mage-OS locks on (hard cross-module deps) but the fully-modular
+    # (modulargento) distribution decouples. Listing them is a no-op on standard
+    # Mage-OS — they're force-kept — but under modulargento they're stripped too,
+    # so "Lite" becomes genuinely light: simple products only, no
+    # wishlist/reviews/newsletter/gift-message/MSRP/swatches/bundle/downloadable.
+    - bundle
+    - downloadable
+    - gift-message
+    - grouped
+    - instant-purchase
+    - media-gallery-sync
+    - msrp
+    - newsletter
+    - product-alert
+    - release-notification
+    - reviews
+    - swatches
+    - wishlist
   disabledLayers:
     - graphql
   enabledLayers: []
