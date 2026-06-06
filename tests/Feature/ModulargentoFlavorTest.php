@@ -75,6 +75,46 @@ class ModulargentoFlavorTest extends TestCase
         $this->assertNotContains('gift-message', $component->instance()->selection()->disabledSets);
     }
 
+    public function test_picking_a_profile_preserves_the_modulargento_distribution(): void
+    {
+        Livewire::test(Configurator::class)
+            ->set('version', $this->mgVersion())
+            ->set('distribution', 'modulargento')
+            ->call('setProfile', 'mageos-lite')
+            ->assertSet('distribution', 'modulargento');
+    }
+
+    public function test_lite_profile_is_genuinely_light_under_modulargento(): void
+    {
+        $c = Livewire::test(Configurator::class)
+            ->set('version', $this->mgVersion())
+            ->set('distribution', 'modulargento')
+            ->call('setProfile', 'mageos-lite');
+
+        $replace = $c->get('composer')['replace'] ?? [];
+        // Sets that stock Mage-OS locks on are actually stripped under modulargento.
+        $this->assertArrayHasKey('modulargento/module-wishlist', $replace);
+        $this->assertArrayHasKey('modulargento/module-bundle', $replace);
+        $this->assertArrayHasKey('modulargento/module-gift-message', $replace);
+    }
+
+    public function test_lite_profile_keeps_locked_sets_under_standard(): void
+    {
+        $c = Livewire::test(Configurator::class)
+            ->set('version', $this->mgVersion())
+            ->set('distribution', 'standard')
+            ->call('setProfile', 'mageos-lite');
+
+        $replace = $c->get('composer')['replace'] ?? [];
+        // The locked sets the lite profile lists are force-kept on stock Mage-OS,
+        // so they never enter the replace map under the standard distribution.
+        $this->assertArrayNotHasKey('mage-os/module-wishlist', $replace);
+        $this->assertArrayNotHasKey('modulargento/module-wishlist', $replace);
+        $this->assertArrayNotHasKey('mage-os/module-bundle', $replace);
+        // Sets removable on stock Mage-OS that lite drops still go.
+        $this->assertNotEmpty($replace);
+    }
+
     public function test_leaving_the_tracked_version_resets_to_standard(): void
     {
         $component = Livewire::test(Configurator::class)

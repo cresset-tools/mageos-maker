@@ -103,6 +103,14 @@ class Configurator
             if (! $this->defs->isSetAvailable($set, $selection->version)) {
                 continue;
             }
+            // A set that isn't removable under the chosen distribution can't be
+            // cleanly stripped — emitting a replace for it would break the
+            // install. Skip it (keep the module). This lets a profile list every
+            // set it would ideally drop: the locked ones are no-ops on standard
+            // Mage-OS but really come out under the fully-modular distribution.
+            if (! $this->defs->isSetRemovable($set, $selection->distribution)) {
+                continue;
+            }
             foreach ($this->defs->setPackageEntries($set) as $entry) {
                 if (! $this->packageAllowed($entry, $ctx, $composer['require'])) {
                     continue;
