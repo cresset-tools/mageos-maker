@@ -60,7 +60,7 @@ fi
 # outside app/code so --app-code can't reach them; overlay them on every row via
 # one-shot's --setup-overlay (they're universally beneficial and don't depend on
 # which set is removed).
-SETUP_OVERLAY_FILES="setup/src/Magento/Setup/Fixtures/AttributeSet/SwatchesGenerator.php,setup/src/Magento/Setup/Fixtures/EavVariationsFixture.php"
+SETUP_OVERLAY_FILES="setup/src/Magento/Setup/Fixtures/AttributeSet/SwatchesGenerator.php,setup/src/Magento/Setup/Fixtures/EavVariationsFixture.php,setup/src/Magento/Setup/Model/FixtureGenerator/BundleProductTemplateGenerator.php"
 
 # --- bougie service wiring (read from injected BOUGIE_SERVICE_* env) ----------
 : "${BOUGIE_SERVICE_MARIADB_DATABASE:?run inside 'bougie run' — BOUGIE_SERVICE_MARIADB_* not set}"
@@ -87,7 +87,7 @@ mkdir -p "$results_dir" "$per_set_dir" "$sandboxes_dir"
 # diff is composer.json metadata requiring the extracted framework-graph-ql
 # sub-packages; no code change, and the framework GraphQl classes still come
 # from stock vendor magento/framework, so overlaying it has no runtime effect.)
-DECOUPLED_MODULES=(AdminAnalytics Bundle BundleGraphQl Catalog CatalogGraphQl CatalogImportExport CatalogWidget Checkout Customer CustomerGraphQl ConfigurableProductGraphQl DownloadableGraphQl GiftMessage GiftMessageGraphQl GroupedProduct GroupedProductGraphQl MediaGalleryApi MediaGalleryCatalogIntegration MediaGalleryIntegration MediaGallerySynchronization MediaGalleryUi Msrp Newsletter NewsletterGraphQl Paypal PaypalInstantPurchase ProductAlert QuoteGraphQl ReleaseNotification Reports Review Sales Weee Wishlist WishlistGraphQl)
+DECOUPLED_MODULES=(AdminAnalytics Bundle BundleGraphQl Catalog CatalogGraphQl CatalogImportExport CatalogSearch CatalogWidget Checkout Customer CustomerGraphQl ConfigurableProductGraphQl DownloadableGraphQl GiftMessage GiftMessageGraphQl GroupedProduct GroupedProductGraphQl MediaGalleryApi MediaGalleryCatalogIntegration MediaGalleryIntegration MediaGallerySynchronization MediaGalleryUi Msrp Newsletter NewsletterGraphQl Paypal PaypalInstantPurchase ProductAlert QuoteGraphQl ReleaseNotification Reports Review Sales Weee Wishlist WishlistGraphQl)
 # Bridge modules added by modulargento — restore reporting/glue that the decoupling
 # stripped out of staying modules. Each needs the feature(s) it bridges present:
 # Review/Wishlist reporting, and the Weee<->Swatches listing glue (WeeeSwatches).
@@ -139,6 +139,12 @@ vendor_overlay_args() {
   if [[ "$disabled_csv" != *",product-alert,"* && "$disabled_csv" != *",inventory,"* \
         && -d "$VENDOR_FORKS/module-inventory-product-alert" ]]; then
     a+=(--vendor-overlay "$VENDOR_FORKS/module-inventory-product-alert:vendor/mage-os/module-inventory-product-alert")
+  fi
+  # inventory-graph-ql is general MSI (removed with the inventory set); its
+  # StockStatusProvider was decoupled from Magento_Bundle, so overlay the fork unless
+  # MSI itself is being removed.
+  if [[ "$disabled_csv" != *",inventory,"* && -d "$VENDOR_FORKS/module-inventory-graph-ql" ]]; then
+    a+=(--vendor-overlay "$VENDOR_FORKS/module-inventory-graph-ql:vendor/mage-os/module-inventory-graph-ql")
   fi
   printf '%s\n' "${a[@]}"
 }

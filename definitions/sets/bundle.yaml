@@ -7,3 +7,7 @@ packages:
   - mage-os/module-bundle-graph-ql
   - mage-os/module-bundle-import-export
   - mage-os/module-quote-bundle-options
+  - mage-os/module-inventory-bundle-product
+  - mage-os/module-inventory-bundle-product-admin-ui
+  - mage-os/module-inventory-bundle-product-indexer
+  - mage-os/module-inventory-catalog-search-bundle-product
