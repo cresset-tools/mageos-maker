@@ -56,6 +56,12 @@ if [[ ! -d "$app_code_src" ]]; then
   echo "modulargento app/code not found: $app_code_src" >&2; exit 1
 fi
 
+# setup/src performance-fixture files decoupled from optional modules. These live
+# outside app/code so --app-code can't reach them; overlay them on every row via
+# one-shot's --setup-overlay (they're universally beneficial and don't depend on
+# which set is removed).
+SETUP_OVERLAY_FILES="setup/src/Magento/Setup/Fixtures/AttributeSet/SwatchesGenerator.php,setup/src/Magento/Setup/Fixtures/EavVariationsFixture.php"
+
 # --- bougie service wiring (read from injected BOUGIE_SERVICE_* env) ----------
 : "${BOUGIE_SERVICE_MARIADB_DATABASE:?run inside 'bougie run' — BOUGIE_SERVICE_MARIADB_* not set}"
 export MODULARGENTO=1
@@ -139,7 +145,9 @@ run_row() {
   local disabled_csv; disabled_csv="$(IFS=,; echo "${disabled[*]+"${disabled[*]}"}")"
   mapfile -t vargs < <(vendor_overlay_args "$disabled_csv")
   EXTRA_DISABLE="$extra" "$script_dir/one-shot.sh" "$name" ${VERSION:+"$VERSION"} \
-      --app-code "$app_code_src:$overlay" "${vargs[@]+"${vargs[@]}"}" > "$per_set_dir/$name.json" 2>/dev/null || true
+      --app-code "$app_code_src:$overlay" \
+      --setup-overlay "$MODULARGENTO_SRC:$SETUP_OVERLAY_FILES" \
+      "${vargs[@]+"${vargs[@]}"}" > "$per_set_dir/$name.json" 2>/dev/null || true
   python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$per_set_dir/$name.json" 2>/dev/null || echo unknown
 }
 

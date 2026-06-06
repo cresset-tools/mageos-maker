@@ -4,9 +4,9 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 
 **Baseline** (full modulargento overlay, nothing removed): PASS — installs + compiles clean.
 
-**Removable with modulargento: 9 / 13** — newly unlocked vs stock: `gift-message`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `wishlist`.
+**Removable with modulargento: 10 / 13** — newly unlocked vs stock: `gift-message`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`.
 
-**Maximal achievable reduction** (every individually-removable set removed together: `gift-message`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
+**Maximal achievable reduction** (every individually-removable set removed together: `gift-message`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
 
 ## Per-set: stock vs modulargento
 
@@ -23,10 +23,10 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 | `product-alert` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `release-notification` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `reviews` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
-| `swatches` | ❌ fail | ❌ fail | same |
+| `swatches` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `wishlist` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 
-## Remaining worklist — still blocked (4 sets)
+## Remaining worklist — still blocked (3 sets)
 
 These need further decoupling in modulargento before they're removable.
 
@@ -41,8 +41,4 @@ These need further decoupling in modulargento before they're removable.
 ### `Constant "\Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE" is not defined`
 
 - `grouped`  ([log](raw/grouped.log))
-
-### `Class "Magento\Swatches\Helper\Media" does not exist`
-
-- `swatches`  ([log](raw/swatches.log))
 
