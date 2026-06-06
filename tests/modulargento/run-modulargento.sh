@@ -87,7 +87,7 @@ mkdir -p "$results_dir" "$per_set_dir" "$sandboxes_dir"
 # diff is composer.json metadata requiring the extracted framework-graph-ql
 # sub-packages; no code change, and the framework GraphQl classes still come
 # from stock vendor magento/framework, so overlaying it has no runtime effect.)
-DECOUPLED_MODULES=(AdminAnalytics Bundle Catalog CatalogImportExport CatalogWidget Checkout Customer CustomerGraphQl GiftMessage GiftMessageGraphQl GroupedProduct MediaGalleryApi MediaGalleryCatalogIntegration MediaGalleryIntegration MediaGallerySynchronization MediaGalleryUi Msrp Newsletter Paypal PaypalInstantPurchase ProductAlert QuoteGraphQl ReleaseNotification Reports Review Sales Weee Wishlist)
+DECOUPLED_MODULES=(AdminAnalytics Bundle BundleGraphQl Catalog CatalogGraphQl CatalogImportExport CatalogWidget Checkout Customer CustomerGraphQl ConfigurableProductGraphQl DownloadableGraphQl GiftMessage GiftMessageGraphQl GroupedProduct GroupedProductGraphQl MediaGalleryApi MediaGalleryCatalogIntegration MediaGalleryIntegration MediaGallerySynchronization MediaGalleryUi Msrp Newsletter NewsletterGraphQl Paypal PaypalInstantPurchase ProductAlert QuoteGraphQl ReleaseNotification Reports Review Sales Weee Wishlist WishlistGraphQl)
 # Bridge modules added by modulargento — restore reporting/glue that the decoupling
 # stripped out of staying modules. Each needs the feature(s) it bridges present:
 # Review/Wishlist reporting, and the Weee<->Swatches listing glue (WeeeSwatches).
@@ -101,12 +101,13 @@ overlay_for_disabled() {
   local s
   for s in "$@"; do
     case "$s" in
-      wishlist)   excl[Wishlist]=1; excl[WishlistReports]=1 ;;
+      wishlist)   excl[Wishlist]=1; excl[WishlistReports]=1; excl[WishlistGraphQl]=1 ;;
       reviews)    excl[Review]=1;   excl[ReviewReports]=1 ;;
-      newsletter) excl[Newsletter]=1 ;;
+      newsletter) excl[Newsletter]=1; excl[NewsletterGraphQl]=1 ;;
       msrp)       excl[Msrp]=1 ;;
-      grouped)    excl[GroupedProduct]=1 ;;
-      bundle)     excl[Bundle]=1 ;;
+      grouped)    excl[GroupedProduct]=1; excl[GroupedProductGraphQl]=1 ;;
+      bundle)     excl[Bundle]=1; excl[BundleGraphQl]=1 ;;
+      downloadable) excl[DownloadableGraphQl]=1 ;;
       instant-purchase) excl[PaypalInstantPurchase]=1 ;;
       media-gallery-sync) excl[MediaGallerySynchronization]=1 ;;
       product-alert) excl[ProductAlert]=1 ;;
