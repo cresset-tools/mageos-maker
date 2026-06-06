@@ -82,9 +82,21 @@ AMQP_PORT="${AMQP_PORT:-5672}"
 AMQP_USER="${AMQP_USER:-guest}"
 AMQP_PASSWORD="${AMQP_PASSWORD:-guest}"
 
+# Modulargento / bougie mode (set MODULARGENTO=1): the bougie MariaDB is
+# socket-only and the per-project tenant user can't CREATE DATABASE, so every
+# sandbox reuses the one tenant DB ($MODULARGENTO_DB) sequentially and relies on
+# `setup:install --cleanup-database` to wipe tables between sets. Cache/session/
+# page-cache fall back to files so no Redis/AMQP is needed.
+MODULARGENTO="${MODULARGENTO:-0}"
+MODULARGENTO_DB="${MODULARGENTO_DB:-}"
+
 # Sanitize set name for MySQL identifier / OpenSearch prefix (alnum + underscore).
 sanitized="$(printf '%s' "$set_name" | tr -c 'A-Za-z0-9_' '_' | sed 's/^_*//' | head -c 48)"
-db_name="${DB_NAME_PREFIX}${sanitized}"
+if [[ "$MODULARGENTO" == "1" && -n "$MODULARGENTO_DB" ]]; then
+  db_name="$MODULARGENTO_DB"
+else
+  db_name="${DB_NAME_PREFIX}${sanitized}"
+fi
 os_prefix="mageos_${sanitized}"
 
 results_dir="$script_dir/results"
@@ -133,6 +145,10 @@ echo "=== one-shot $set_name (profile=$PROFILE version=${version:-latest}) ===" 
 configure_args=(--profile="$PROFILE" --output="$sandbox/composer.json")
 # Names starting with "_" are control rows (e.g. _baseline) — emit profile as-is.
 [[ "$set_name" != _* ]] && configure_args+=(--disable="$set_name")
+# EXTRA_DISABLE: comma-separated sets to disable on top of the set-name (used by
+# the modulargento runner's combined "maximal reduction" row, e.g.
+# EXTRA_DISABLE=newsletter,reviews,wishlist on a _max-reduction control row).
+[[ -n "${EXTRA_DISABLE:-}" ]] && configure_args+=(--disable="$EXTRA_DISABLE")
 [[ -n "$version" ]] && configure_args+=(--mageos-version="$version")
 
 if ! ( cd "$PROJECT_ROOT" && php artisan mageos:configure "${configure_args[@]}" ) >> "$log" 2>&1; then
@@ -253,6 +269,12 @@ if [[ ${#app_code_overlays[@]} -gt 0 ]]; then
     emit_json "configure-failed" "app-code-overlay-failed" "$diff_flag" "configure"
     exit 0
   fi
+  # Wipe generated/ BEFORE dumping the autoloader. Magento's composer.json
+  # autoloads generated/code/ (psr-0), so `dump-autoload --optimize` would bake
+  # stale DI proxy classmap entries that the wipe below then deletes -> fatal
+  # "Failed to open stream" at bootstrap. Magento regenerates those proxies at
+  # di:compile via its own generator, so they must not be in the composer classmap.
+  rm -rf "$sandbox/generated" "$sandbox/var/di" "$sandbox/var/cache"
   # Removed vendor module dirs leave their registration.php still referenced
   # in vendor/composer/autoload_files.php. Regenerate the composer autoloader
   # so the bootstrap doesn't fail on the missing files.
@@ -270,15 +292,38 @@ rm -rf "$sandbox/generated" "$sandbox/var/cache" "$sandbox/var/page_cache" \
        "$sandbox/app/etc/config.php" "$sandbox/app/etc/env.php"
 
 # 6. Ensure the per-sandbox database exists (setup:install does not create it).
-echo "--- create database $db_name ---" >> "$log"
-if ! MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -u "$DB_USER" \
-    -e "CREATE DATABASE IF NOT EXISTS \`$db_name\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" >> "$log" 2>&1; then
-  emit_json "install-failed" "mysql-create-database-failed" "$diff_flag" "install"
-  exit 0
+#    In modulargento/bougie mode the shared tenant DB already exists and the
+#    tenant user can't CREATE DATABASE — skip; --cleanup-database wipes it.
+if [[ "$MODULARGENTO" == "1" ]]; then
+  echo "--- reuse existing bougie tenant DB $db_name (skip create; --cleanup-database wipes it) ---" >> "$log"
+else
+  echo "--- create database $db_name ---" >> "$log"
+  if ! MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -u "$DB_USER" \
+      -e "CREATE DATABASE IF NOT EXISTS \`$db_name\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" >> "$log" 2>&1; then
+    emit_json "install-failed" "mysql-create-database-failed" "$diff_flag" "install"
+    exit 0
+  fi
 fi
 
 # 6. setup:install — Magento needs app/etc/config.php before di:compile will run.
-echo "--- setup:install (db=$db_name, os-prefix=$os_prefix) ---" >> "$log"
+# Cache/session/page-cache backends: files in modulargento/bougie mode (no Redis
+# dependency — di:compile + install don't need it), Redis otherwise.
+if [[ "$MODULARGENTO" == "1" ]]; then
+  # File-based cache: omit --cache-backend/--page-cache entirely (Magento only
+  # accepts redis/valkey there; the default with neither flag is the file
+  # backend). --session-save=files is the valid way to ask for file sessions.
+  cache_args=( --session-save=files )
+else
+  cache_args=(
+    --session-save=redis
+    --session-save-redis-host="$REDIS_HOST" --session-save-redis-port="$REDIS_PORT" --session-save-redis-db=2
+    --cache-backend=redis
+    --cache-backend-redis-server="$REDIS_HOST" --cache-backend-redis-port="$REDIS_PORT" --cache-backend-redis-db=0
+    --page-cache=redis
+    --page-cache-redis-server="$REDIS_HOST" --page-cache-redis-port="$REDIS_PORT" --page-cache-redis-db=1
+  )
+fi
+echo "--- setup:install (db=$db_name, os-prefix=$os_prefix, modulargento=$MODULARGENTO) ---" >> "$log"
 setup_status=0
 ( cd "$sandbox" && timeout "$SETUP_TIMEOUT" bin/magento setup:install \
     --base-url=http://localhost:8080/ \
@@ -301,18 +346,7 @@ setup_status=0
     --opensearch-port="$OPENSEARCH_PORT" \
     --opensearch-index-prefix="$os_prefix" \
     --opensearch-enable-auth=0 \
-    --session-save=redis \
-    --session-save-redis-host="$REDIS_HOST" \
-    --session-save-redis-port="$REDIS_PORT" \
-    --session-save-redis-db=2 \
-    --cache-backend=redis \
-    --cache-backend-redis-server="$REDIS_HOST" \
-    --cache-backend-redis-port="$REDIS_PORT" \
-    --cache-backend-redis-db=0 \
-    --page-cache=redis \
-    --page-cache-redis-server="$REDIS_HOST" \
-    --page-cache-redis-port="$REDIS_PORT" \
-    --page-cache-redis-db=1 ) >> "$log" 2>&1 || setup_status=$?
+    "${cache_args[@]}" ) >> "$log" 2>&1 || setup_status=$?
 
 if [[ "$setup_status" -ne 0 ]]; then
   if [[ "$setup_status" -eq 124 ]]; then
@@ -331,6 +365,8 @@ if [[ "$setup_status" -ne 0 ]]; then
   done <<'PATTERNS'
 SQLSTATE\[[^]]+\]:[^,]+
 Class "[^"]+" does not exist
+Class "[^"]+" not found
+Interface "[^"]+" not found
 Source class "[^"]+" for "[^"]+" generation does not exist
 Plugin class '[^']+'[^']*doesn't exist
 Preference '[^']+' for '[^']+'
@@ -369,11 +405,14 @@ while IFS= read -r pat; do
   if [[ -n "$hit" ]]; then fp="$hit"; break; fi
 done <<'PATTERNS'
 Class "[^"]+" does not exist
+Class "[^"]+" not found
+Interface "[^"]+" not found
 Source class "[^"]+" for "[^"]+" generation does not exist
 Type Error occurred when creating object: [^,]+
 The requested class did not generate properly, because the '[^']+' file
 Plugin class '[^']+'[^']*doesn't exist
 Preference '[^']+' for '[^']+'
+Constant "[^"]+" is not defined
 PATTERNS
 
 if [[ -z "$fp" ]]; then
