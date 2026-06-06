@@ -46,6 +46,7 @@ extra_repos=()
 extra_requires=()
 app_code_overlays=()
 vendor_overlays=()
+setup_overlays=()
 
 # Optional second positional: version (any non-flag arg).
 if [[ $# -gt 0 && "$1" != --* ]]; then
@@ -64,6 +65,11 @@ while [[ $# -gt 0 ]]; do
     # Used to test fixes to vendor add-on packages (e.g. decoupling them from a
     # module being removed) before forking them.
     --vendor-overlay) vendor_overlays+=("$2"); shift 2 ;;
+    # Overlay individual files that live OUTSIDE app/code (which --app-code can't
+    # reach), e.g. the performance-fixture tooling in setup/src. SRC:RELPATH[,RELPATH2...]
+    # where each RELPATH is relative to both the source root and the sandbox, e.g.
+    #   --setup-overlay /path/to/modulargento:setup/src/Magento/Setup/Fixtures/AttributeSet/SwatchesGenerator.php
+    --setup-overlay) setup_overlays+=("$2"); shift 2 ;;
     *) echo "unknown flag: $1" >&2; exit 2 ;;
   esac
 done
@@ -312,6 +318,36 @@ if [[ ${#app_code_overlays[@]} -gt 0 ]]; then
   echo "--- composer dump-autoload (after overlay) ---" >> "$log"
   if ! ( cd "$sandbox" && composer dump-autoload --no-interaction --optimize ) >> "$log" 2>&1; then
     emit_json "configure-failed" "dump-autoload-failed" "$diff_flag" "configure"
+    exit 0
+  fi
+fi
+
+# Overlay individual files that live OUTSIDE app/code (which --app-code can't reach),
+# e.g. the performance-fixture tooling in setup/src. Each file replaces the sandbox
+# copy at the same relative path; class names/paths are unchanged so no re-dump needed.
+if [[ ${#setup_overlays[@]} -gt 0 ]]; then
+  echo "--- setup overlays: ${#setup_overlays[@]} entry/entries ---" >> "$log"
+  setup_overlay_failed=0
+  for spec in "${setup_overlays[@]}"; do
+    if [[ "$spec" != *:* ]]; then
+      echo "  --setup-overlay expects SRC:RELPATH[,RELPATH...], got '$spec'" >> "$log"; setup_overlay_failed=1; break
+    fi
+    src="${spec%%:*}"
+    rels_csv="${spec#*:}"
+    IFS=',' read -ra rels <<< "$rels_csv"
+    for rel in "${rels[@]}"; do
+      rel="${rel// /}"
+      [[ -z "$rel" ]] && continue
+      if [[ ! -f "$src/$rel" ]]; then
+        echo "  source file not found: $src/$rel" >> "$log"; setup_overlay_failed=1; break 2
+      fi
+      mkdir -p "$sandbox/$(dirname "$rel")"
+      cp "$src/$rel" "$sandbox/$rel"
+      echo "  overlaid $rel from $src" >> "$log"
+    done
+  done
+  if [[ $setup_overlay_failed -ne 0 ]]; then
+    emit_json "configure-failed" "setup-overlay-failed" "$diff_flag" "configure"
     exit 0
   fi
 fi

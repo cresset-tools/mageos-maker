@@ -122,10 +122,10 @@
     },
     {
       "set": "swatches",
-      "status": "fail",
-      "fingerprint": "Class \"Magento\\Swatches\\Helper\\Media\" does not exist",
+      "status": "pass",
+      "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/swatches.log",
-      "duration_s": 65,
+      "duration_s": 58,
       "composer_diff_baseline": "true",
       "phase": "compile"
     },
