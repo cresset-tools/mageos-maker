@@ -4,9 +4,9 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 
 **Baseline** (full modulargento overlay, nothing removed): PASS — installs + compiles clean.
 
-**Removable with modulargento: 12 / 13** — newly unlocked vs stock: `downloadable`, `gift-message`, `grouped`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`.
+**Removable with modulargento: 13 / 14** — newly unlocked vs stock: `downloadable`, `gift-message`, `grouped`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`.
 
-**Maximal achievable reduction** (every individually-removable set removed together: `downloadable`, `gift-message`, `grouped`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
+**Maximal achievable reduction** (every individually-removable set removed together: `downloadable`, `gift-message`, `grouped`, `instant-purchase`, `inventory`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
 
 ## Per-set: stock vs modulargento
 
@@ -17,6 +17,7 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 | `gift-message` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `grouped` | ❌ install-failed | ✅ pass | **fail → pass** 🎉 |
 | `instant-purchase` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
+| `inventory` | ✅ pass | ✅ pass | same |
 | `media-gallery-sync` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `msrp` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `newsletter` | ❌ fail | ✅ pass | **fail → pass** 🎉 |

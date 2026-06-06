@@ -8,7 +8,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/_baseline.log",
-      "duration_s": 58,
+      "duration_s": 57,
       "composer_diff_baseline": "unknown",
       "phase": "compile"
     },
@@ -63,6 +63,15 @@
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/instant-purchase.log",
       "duration_s": 73,
+      "composer_diff_baseline": "true",
+      "phase": "compile"
+    },
+    {
+      "set": "inventory",
+      "status": "pass",
+      "fingerprint": "",
+      "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/inventory.log",
+      "duration_s": 55,
       "composer_diff_baseline": "true",
       "phase": "compile"
     },
