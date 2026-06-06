@@ -152,6 +152,14 @@ if [[ ! -x "$artisan" && ! -f "$artisan" ]]; then
   exit 0
 fi
 
+# Snapshot the sandbox's prior composer.json (if any) so we can tell, after
+# regenerating + patching it below, whether the effective package set changed
+# since this sandbox's last run. If it did, a leftover composer.lock is stale and
+# must be dropped (see "drop stale lock" below); otherwise we keep it for fast reuse.
+prev_composer="$(mktemp)"
+trap 'rm -f "$prev_composer"' EXIT
+if [[ -f "$sandbox/composer.json" ]]; then cp "$sandbox/composer.json" "$prev_composer"; else : > "$prev_composer"; fi
+
 # 1. Generate composer.json.
 : > "$log"
 echo "=== one-shot $set_name (profile=$PROFILE version=${version:-latest}) ===" >> "$log"
@@ -221,8 +229,15 @@ PY
     emit_json "configure-failed" "patch-merge-failed" "$diff_flag" "configure"
     exit 0
   fi
-  # Mutating composer.json invalidates any composer.lock left behind by a
-  # prior run — drop it so the next `composer install` re-resolves.
+fi
+
+# Drop a stale composer.lock when the effective composer.json changed since this
+# sandbox's last run (set definition gained/lost packages, patches added/removed,
+# version bumped, …). Reusing a lock built for a different package set makes
+# `composer install` fail with "lock file does not contain a compatible set of
+# packages"; an unchanged composer.json keeps the lock for fast reuse.
+if [[ -f "$sandbox/composer.lock" ]] && ! diff -q "$prev_composer" "$sandbox/composer.json" >/dev/null 2>&1; then
+  echo "--- composer.json changed since last run — dropping stale composer.lock ---" >> "$log"
   rm -f "$sandbox/composer.lock"
 fi
 
