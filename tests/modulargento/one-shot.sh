@@ -132,9 +132,9 @@ emit_json() {
   local status="$1" fingerprint="$2" diff="$3" phase="$4"
   local end_ts dur
   end_ts=$(date +%s); dur=$((end_ts - start_ts))
-  python3 - "$set_name" "$status" "$fingerprint" "$log" "$dur" "$diff" "$phase" <<'PY' > "$per_set_json"
+  python3 - "$set_name" "$status" "$fingerprint" "$log" "$dur" "$diff" "$phase" "${GRAPHQL_RESULT:-n/a}" <<'PY' > "$per_set_json"
 import json, sys
-keys = ["set","status","fingerprint","log_path","duration_s","composer_diff_baseline","phase"]
+keys = ["set","status","fingerprint","log_path","duration_s","composer_diff_baseline","phase","graphql"]
 vals = sys.argv[1:]
 vals[4] = int(vals[4])
 out = dict(zip(keys, vals))
@@ -470,6 +470,23 @@ compile_status=0
 ( cd "$sandbox" && timeout "$COMPILE_TIMEOUT" bin/magento setup:di:compile ) >> "$log" 2>&1 || compile_status=$?
 
 if [[ "$compile_status" -eq 0 ]]; then
+  # 6a. Optional GraphQL functional smoke (GRAPHQL_SMOKE=1): the install+compile gate
+  # never exercises the runtime-stitched GraphQL schema, so a removed *GraphQl module
+  # can leave a dangling schema reference that still compiles. Build + introspect the
+  # schema in the canonical post-compile state and record the result (does not change
+  # the set's pass/fail — GraphQL health is reported as a separate dimension).
+  GRAPHQL_RESULT="n/a"
+  if [[ "${GRAPHQL_SMOKE:-0}" == "1" && -f "$script_dir/graphql-smoke.php" ]]; then
+    echo "--- graphql smoke ---" >> "$log"
+    gq_out="$( cd "$sandbox" && timeout 180 php "$script_dir/graphql-smoke.php" 2>>"$log" )" || true
+    echo "$gq_out" >> "$log"
+    if [[ "$gq_out" == GRAPHQL_OK* ]]; then
+      GRAPHQL_RESULT="ok"
+    else
+      GRAPHQL_RESULT="$(printf '%s' "$gq_out" | tr '\n' ' ' | head -c 200)"
+      [[ -z "$GRAPHQL_RESULT" ]] && GRAPHQL_RESULT="graphql-smoke-error"
+    fi
+  fi
   emit_json "pass" "" "$diff_flag" "compile"
   exit 0
 fi

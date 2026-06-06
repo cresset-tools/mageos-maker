@@ -8,63 +8,70 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/_baseline.log",
-      "duration_s": 57,
+      "duration_s": 60,
       "composer_diff_baseline": "unknown",
-      "phase": "compile"
+      "phase": "compile",
+      "graphql": "ok"
     },
     {
       "set": "_max-reduction",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/_max-reduction.log",
-      "duration_s": 360,
+      "duration_s": 79,
       "composer_diff_baseline": "unknown",
-      "phase": "compile"
+      "phase": "compile",
+      "graphql": "GRAPHQL_FAIL query-errors: Unknown type \"WishlistItemInterface\"."
     },
     {
       "set": "bundle",
       "status": "install-failed",
       "fingerprint": "SQLSTATE[42S02]: Base table or view not found: 1146 Table 'modulargento_mag  ",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/bundle.log",
-      "duration_s": 39,
+      "duration_s": 26,
       "composer_diff_baseline": "true",
-      "phase": "install"
+      "phase": "install",
+      "graphql": "n/a"
     },
     {
       "set": "downloadable",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/downloadable.log",
-      "duration_s": 56,
+      "duration_s": 57,
       "composer_diff_baseline": "true",
-      "phase": "compile"
+      "phase": "compile",
+      "graphql": "ok"
     },
     {
       "set": "gift-message",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/gift-message.log",
-      "duration_s": 59,
+      "duration_s": 58,
       "composer_diff_baseline": "true",
-      "phase": "compile"
+      "phase": "compile",
+      "graphql": "ok"
     },
     {
       "set": "grouped",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/grouped.log",
-      "duration_s": 66,
+      "duration_s": 58,
       "composer_diff_baseline": "true",
-      "phase": "compile"
+      "phase": "compile",
+      "graphql": "ok"
     },
     {
       "set": "instant-purchase",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/instant-purchase.log",
-      "duration_s": 73,
+      "duration_s": 58,
       "composer_diff_baseline": "true",
-      "phase": "compile"
+      "phase": "compile",
+      "graphql": "ok"
     },
     {
       "set": "inventory",
@@ -73,79 +80,88 @@
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/inventory.log",
       "duration_s": 55,
       "composer_diff_baseline": "true",
-      "phase": "compile"
+      "phase": "compile",
+      "graphql": "ok"
     },
     {
       "set": "media-gallery-sync",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/media-gallery-sync.log",
-      "duration_s": 68,
+      "duration_s": 57,
       "composer_diff_baseline": "true",
-      "phase": "compile"
+      "phase": "compile",
+      "graphql": "ok"
     },
     {
       "set": "msrp",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/msrp.log",
-      "duration_s": 56,
+      "duration_s": 74,
       "composer_diff_baseline": "true",
-      "phase": "compile"
+      "phase": "compile",
+      "graphql": "ok"
     },
     {
       "set": "newsletter",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/newsletter.log",
-      "duration_s": 67,
+      "duration_s": 59,
       "composer_diff_baseline": "true",
-      "phase": "compile"
+      "phase": "compile",
+      "graphql": "GRAPHQL_FAIL query-errors: Internal server error :: Class \"Magento\\NewsletterGraphQl\\Model\\Resolver\\IsSubscribed\" does not exist"
     },
     {
       "set": "product-alert",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/product-alert.log",
-      "duration_s": 71,
+      "duration_s": 56,
       "composer_diff_baseline": "true",
-      "phase": "compile"
+      "phase": "compile",
+      "graphql": "ok"
     },
     {
       "set": "release-notification",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/release-notification.log",
-      "duration_s": 70,
+      "duration_s": 62,
       "composer_diff_baseline": "true",
-      "phase": "compile"
+      "phase": "compile",
+      "graphql": "ok"
     },
     {
       "set": "reviews",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/reviews.log",
-      "duration_s": 105,
+      "duration_s": 57,
       "composer_diff_baseline": "true",
-      "phase": "compile"
+      "phase": "compile",
+      "graphql": "ok"
     },
     {
       "set": "swatches",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/swatches.log",
-      "duration_s": 58,
+      "duration_s": 60,
       "composer_diff_baseline": "true",
-      "phase": "compile"
+      "phase": "compile",
+      "graphql": "ok"
     },
     {
       "set": "wishlist",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/wishlist.log",
-      "duration_s": 71,
+      "duration_s": 72,
       "composer_diff_baseline": "true",
-      "phase": "compile"
+      "phase": "compile",
+      "graphql": "GRAPHQL_FAIL query-errors: Unknown type \"WishlistItemInterface\"."
     }
   ]
 }
