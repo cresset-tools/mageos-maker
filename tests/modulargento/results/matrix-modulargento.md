@@ -4,29 +4,30 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 
 **Baseline** (full modulargento overlay, nothing removed): PASS — installs + compiles clean.
 
-**Removable with modulargento: 3 / 13** — newly unlocked vs stock: `msrp`, `newsletter`, `wishlist`.
+**Removable with modulargento: 8 / 14** — newly unlocked vs stock: `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `reviews`, `wishlist`.
 
-**Maximal achievable reduction** (every individually-removable set removed together: `msrp`, `newsletter`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
+**Maximal achievable reduction** (every individually-removable set removed together: `_pa-baseline`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `reviews`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
 
 ## Per-set: stock vs modulargento
 
 | Set | Stock | Modulargento | Change |
 |---|---|---|---|
+| `_pa-baseline` | ❌ — | ✅ pass |  |
 | `bundle` | ❌ install-failed | ❌ install-failed | same |
 | `downloadable` | ❌ install-failed | ❌ install-failed | same |
 | `gift-message` | ❌ fail | ❌ fail | same |
 | `grouped` | ❌ install-failed | ❌ install-failed | same |
-| `instant-purchase` | ❌ fail | ❌ fail | same |
-| `media-gallery-sync` | ❌ fail | ❌ fail | same |
+| `instant-purchase` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
+| `media-gallery-sync` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `msrp` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `newsletter` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
-| `product-alert` | ❌ fail | ❌ fail | same |
+| `product-alert` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `release-notification` | ❌ fail | ❌ fail | same |
-| `reviews` | ❌ fail | ❌ fail | same |
+| `reviews` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `swatches` | ❌ fail | ❌ fail | same |
 | `wishlist` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 
-## Remaining worklist — still blocked (10 sets)
+## Remaining worklist — still blocked (6 sets)
 
 These need further decoupling in modulargento before they're removable.
 
@@ -38,7 +39,7 @@ These need further decoupling in modulargento before they're removable.
 
 - `downloadable`  ([log](raw/downloadable.log))
 
-### `Class "Magento\GiftMessage\Helper\Message" does not exist`
+### `Class "Magento\GiftMessage\Api\ItemRepositoryInterface" does not exist`
 
 - `gift-message`  ([log](raw/gift-message.log))
 
@@ -46,26 +47,9 @@ These need further decoupling in modulargento before they're removable.
 
 - `grouped`  ([log](raw/grouped.log))
 
-### `Interface "Magento\InstantPurchase\PaymentMethodIntegration\PaymentTokenFormatterInterface" not found`
-
-- `instant-purchase`  ([log](raw/instant-purchase.log))
-
-### `Class "Magento\MediaGallerySynchronizationApi\Api\SynchronizeFilesInterface  
-  " does not exist`
-
-- `media-gallery-sync`  ([log](raw/media-gallery-sync.log))
-
-### `Class "Magento\ProductAlert\Model\StockFactory" does not exist`
-
-- `product-alert`  ([log](raw/product-alert.log))
-
 ### `s not exist setup:di:compile`
 
 - `release-notification`  ([log](raw/release-notification.log))
-
-### `Class "Magento\Review\Block\Product\ReviewRenderer" not found`
-
-- `reviews`  ([log](raw/reviews.log))
 
 ### `Class "Magento\Swatches\Helper\Media" does not exist`
 

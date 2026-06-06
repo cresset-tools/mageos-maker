@@ -45,6 +45,7 @@ version=""
 extra_repos=()
 extra_requires=()
 app_code_overlays=()
+vendor_overlays=()
 
 # Optional second positional: version (any non-flag arg).
 if [[ $# -gt 0 && "$1" != --* ]]; then
@@ -57,6 +58,12 @@ while [[ $# -gt 0 ]]; do
     --repo)     extra_repos+=("$2"); shift 2 ;;
     --require)  extra_requires+=("$2"); shift 2 ;;
     --app-code) app_code_overlays+=("$2"); shift 2 ;;
+    # Replace an installed vendor package with a patched local copy after
+    # composer install. SRC:DESTSUBPATH e.g.
+    #   --vendor-overlay /path/to/fork:vendor/mage-os/module-page-builder-widget
+    # Used to test fixes to vendor add-on packages (e.g. decoupling them from a
+    # module being removed) before forking them.
+    --vendor-overlay) vendor_overlays+=("$2"); shift 2 ;;
     *) echo "unknown flag: $1" >&2; exit 2 ;;
   esac
 done
@@ -225,6 +232,26 @@ if ! ( cd "$sandbox" && timeout "$INSTALL_TIMEOUT" composer install --no-interac
   [[ -z "$fp" ]] && fp="composer-install-failed"
   emit_json "composer-failed" "$fp" "$diff_flag" "install"
   exit 0
+fi
+
+# 4a2. Replace installed vendor packages with patched local copies (e.g. fixes to
+# vendor add-on modules under test, before forking them).
+if [[ ${#vendor_overlays[@]} -gt 0 ]]; then
+  echo "--- vendor overlays: ${#vendor_overlays[@]} entry/entries ---" >> "$log"
+  vendor_failed=0
+  for spec in "${vendor_overlays[@]}"; do
+    if [[ "$spec" != *:* ]]; then echo "  --vendor-overlay expects SRC:DESTSUBPATH, got '$spec'" >> "$log"; vendor_failed=1; break; fi
+    vsrc="${spec%%:*}"; vdest="${spec#*:}"
+    if [[ ! -d "$vsrc" ]]; then echo "  source not found: $vsrc" >> "$log"; vendor_failed=1; break; fi
+    rm -rf "$sandbox/$vdest"
+    mkdir -p "$sandbox/$vdest"
+    cp -R "$vsrc/." "$sandbox/$vdest/"
+    echo "  overlaid $vdest from $vsrc" >> "$log"
+  done
+  if [[ $vendor_failed -ne 0 ]]; then
+    emit_json "configure-failed" "vendor-overlay-failed" "$diff_flag" "configure"
+    exit 0
+  fi
 fi
 
 # 4b. Overlay patched module sources into app/code so they shadow vendor/.

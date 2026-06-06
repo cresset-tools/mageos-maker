@@ -22,6 +22,15 @@
       "phase": "compile"
     },
     {
+      "set": "_pa-baseline",
+      "status": "pass",
+      "fingerprint": "",
+      "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/_pa-baseline.log",
+      "duration_s": 69,
+      "composer_diff_baseline": "unknown",
+      "phase": "compile"
+    },
+    {
       "set": "bundle",
       "status": "install-failed",
       "fingerprint": "SQLSTATE[42S02]: Base table or view not found: 1146 Table 'modulargento_mag  ",
@@ -42,9 +51,9 @@
     {
       "set": "gift-message",
       "status": "fail",
-      "fingerprint": "Class \"Magento\\GiftMessage\\Helper\\Message\" does not exist",
+      "fingerprint": "Class \"Magento\\GiftMessage\\Api\\ItemRepositoryInterface\" does not exist",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/gift-message.log",
-      "duration_s": 109,
+      "duration_s": 85,
       "composer_diff_baseline": "true",
       "phase": "compile"
     },
@@ -59,19 +68,19 @@
     },
     {
       "set": "instant-purchase",
-      "status": "fail",
-      "fingerprint": "Interface \"Magento\\InstantPurchase\\PaymentMethodIntegration\\PaymentTokenFormatterInterface\" not found",
+      "status": "pass",
+      "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/instant-purchase.log",
-      "duration_s": 55,
+      "duration_s": 73,
       "composer_diff_baseline": "true",
       "phase": "compile"
     },
     {
       "set": "media-gallery-sync",
-      "status": "fail",
-      "fingerprint": "Class \"Magento\\MediaGallerySynchronizationApi\\Api\\SynchronizeFilesInterface  \n  \" does not exist",
+      "status": "pass",
+      "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/media-gallery-sync.log",
-      "duration_s": 99,
+      "duration_s": 68,
       "composer_diff_baseline": "true",
       "phase": "compile"
     },
@@ -95,10 +104,10 @@
     },
     {
       "set": "product-alert",
-      "status": "fail",
-      "fingerprint": "Class \"Magento\\ProductAlert\\Model\\StockFactory\" does not exist",
+      "status": "pass",
+      "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/product-alert.log",
-      "duration_s": 68,
+      "duration_s": 71,
       "composer_diff_baseline": "true",
       "phase": "compile"
     },
@@ -113,10 +122,10 @@
     },
     {
       "set": "reviews",
-      "status": "fail",
-      "fingerprint": "Class \"Magento\\Review\\Block\\Product\\ReviewRenderer\" not found",
+      "status": "pass",
+      "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/reviews.log",
-      "duration_s": 55,
+      "duration_s": 105,
       "composer_diff_baseline": "true",
       "phase": "compile"
     },
