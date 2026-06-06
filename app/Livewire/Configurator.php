@@ -35,6 +35,14 @@ class Configurator extends Component
 
     public ?string $profile = null;
 
+    /**
+     * Which distribution backs the project: 'standard' (stock Mage-OS) or
+     * 'modulargento' (fully-modular). Only selectable when {@see $version}
+     * matches the configured modulargento version; forced to 'standard'
+     * otherwise. Picking 'modulargento' unlocks the otherwise-locked sets.
+     */
+    public string $distribution = 'standard';
+
     /** @var list<string> Stock set names currently enabled (checked). */
     public array $enabledSets = [];
 
@@ -174,6 +182,51 @@ class Configurator extends Component
         );
         $this->enabledSets = array_values(array_unique(array_merge($this->enabledSets, $newlyAvailable)));
         $this->previousVersion = $value;
+
+        // The fully-modular flavor is only offered on its tracked version; if we
+        // moved off it, snap back to the stock distribution and re-lock the sets
+        // it had unlocked.
+        if ($this->distribution === 'modulargento' && ! $this->modulargentoAvailable($value)) {
+            $this->distribution = 'standard';
+            $this->forceNonRemovableSetsOn();
+        }
+    }
+
+    /** Whether the fully-modular (modulargento) distribution is offered for a version. */
+    public function modulargentoAvailable(?string $version): bool
+    {
+        $mgVersion = (string) config('mageos.modulargento.version', '');
+
+        return $mgVersion !== '' && $version === $mgVersion;
+    }
+
+    /**
+     * Distribution radio changed. Re-lock any set that isn't removable under the
+     * newly-selected distribution (switching modulargento → standard forces the
+     * previously-unlocked sets back on so they aren't silently dropped).
+     */
+    public function updatedDistribution(string $value): void
+    {
+        if ($value === 'modulargento' && ! $this->modulargentoAvailable($this->version)) {
+            $this->distribution = 'standard';
+        }
+        $this->forceNonRemovableSetsOn();
+    }
+
+    /**
+     * Ensure every set that is NOT removable under the current distribution is
+     * checked (stock modules can't be dropped, so their checkbox must reflect
+     * that they ship).
+     */
+    private function forceNonRemovableSetsOn(): void
+    {
+        $defs = app(Definitions::class);
+        $allSets = array_keys($defs->setsForVersion($this->version ?? ''));
+        $nonRemovable = array_values(array_filter(
+            $allSets,
+            fn ($n) => ! $defs->isSetRemovable($n, $this->distribution),
+        ));
+        $this->enabledSets = array_values(array_unique(array_merge($this->enabledSets, $nonRemovable)));
     }
 
     /**
@@ -404,7 +457,7 @@ class Configurator extends Component
         // Sets / stock layers marked `removable: false` are force-enabled regardless
         // of UI state — they're known to break di:compile / setup:install when
         // removed. They never enter disabledSets / disabledLayers.
-        $nonRemovableSets = array_values(array_filter($allSetNames, fn ($n) => ! $defs->isSetRemovable($n)));
+        $nonRemovableSets = array_values(array_filter($allSetNames, fn ($n) => ! $defs->isSetRemovable($n, $this->distribution)));
         $disabled = array_values(array_diff($allSetNames, $this->enabledSets, $nonRemovableSets));
         $nonRemovableLayers = array_values(array_filter($stockLayerNames, fn ($n) => ! $defs->isLayerRemovable($n)));
         $disabledLayers = array_values(array_diff($stockLayerNames, $this->enabledStockLayers, $nonRemovableLayers));
@@ -420,6 +473,7 @@ class Configurator extends Component
             disabledSubtoggles: array_values(array_diff($allSubtoggles, $this->enabledSubtoggles)),
             enabledOptionSubtoggles: $this->enabledOptionSubtoggles,
             optionVariants: $this->optionVariants,
+            distribution: $this->distribution,
         );
     }
 
@@ -534,11 +588,17 @@ class Configurator extends Component
         $this->version = $sel->version;
         $this->previousVersion = $sel->version;
         $this->profile = $sel->profile;
+        // A modulargento selection only stands when the version still offers it;
+        // otherwise fall back to the stock distribution.
+        $this->distribution = ($sel->distribution === 'modulargento' && $this->modulargentoAvailable($sel->version))
+            ? 'modulargento'
+            : 'standard';
         // Force non-removable sets on, even if a saved/profile selection tried to
-        // disable them. The view also greys their checkboxes out.
+        // disable them. The view also greys their checkboxes out. Removability
+        // is distribution-aware (modulargento unlocks the otherwise-locked sets).
         $effectiveDisabled = array_values(array_filter(
             $sel->disabledSets,
-            fn ($n) => $defs->isSetRemovable($n),
+            fn ($n) => $defs->isSetRemovable($n, $this->distribution),
         ));
         $this->enabledSets = array_values(array_diff($allSets, $effectiveDisabled));
         $effectiveDisabledLayers = array_values(array_filter(
@@ -577,7 +637,7 @@ class Configurator extends Component
 
         $setRemovable = [];
         foreach (array_keys($versionSets) as $name) {
-            $setRemovable[$name] = $defs->isSetRemovable($name);
+            $setRemovable[$name] = $defs->isSetRemovable($name, $this->distribution);
         }
         $layerRemovable = [];
         foreach (array_keys($defs->layers) as $name) {
@@ -596,6 +656,9 @@ class Configurator extends Component
             'profileDefs' => $defs->profiles,
             'profileGroupDefs' => $defs->profileGroups,
             'versions' => $catalog->availableVersions() ?: [$this->version],
+            // Whether to surface the Standard / Fully-modular distribution toggle
+            // (only on the version the modulargento flavor tracks).
+            'modulargentoAvailable' => $this->modulargentoAvailable($this->version),
         ])->layout('components.layouts.app');
     }
 }

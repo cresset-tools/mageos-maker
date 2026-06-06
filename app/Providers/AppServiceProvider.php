@@ -90,6 +90,7 @@ class AppServiceProvider extends ServiceProvider
             $app->make(CatalogRepository::class),
             $app->make(AddonVersionResolver::class),
             $app['config']->get('mageos.repository_url'),
+            $app['config']->get('mageos.modulargento', []),
         ));
 
         $this->app->singleton(InstallTreeResolver::class, fn ($app) => new InstallTreeResolver(

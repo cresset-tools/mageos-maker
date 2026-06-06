@@ -22,6 +22,25 @@
             </select>
         </div>
 
+        @if ($modulargentoAvailable)
+            <div class="panel">
+                <h2>Distribution</h2>
+                <p style="font-size:12px;color:#666;margin:0 0 8px;">The fully-modular build decouples the core so every module set below can be removed.</p>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="distribution" value="standard"
+                            wire:model.live="distribution" @checked($distribution === 'standard')>
+                        <span><strong>Standard Mage-OS</strong> <span class="desc">Stock distribution; some sets are locked on.</span></span>
+                    </label>
+                    <label>
+                        <input type="radio" name="distribution" value="modulargento"
+                            wire:model.live="distribution" @checked($distribution === 'modulargento')>
+                        <span><strong>Fully modular (modulargento)</strong> <span class="desc">Decoupled build — every set is removable.</span></span>
+                    </label>
+                </div>
+            </div>
+        @endif
+
         <div class="panel">
             <h2>Profile</h2>
             <p style="font-size:12px;color:#666;margin:0 0 8px;">Picking a profile reseeds your selections. Customize freely afterwards.</p>

@@ -1,0 +1,136 @@
+<?php
+
+namespace Tests\Unit;
+
+use App\Services\AddonVersionResolver;
+use App\Services\CatalogRepository;
+use App\Services\ComposerRepoIndex;
+use App\Services\Configurator;
+use App\Services\Definitions;
+use App\Services\Selection;
+use Tests\TestCase;
+
+/**
+ * The fully-modular (modulargento) distribution is a flavor of a single Mage-OS
+ * release: it swaps the backing Composer repo + edition package, unlocks the
+ * sets that are forced-on in stock Mage-OS, and removes them by replacing the
+ * `modulargento/*` packages (same kebab suffix, swapped vendor prefix).
+ */
+class ModulargentoDistributionTest extends TestCase
+{
+    private function defs(): Definitions
+    {
+        return new Definitions(
+            sets: [
+                // Locked in stock Mage-OS, decoupled (removable) under modulargento.
+                'gift-message' => [
+                    'name' => 'gift-message',
+                    'label' => 'Gift Message',
+                    'removable' => false,
+                    'packages' => ['mage-os/module-gift-message', 'mage-os/module-gift-message-graph-ql'],
+                ],
+                // Opts out of modulargento removability even though decoupling exists.
+                'core-thing' => [
+                    'name' => 'core-thing',
+                    'label' => 'Core Thing',
+                    'removable' => false,
+                    'removable_modulargento' => false,
+                    'packages' => ['mage-os/module-core-thing'],
+                ],
+            ],
+            layers: [],
+            addons: [],
+            profileGroups: [],
+            profiles: [],
+        );
+    }
+
+    private function configurator(Definitions $defs): Configurator
+    {
+        $catalog = $this->createMock(CatalogRepository::class);
+        $catalog->method('packageVersions')->willReturn([]);
+
+        return new Configurator(
+            $defs,
+            $catalog,
+            new AddonVersionResolver($defs, new ComposerRepoIndex([], 'mageos-catalog'), 'mageos-catalog'),
+            'https://repo.mage-os.org/',
+            [
+                'repository_url' => 'https://modulargento.cresset.tools/',
+                'edition_package' => 'modulargento/project-community-edition',
+                'version' => '3.0.0',
+                'php_constraint' => '~8.3.0||~8.4.0||~8.5.0',
+            ],
+        );
+    }
+
+    public function test_removability_is_distribution_aware(): void
+    {
+        $defs = $this->defs();
+
+        // Stock: the set is locked on.
+        $this->assertFalse($defs->isSetRemovable('gift-message', 'standard'));
+        // Modulargento: it's decoupled, so removable.
+        $this->assertTrue($defs->isSetRemovable('gift-message', 'modulargento'));
+        // Explicit opt-out stays locked even under modulargento.
+        $this->assertFalse($defs->isSetRemovable('core-thing', 'modulargento'));
+    }
+
+    public function test_modulargento_base_composer_uses_the_flavor_backing(): void
+    {
+        $cfg = $this->configurator($this->defs());
+
+        $composer = $cfg->build(new Selection(
+            version: '3.0.0', profile: null,
+            disabledSets: [], disabledLayers: [], enabledLayers: [], enabledAddons: [], profileGroups: [],
+            distribution: 'modulargento',
+        ));
+
+        $this->assertSame('3.0.0', $composer['require']['modulargento/project-community-edition'] ?? null);
+        $this->assertSame('~8.3.0||~8.4.0||~8.5.0', $composer['require']['php'] ?? null);
+        $this->assertContains(
+            ['type' => 'composer', 'url' => 'https://modulargento.cresset.tools/'],
+            $composer['repositories'] ?? [],
+        );
+        // The stock mage-os repo must not leak into a modulargento project.
+        $this->assertNotContains(
+            ['type' => 'composer', 'url' => 'https://repo.mage-os.org/'],
+            $composer['repositories'] ?? [],
+        );
+    }
+
+    public function test_disabling_a_set_replaces_both_vendor_names(): void
+    {
+        $cfg = $this->configurator($this->defs());
+
+        $composer = $cfg->build(new Selection(
+            version: '3.0.0', profile: null,
+            disabledSets: ['gift-message'], disabledLayers: [], enabledLayers: [], enabledAddons: [], profileGroups: [],
+            distribution: 'modulargento',
+        ));
+
+        // A package may be installed as modulargento/* (renamed) or kept as
+        // mage-os/* (the standalone forks), so both names are replaced — the
+        // uninstalled one is a harmless no-op, guaranteeing removal either way.
+        $this->assertArrayHasKey('modulargento/module-gift-message', $composer['replace'] ?? []);
+        $this->assertArrayHasKey('mage-os/module-gift-message', $composer['replace'] ?? []);
+        $this->assertArrayHasKey('modulargento/module-gift-message-graph-ql', $composer['replace'] ?? []);
+        $this->assertArrayHasKey('mage-os/module-gift-message-graph-ql', $composer['replace'] ?? []);
+    }
+
+    public function test_standard_distribution_keeps_mage_os_replace_names(): void
+    {
+        $cfg = $this->configurator($this->defs());
+
+        // Configurator.build trusts disabledSets (force-on lives in the UI layer),
+        // so disabling here exercises the standard-distribution name path.
+        $composer = $cfg->build(new Selection(
+            version: '3.0.0', profile: null,
+            disabledSets: ['gift-message'], disabledLayers: [], enabledLayers: [], enabledAddons: [], profileGroups: [],
+            distribution: 'standard',
+        ));
+
+        $this->assertArrayHasKey('mage-os/module-gift-message', $composer['replace'] ?? []);
+        $this->assertArrayNotHasKey('modulargento/module-gift-message', $composer['replace'] ?? []);
+    }
+}
