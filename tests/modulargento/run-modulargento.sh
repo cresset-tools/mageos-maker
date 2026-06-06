@@ -74,6 +74,10 @@ export OPENSEARCH_PORT="${BOUGIE_SERVICE_OPENSEARCH_PORT:-9200}"
 export PROFILE
 [[ -n "$VERSION" ]] && export MAGEOS_VERSION="$VERSION"
 export COMPOSER_CACHE_DIR="${COMPOSER_CACHE_DIR:-$HOME/.cache/composer}"
+# Forward the optional GraphQL functional smoke flag to one-shot (validates the
+# runtime-stitched schema still builds + introspects after a set's *GraphQl modules
+# are removed — something install+di:compile never checks).
+export GRAPHQL_SMOKE="${GRAPHQL_SMOKE:-0}"
 
 mkdir -p "$results_dir" "$per_set_dir" "$sandboxes_dir"
 
@@ -102,13 +106,14 @@ overlay_for_disabled() {
       newsletter) excl[Newsletter]=1 ;;
       msrp)       excl[Msrp]=1 ;;
       grouped)    excl[GroupedProduct]=1 ;;
+      bundle)     excl[Bundle]=1 ;;
       instant-purchase) excl[PaypalInstantPurchase]=1 ;;
       media-gallery-sync) excl[MediaGallerySynchronization]=1 ;;
       product-alert) excl[ProductAlert]=1 ;;
       gift-message) excl[GiftMessage]=1; excl[GiftMessageGraphQl]=1 ;;
       release-notification) excl[ReleaseNotification]=1 ;;
       swatches) excl[WeeeSwatches]=1 ;;
-      weee) excl[WeeeSwatches]=1 ;;
+      weee) excl[Weee]=1; excl[WeeeSwatches]=1 ;;
     esac
   done
   local out=() m
