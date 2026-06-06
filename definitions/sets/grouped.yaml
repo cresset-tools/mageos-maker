@@ -7,3 +7,7 @@ packages:
   - mage-os/module-grouped-product-graph-ql
   - mage-os/module-grouped-import-export
   - mage-os/module-grouped-catalog-inventory
+  - mage-os/module-msrp-grouped-product
+  - mage-os/module-inventory-grouped-product
+  - mage-os/module-inventory-grouped-product-admin-ui
+  - mage-os/module-inventory-grouped-product-indexer

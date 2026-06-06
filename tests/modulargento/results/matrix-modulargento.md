@@ -4,9 +4,9 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 
 **Baseline** (full modulargento overlay, nothing removed): PASS — installs + compiles clean.
 
-**Removable with modulargento: 10 / 13** — newly unlocked vs stock: `gift-message`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`.
+**Removable with modulargento: 11 / 13** — newly unlocked vs stock: `gift-message`, `grouped`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`.
 
-**Maximal achievable reduction** (every individually-removable set removed together: `gift-message`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
+**Maximal achievable reduction** (every individually-removable set removed together: `gift-message`, `grouped`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
 
 ## Per-set: stock vs modulargento
 
@@ -15,7 +15,7 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 | `bundle` | ❌ install-failed | ❌ install-failed | same |
 | `downloadable` | ❌ install-failed | ❌ install-failed | same |
 | `gift-message` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
-| `grouped` | ❌ install-failed | ❌ install-failed | same |
+| `grouped` | ❌ install-failed | ✅ pass | **fail → pass** 🎉 |
 | `instant-purchase` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `media-gallery-sync` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `msrp` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
@@ -26,7 +26,7 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 | `swatches` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `wishlist` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 
-## Remaining worklist — still blocked (3 sets)
+## Remaining worklist — still blocked (2 sets)
 
 These need further decoupling in modulargento before they're removable.
 
@@ -37,8 +37,4 @@ These need further decoupling in modulargento before they're removable.
 ### `Class "Magento\Downloadable\Model\Product\Type" not found`
 
 - `downloadable`  ([log](raw/downloadable.log))
-
-### `Constant "\Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE" is not defined`
-
-- `grouped`  ([log](raw/grouped.log))
 
