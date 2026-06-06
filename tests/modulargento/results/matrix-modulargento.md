@@ -4,18 +4,17 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 
 **Baseline** (full modulargento overlay, nothing removed): PASS — installs + compiles clean.
 
-**Removable with modulargento: 8 / 14** — newly unlocked vs stock: `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `reviews`, `wishlist`.
+**Removable with modulargento: 8 / 13** — newly unlocked vs stock: `gift-message`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `reviews`, `wishlist`.
 
-**Maximal achievable reduction** (every individually-removable set removed together: `_pa-baseline`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `reviews`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
+**Maximal achievable reduction** (every individually-removable set removed together: `gift-message`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `reviews`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
 
 ## Per-set: stock vs modulargento
 
 | Set | Stock | Modulargento | Change |
 |---|---|---|---|
-| `_pa-baseline` | ❌ — | ✅ pass |  |
 | `bundle` | ❌ install-failed | ❌ install-failed | same |
 | `downloadable` | ❌ install-failed | ❌ install-failed | same |
-| `gift-message` | ❌ fail | ❌ fail | same |
+| `gift-message` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `grouped` | ❌ install-failed | ❌ install-failed | same |
 | `instant-purchase` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `media-gallery-sync` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
@@ -27,7 +26,7 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 | `swatches` | ❌ fail | ❌ fail | same |
 | `wishlist` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 
-## Remaining worklist — still blocked (6 sets)
+## Remaining worklist — still blocked (5 sets)
 
 These need further decoupling in modulargento before they're removable.
 
@@ -38,10 +37,6 @@ These need further decoupling in modulargento before they're removable.
 ### `Class "Magento\Downloadable\Model\Product\Type" not found`
 
 - `downloadable`  ([log](raw/downloadable.log))
-
-### `Class "Magento\GiftMessage\Api\ItemRepositoryInterface" does not exist`
-
-- `gift-message`  ([log](raw/gift-message.log))
 
 ### `Constant "\Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE" is not defined`
 

@@ -77,7 +77,7 @@ mkdir -p "$results_dir" "$per_set_dir" "$sandboxes_dir"
 # diff is composer.json metadata requiring the extracted framework-graph-ql
 # sub-packages; no code change, and the framework GraphQl classes still come
 # from stock vendor magento/framework, so overlaying it has no runtime effect.)
-DECOUPLED_MODULES=(Bundle Catalog CatalogWidget Checkout Customer CustomerGraphQl GiftMessage GroupedProduct MediaGalleryApi MediaGalleryCatalogIntegration MediaGalleryIntegration MediaGallerySynchronization MediaGalleryUi Msrp Newsletter Paypal PaypalInstantPurchase ProductAlert Reports Review Sales Wishlist)
+DECOUPLED_MODULES=(Bundle Catalog CatalogWidget Checkout Customer CustomerGraphQl GiftMessage GiftMessageGraphQl GroupedProduct MediaGalleryApi MediaGalleryCatalogIntegration MediaGalleryIntegration MediaGallerySynchronization MediaGalleryUi Msrp Newsletter Paypal PaypalInstantPurchase ProductAlert QuoteGraphQl Reports Review Sales Wishlist)
 # Bridge modules added by modulargento — restore wishlist/review reporting that
 # the decoupling stripped out of Reports. Each needs its feature present.
 BRIDGE_MODULES=(ReviewReports WishlistReports)
@@ -98,7 +98,7 @@ overlay_for_disabled() {
       instant-purchase) excl[PaypalInstantPurchase]=1 ;;
       media-gallery-sync) excl[MediaGallerySynchronization]=1 ;;
       product-alert) excl[ProductAlert]=1 ;;
-      gift-message) excl[GiftMessage]=1 ;;
+      gift-message) excl[GiftMessage]=1; excl[GiftMessageGraphQl]=1 ;;
     esac
   done
   local out=() m

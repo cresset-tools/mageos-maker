@@ -8,7 +8,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/_baseline.log",
-      "duration_s": 57,
+      "duration_s": 58,
       "composer_diff_baseline": "unknown",
       "phase": "compile"
     },
@@ -18,15 +18,6 @@
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/_max-reduction.log",
       "duration_s": 360,
-      "composer_diff_baseline": "unknown",
-      "phase": "compile"
-    },
-    {
-      "set": "_pa-baseline",
-      "status": "pass",
-      "fingerprint": "",
-      "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/_pa-baseline.log",
-      "duration_s": 69,
       "composer_diff_baseline": "unknown",
       "phase": "compile"
     },
@@ -50,10 +41,10 @@
     },
     {
       "set": "gift-message",
-      "status": "fail",
-      "fingerprint": "Class \"Magento\\GiftMessage\\Api\\ItemRepositoryInterface\" does not exist",
+      "status": "pass",
+      "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/gift-message.log",
-      "duration_s": 85,
+      "duration_s": 57,
       "composer_diff_baseline": "true",
       "phase": "compile"
     },
