@@ -8,7 +8,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/_baseline.log",
-      "duration_s": 55,
+      "duration_s": 57,
       "composer_diff_baseline": "unknown",
       "phase": "compile"
     },
@@ -77,10 +77,10 @@
     },
     {
       "set": "msrp",
-      "status": "fail",
-      "fingerprint": "Class \"Magento\\Msrp\\Helper\\Data\" does not exist",
+      "status": "pass",
+      "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/msrp.log",
-      "duration_s": 63,
+      "duration_s": 56,
       "composer_diff_baseline": "true",
       "phase": "compile"
     },

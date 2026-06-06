@@ -4,9 +4,9 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 
 **Baseline** (full modulargento overlay, nothing removed): PASS — installs + compiles clean.
 
-**Removable with modulargento: 2 / 13** — newly unlocked vs stock: `newsletter`, `wishlist`.
+**Removable with modulargento: 3 / 13** — newly unlocked vs stock: `msrp`, `newsletter`, `wishlist`.
 
-**Maximal achievable reduction** (every individually-removable set removed together: `newsletter`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
+**Maximal achievable reduction** (every individually-removable set removed together: `msrp`, `newsletter`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
 
 ## Per-set: stock vs modulargento
 
@@ -18,7 +18,7 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 | `grouped` | ❌ install-failed | ❌ install-failed | same |
 | `instant-purchase` | ❌ fail | ❌ fail | same |
 | `media-gallery-sync` | ❌ fail | ❌ fail | same |
-| `msrp` | ❌ fail | ❌ fail | same |
+| `msrp` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `newsletter` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `product-alert` | ❌ fail | ❌ fail | same |
 | `release-notification` | ❌ fail | ❌ fail | same |
@@ -26,7 +26,7 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 | `swatches` | ❌ fail | ❌ fail | same |
 | `wishlist` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 
-## Remaining worklist — still blocked (11 sets)
+## Remaining worklist — still blocked (10 sets)
 
 These need further decoupling in modulargento before they're removable.
 
@@ -54,10 +54,6 @@ These need further decoupling in modulargento before they're removable.
   " does not exist`
 
 - `media-gallery-sync`  ([log](raw/media-gallery-sync.log))
-
-### `Class "Magento\Msrp\Helper\Data" does not exist`
-
-- `msrp`  ([log](raw/msrp.log))
 
 ### `Class "Magento\ProductAlert\Model\StockFactory" does not exist`
 

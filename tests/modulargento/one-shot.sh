@@ -230,6 +230,10 @@ fi
 # 4b. Overlay patched module sources into app/code so they shadow vendor/.
 if [[ ${#app_code_overlays[@]} -gt 0 ]]; then
   echo "--- app-code overlays: ${#app_code_overlays[@]} entry/entries ---" >> "$log"
+  # Clean any modules overlaid by a PRIOR run that aren't in this run's set —
+  # a stale app/code/Magento/<mod> collides with its reinstalled vendor copy
+  # ("Module ... has been already defined"). app/code only ever holds overlays.
+  rm -rf "$sandbox/app/code/Magento"
   mkdir -p "$sandbox/app/code/Magento"
   overlay_failed=0
   for spec in "${app_code_overlays[@]}"; do
