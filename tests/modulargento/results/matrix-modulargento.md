@@ -4,15 +4,15 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 
 **Baseline** (full modulargento overlay, nothing removed): PASS — installs + compiles clean.
 
-**Removable with modulargento: 13 / 14** — newly unlocked vs stock: `downloadable`, `gift-message`, `grouped`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`.
+**Removable with modulargento: 14 / 14** — newly unlocked vs stock: `bundle`, `downloadable`, `gift-message`, `grouped`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`.
 
-**Maximal achievable reduction** (every individually-removable set removed together: `downloadable`, `gift-message`, `grouped`, `instant-purchase`, `inventory`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
+**Maximal achievable reduction** (every individually-removable set removed together: `bundle`, `downloadable`, `gift-message`, `grouped`, `instant-purchase`, `inventory`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
 
 ## Per-set: stock vs modulargento
 
 | Set | Stock | Modulargento | Change |
 |---|---|---|---|
-| `bundle` | ❌ install-failed | ❌ install-failed | same |
+| `bundle` | ❌ install-failed | ✅ pass | **fail → pass** 🎉 |
 | `downloadable` | ❌ install-failed | ✅ pass | **fail → pass** 🎉 |
 | `gift-message` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `grouped` | ❌ install-failed | ✅ pass | **fail → pass** 🎉 |
@@ -26,12 +26,4 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 | `reviews` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `swatches` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
 | `wishlist` | ❌ fail | ✅ pass | **fail → pass** 🎉 |
-
-## Remaining worklist — still blocked (1 sets)
-
-These need further decoupling in modulargento before they're removable.
-
-### `SQLSTATE[42S02]: Base table or view not found: 1146 Table 'modulargento_mag`
-
-- `bundle`  ([log](raw/bundle.log))
 

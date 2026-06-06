@@ -25,13 +25,13 @@
     },
     {
       "set": "bundle",
-      "status": "install-failed",
-      "fingerprint": "SQLSTATE[42S02]: Base table or view not found: 1146 Table 'modulargento_mag  ",
+      "status": "pass",
+      "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/bundle.log",
-      "duration_s": 26,
+      "duration_s": 62,
       "composer_diff_baseline": "true",
-      "phase": "install",
-      "graphql": "n/a"
+      "phase": "compile",
+      "graphql": "ok"
     },
     {
       "set": "downloadable",
@@ -108,10 +108,10 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/newsletter.log",
-      "duration_s": 59,
+      "duration_s": 58,
       "composer_diff_baseline": "true",
       "phase": "compile",
-      "graphql": "GRAPHQL_FAIL query-errors: Internal server error :: Class \"Magento\\NewsletterGraphQl\\Model\\Resolver\\IsSubscribed\" does not exist"
+      "graphql": "ok"
     },
     {
       "set": "product-alert",
@@ -158,10 +158,10 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/wishlist.log",
-      "duration_s": 72,
+      "duration_s": 59,
       "composer_diff_baseline": "true",
       "phase": "compile",
-      "graphql": "GRAPHQL_FAIL query-errors: Unknown type \"WishlistItemInterface\"."
+      "graphql": "ok"
     }
   ]
 }
