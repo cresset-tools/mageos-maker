@@ -77,7 +77,7 @@ mkdir -p "$results_dir" "$per_set_dir" "$sandboxes_dir"
 # diff is composer.json metadata requiring the extracted framework-graph-ql
 # sub-packages; no code change, and the framework GraphQl classes still come
 # from stock vendor magento/framework, so overlaying it has no runtime effect.)
-DECOUPLED_MODULES=(Catalog CatalogWidget Checkout Customer CustomerGraphQl GroupedProduct Msrp Newsletter Reports Review Sales Wishlist)
+DECOUPLED_MODULES=(Bundle Catalog CatalogWidget Checkout Customer CustomerGraphQl GiftMessage GroupedProduct MediaGalleryApi MediaGalleryCatalogIntegration MediaGalleryIntegration MediaGallerySynchronization MediaGalleryUi Msrp Newsletter Paypal PaypalInstantPurchase ProductAlert Reports Review Sales Wishlist)
 # Bridge modules added by modulargento — restore wishlist/review reporting that
 # the decoupling stripped out of Reports. Each needs its feature present.
 BRIDGE_MODULES=(ReviewReports WishlistReports)
@@ -95,6 +95,10 @@ overlay_for_disabled() {
       newsletter) excl[Newsletter]=1 ;;
       msrp)       excl[Msrp]=1 ;;
       grouped)    excl[GroupedProduct]=1 ;;
+      instant-purchase) excl[PaypalInstantPurchase]=1 ;;
+      media-gallery-sync) excl[MediaGallerySynchronization]=1 ;;
+      product-alert) excl[ProductAlert]=1 ;;
+      gift-message) excl[GiftMessage]=1 ;;
     esac
   done
   local out=() m
@@ -104,6 +108,23 @@ overlay_for_disabled() {
   (IFS=,; echo "${out[*]}")
 }
 
+# Patched vendor add-on forks (cresset-tools) that decouple themselves from a
+# core module being removed. page-builder-widget + admin-activity-log are
+# decoupled from Review and stay installed regardless, so overlay them always;
+# inventory-product-alert is removed together with product-alert, so only overlay
+# it when product-alert is NOT being removed (otherwise it shouldn't be present).
+VENDOR_FORKS="${VENDOR_FORKS:-$HOME/vendor-forks}"
+vendor_overlay_args() {
+  local disabled_csv=",${1},"
+  local -a a=()
+  [[ -d "$VENDOR_FORKS/module-page-builder-widget" ]] && a+=(--vendor-overlay "$VENDOR_FORKS/module-page-builder-widget:vendor/mage-os/module-page-builder-widget")
+  [[ -d "$VENDOR_FORKS/module-admin-activity-log" ]] && a+=(--vendor-overlay "$VENDOR_FORKS/module-admin-activity-log:vendor/mage-os/module-admin-activity-log")
+  if [[ "$disabled_csv" != *",product-alert,"* && -d "$VENDOR_FORKS/module-inventory-product-alert" ]]; then
+    a+=(--vendor-overlay "$VENDOR_FORKS/module-inventory-product-alert:vendor/mage-os/module-inventory-product-alert")
+  fi
+  printf '%s\n' "${a[@]}"
+}
+
 # Run one row through one-shot with the right overlay. $1=set-name, $2=extra-disable-csv
 run_row() {
   local name="$1" extra="${2:-}"
@@ -111,8 +132,10 @@ run_row() {
   [[ "$name" != _* ]] && disabled+=("$name")
   [[ -n "$extra" ]] && IFS=',' read -ra ed <<< "$extra" && disabled+=("${ed[@]}")
   local overlay; overlay="$(overlay_for_disabled "${disabled[@]+"${disabled[@]}"}")"
+  local disabled_csv; disabled_csv="$(IFS=,; echo "${disabled[*]+"${disabled[*]}"}")"
+  mapfile -t vargs < <(vendor_overlay_args "$disabled_csv")
   EXTRA_DISABLE="$extra" "$script_dir/one-shot.sh" "$name" ${VERSION:+"$VERSION"} \
-      --app-code "$app_code_src:$overlay" > "$per_set_dir/$name.json" 2>/dev/null || true
+      --app-code "$app_code_src:$overlay" "${vargs[@]+"${vargs[@]}"}" > "$per_set_dir/$name.json" 2>/dev/null || true
   python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$per_set_dir/$name.json" 2>/dev/null || echo unknown
 }
 
