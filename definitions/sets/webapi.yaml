@@ -1,0 +1,12 @@
+name: webapi
+label: Web API (REST + SOAP)
+description: The entire REST + SOAP Web API layer (Magento_Webapi + async/bulk + security). GraphQL stays — it keeps token auth via the shared Magento_WebapiAuthorization module.
+removable: false  # primary-config + GraphQl auth coupling in stock Mage-OS — decoupled in modulargento
+removable_modulargento: true  # WebapiAsync reader seam + GraphQl auth extracted to Magento_WebapiAuthorization
+packages:
+  - mage-os/module-webapi
+  - mage-os/module-webapi-async
+  - mage-os/module-webapi-security
+  # webapi-only extensions that extend Webapi classes — removed with the layer
+  - mage-os/module-inventory-in-store-pickup-webapi-extension
+  - mage-os/module-re-captcha-webapi-rest
