@@ -93,11 +93,13 @@ mkdir -p "$results_dir" "$per_set_dir" "$sandboxes_dir"
 # diff is composer.json metadata requiring the extracted framework-graph-ql
 # sub-packages; no code change, and the framework GraphQl classes still come
 # from stock vendor magento/framework, so overlaying it has no runtime effect.)
-DECOUPLED_MODULES=(AdminAnalytics Bundle BundleGraphQl Catalog CatalogGraphQl CatalogImportExport CatalogSearch CatalogWidget Checkout Customer CustomerGraphQl ConfigurableProductGraphQl DownloadableGraphQl GiftMessage GiftMessageGraphQl GroupedProduct GroupedProductGraphQl MediaGalleryApi MediaGalleryCatalogIntegration MediaGalleryIntegration MediaGallerySynchronization MediaGalleryUi Msrp Newsletter NewsletterGraphQl Paypal PaypalInstantPurchase ProductAlert QuoteGraphQl ReleaseNotification Reports Review Sales Weee Wishlist WishlistGraphQl)
+DECOUPLED_MODULES=(AdminAnalytics Bundle BundleGraphQl Catalog CatalogGraphQl CatalogImportExport CatalogSearch CatalogWidget Checkout Customer CustomerGraphQl ConfigurableProductGraphQl DownloadableGraphQl GiftMessage GiftMessageGraphQl GroupedProduct GroupedProductGraphQl MediaGalleryApi MediaGalleryCatalogIntegration MediaGalleryIntegration MediaGallerySynchronization MediaGalleryUi Msrp Newsletter NewsletterGraphQl Paypal PaypalInstantPurchase ProductAlert QuoteGraphQl ReleaseNotification RemoteStorage Reports Review Sales Weee Wishlist WishlistGraphQl)
 # Bridge modules added by modulargento — restore reporting/glue that the decoupling
 # stripped out of staying modules. Each needs the feature(s) it bridges present:
-# Review/Wishlist reporting, and the Weee<->Swatches listing glue (WeeeSwatches).
-BRIDGE_MODULES=(ReviewReports WishlistReports WeeeSwatches)
+# Review/Wishlist reporting, the Weee<->Swatches listing glue (WeeeSwatches), and the
+# RemoteStorage<->media-gallery copy plugins (moved out of RemoteStorage so the whole
+# media gallery suite — and just its cron sync — become independently removable).
+BRIDGE_MODULES=(ReviewReports WishlistReports WeeeSwatches MediaGalleryMetadataRemoteStorage MediaGallerySynchronizationRemoteStorage)
 
 # Echo the CSV of modules to overlay for a given set of disabled sets. A removed
 # feature drops its own decoupled module and any bridge that requires it; only
@@ -115,7 +117,12 @@ overlay_for_disabled() {
       bundle)     excl[Bundle]=1; excl[BundleGraphQl]=1 ;;
       downloadable) excl[DownloadableGraphQl]=1 ;;
       instant-purchase) excl[PaypalInstantPurchase]=1 ;;
-      media-gallery-sync) excl[MediaGallerySynchronization]=1 ;;
+      media-gallery-sync) excl[MediaGallerySynchronization]=1; excl[MediaGallerySynchronizationRemoteStorage]=1 ;;
+      media-gallery)
+        excl[MediaGalleryApi]=1; excl[MediaGalleryCatalogIntegration]=1
+        excl[MediaGalleryIntegration]=1; excl[MediaGallerySynchronization]=1
+        excl[MediaGalleryUi]=1; excl[MediaGalleryMetadataRemoteStorage]=1
+        excl[MediaGallerySynchronizationRemoteStorage]=1 ;;
       product-alert) excl[ProductAlert]=1 ;;
       gift-message) excl[GiftMessage]=1; excl[GiftMessageGraphQl]=1 ;;
       release-notification) excl[ReleaseNotification]=1 ;;

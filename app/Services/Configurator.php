@@ -24,7 +24,7 @@ class Configurator
         private readonly array $modulargento = [],
     ) {}
 
-    public function build(Selection $selection, string $hyvaProject = ''): array
+    public function build(Selection $selection, string $hyvaProject = '', bool $forceRemovable = false): array
     {
         $resolved = $this->resolveProfileGroups($selection);
 
@@ -108,7 +108,7 @@ class Configurator
             // install. Skip it (keep the module). This lets a profile list every
             // set it would ideally drop: the locked ones are no-ops on standard
             // Mage-OS but really come out under the fully-modular distribution.
-            if (! $this->defs->isSetRemovable($set, $selection->distribution)) {
+            if (! $forceRemovable && ! $this->defs->isSetRemovable($set, $selection->distribution)) {
                 continue;
             }
             foreach ($this->defs->setPackageEntries($set) as $entry) {

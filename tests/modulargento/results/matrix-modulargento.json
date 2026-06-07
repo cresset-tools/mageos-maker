@@ -8,27 +8,28 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/_baseline.log",
-      "duration_s": 60,
+      "duration_s": 57,
       "composer_diff_baseline": "unknown",
       "phase": "compile",
-      "graphql": "ok"
+      "graphql": "ok",
+      "render": "ok"
     },
     {
       "set": "_max-reduction",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/_max-reduction.log",
-      "duration_s": 79,
+      "duration_s": 57,
       "composer_diff_baseline": "unknown",
       "phase": "compile",
-      "graphql": "GRAPHQL_FAIL query-errors: Unknown type \"WishlistItemInterface\"."
+      "graphql": "ok"
     },
     {
       "set": "bundle",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/bundle.log",
-      "duration_s": 62,
+      "duration_s": 58,
       "composer_diff_baseline": "true",
       "phase": "compile",
       "graphql": "ok"
@@ -38,7 +39,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/downloadable.log",
-      "duration_s": 57,
+      "duration_s": 58,
       "composer_diff_baseline": "true",
       "phase": "compile",
       "graphql": "ok"
@@ -58,7 +59,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/grouped.log",
-      "duration_s": 58,
+      "duration_s": 59,
       "composer_diff_baseline": "true",
       "phase": "compile",
       "graphql": "ok"
@@ -68,7 +69,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/instant-purchase.log",
-      "duration_s": 58,
+      "duration_s": 60,
       "composer_diff_baseline": "true",
       "phase": "compile",
       "graphql": "ok"
@@ -88,17 +89,29 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/media-gallery-sync.log",
-      "duration_s": 57,
+      "duration_s": 66,
       "composer_diff_baseline": "true",
       "phase": "compile",
-      "graphql": "ok"
+      "graphql": "ok",
+      "render": "ok"
+    },
+    {
+      "set": "media-gallery",
+      "status": "pass",
+      "fingerprint": "",
+      "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/media-gallery.log",
+      "duration_s": 97,
+      "composer_diff_baseline": "true",
+      "phase": "compile",
+      "graphql": "ok",
+      "render": "ok"
     },
     {
       "set": "msrp",
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/msrp.log",
-      "duration_s": 74,
+      "duration_s": 59,
       "composer_diff_baseline": "true",
       "phase": "compile",
       "graphql": "ok"
@@ -108,7 +121,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/newsletter.log",
-      "duration_s": 58,
+      "duration_s": 59,
       "composer_diff_baseline": "true",
       "phase": "compile",
       "graphql": "ok"
@@ -118,7 +131,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/product-alert.log",
-      "duration_s": 56,
+      "duration_s": 60,
       "composer_diff_baseline": "true",
       "phase": "compile",
       "graphql": "ok"
@@ -128,7 +141,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/release-notification.log",
-      "duration_s": 62,
+      "duration_s": 59,
       "composer_diff_baseline": "true",
       "phase": "compile",
       "graphql": "ok"
@@ -138,7 +151,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/reviews.log",
-      "duration_s": 57,
+      "duration_s": 59,
       "composer_diff_baseline": "true",
       "phase": "compile",
       "graphql": "ok"
@@ -148,7 +161,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/swatches.log",
-      "duration_s": 60,
+      "duration_s": 58,
       "composer_diff_baseline": "true",
       "phase": "compile",
       "graphql": "ok"

@@ -18,6 +18,8 @@ class ConfigureCommand extends Command
     protected $signature = 'mageos:configure
         {--mageos-version= : Mage-OS edition version (defaults to latest stable)}
         {--profile= : Starter profile name (e.g. mageos-full, mageos-lite)}
+        {--distribution=standard : Backing distribution: standard or modulargento (unlocks the fully-modular sets)}
+        {--unlock-all-sets : Treat every disabled set as removable regardless of its removable flag (used by the removal-matrix harness, which tests removability empirically on a stock base)}
         {--disable=* : Comma-separated set names to disable (added to replace)}
         {--disable-layer=* : Comma-separated stock layer names to disable (added to replace)}
         {--enable-layer=* : Comma-separated non-stock layer names to enable (added to require)}
@@ -60,6 +62,8 @@ class ConfigureCommand extends Command
             }
         }
 
+        $distribution = $this->option('distribution') ?: 'standard';
+
         $selection = new Selection(
             version: $version,
             profile: $selection->profile,
@@ -68,13 +72,14 @@ class ConfigureCommand extends Command
             enabledLayers: array_values(array_unique(array_merge($selection->enabledLayers, $enabledLayers))),
             enabledAddons: array_values(array_unique(array_merge($selection->enabledAddons, $enabledAddons))),
             profileGroups: $profileGroups,
+            distribution: $distribution,
         );
 
         if ($this->option('interactive')) {
             $selection = $this->runInteractive($selection, $defs, $catalog, $configurator);
         }
 
-        $composer = $configurator->build($selection);
+        $composer = $configurator->build($selection, forceRemovable: (bool) $this->option('unlock-all-sets'));
         $rendered = $renderer->render($composer);
 
         if ($this->option('output')) {
