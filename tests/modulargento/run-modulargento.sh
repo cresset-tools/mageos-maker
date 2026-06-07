@@ -99,7 +99,7 @@ DECOUPLED_MODULES=(AdminAnalytics Bundle BundleGraphQl Catalog CatalogGraphQl Ca
 # Review/Wishlist reporting, the Weee<->Swatches listing glue (WeeeSwatches), and the
 # RemoteStorage<->media-gallery copy plugins (moved out of RemoteStorage so the whole
 # media gallery suite — and just its cron sync — become independently removable).
-BRIDGE_MODULES=(ReviewReports WishlistReports WeeeSwatches MediaGalleryMetadataRemoteStorage MediaGallerySynchronizationRemoteStorage)
+BRIDGE_MODULES=(ReviewReports WishlistReports WeeeSwatches MediaGalleryMetadataRemoteStorage MediaGallerySynchronizationRemoteStorage AdminAnalyticsReleaseNotification)
 
 # Echo the CSV of modules to overlay for a given set of disabled sets. A removed
 # feature drops its own decoupled module and any bridge that requires it; only
@@ -125,7 +125,8 @@ overlay_for_disabled() {
         excl[MediaGallerySynchronizationRemoteStorage]=1 ;;
       product-alert) excl[ProductAlert]=1 ;;
       gift-message) excl[GiftMessage]=1; excl[GiftMessageGraphQl]=1 ;;
-      release-notification) excl[ReleaseNotification]=1 ;;
+      release-notification) excl[ReleaseNotification]=1; excl[AdminAnalyticsReleaseNotification]=1 ;;
+      analytics) excl[AdminAnalytics]=1; excl[AdminAnalyticsReleaseNotification]=1 ;;
       swatches) excl[WeeeSwatches]=1 ;;
       weee) excl[Weee]=1; excl[WeeeSwatches]=1 ;;
     esac

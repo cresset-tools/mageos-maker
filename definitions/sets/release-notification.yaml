@@ -4,3 +4,4 @@ description: Admin in-app release notification module
 removable: false  # hard cross-module deps in stock Mage-OS — can't be cleanly removed
 packages:
   - mage-os/module-release-notification
+  - mage-os/module-admin-analytics-release-notification

@@ -4,14 +4,15 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 
 **Baseline** (full modulargento overlay, nothing removed): PASS — installs + compiles clean.
 
-**Removable with modulargento: 15 / 15** — newly unlocked vs stock: `bundle`, `downloadable`, `gift-message`, `grouped`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`.
+**Removable with modulargento: 16 / 16** — newly unlocked vs stock: `bundle`, `downloadable`, `gift-message`, `grouped`, `instant-purchase`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`.
 
-**Maximal achievable reduction** (every individually-removable set removed together: `bundle`, `downloadable`, `gift-message`, `grouped`, `instant-purchase`, `inventory`, `media-gallery`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
+**Maximal achievable reduction** (every individually-removable set removed together: `analytics`, `bundle`, `downloadable`, `gift-message`, `grouped`, `instant-purchase`, `inventory`, `media-gallery`, `media-gallery-sync`, `msrp`, `newsletter`, `product-alert`, `release-notification`, `reviews`, `swatches`, `wishlist`): PASS — the reduced-feature install still boots + compiles.
 
 ## Per-set: stock vs modulargento
 
 | Set | Stock | Modulargento | Change | Smoke |
 |---|---|---|---|---|
+| `analytics` | ❌ — | ✅ pass |  | gql ✅ · render ✅ |
 | `bundle` | ❌ install-failed | ✅ pass | **fail → pass** 🎉 | gql ✅ · render · |
 | `downloadable` | ❌ install-failed | ✅ pass | **fail → pass** 🎉 | gql ✅ · render · |
 | `gift-message` | ❌ fail | ✅ pass | **fail → pass** 🎉 | gql ✅ · render · |
@@ -23,7 +24,7 @@ Module-removal matrix run against **modulargento** (decoupled Mage-OS fork) on b
 | `msrp` | ❌ fail | ✅ pass | **fail → pass** 🎉 | gql ✅ · render · |
 | `newsletter` | ❌ fail | ✅ pass | **fail → pass** 🎉 | gql ✅ · render · |
 | `product-alert` | ❌ fail | ✅ pass | **fail → pass** 🎉 | gql ✅ · render · |
-| `release-notification` | ❌ fail | ✅ pass | **fail → pass** 🎉 | gql ✅ · render · |
+| `release-notification` | ❌ fail | ✅ pass | **fail → pass** 🎉 | gql ✅ · render ✅ |
 | `reviews` | ❌ fail | ✅ pass | **fail → pass** 🎉 | gql ✅ · render · |
 | `swatches` | ❌ fail | ✅ pass | **fail → pass** 🎉 | gql ✅ · render · |
 | `wishlist` | ❌ fail | ✅ pass | **fail → pass** 🎉 | gql ✅ · render · |

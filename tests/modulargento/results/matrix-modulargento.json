@@ -8,7 +8,7 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/_baseline.log",
-      "duration_s": 57,
+      "duration_s": 61,
       "composer_diff_baseline": "unknown",
       "phase": "compile",
       "graphql": "ok",
@@ -23,6 +23,17 @@
       "composer_diff_baseline": "unknown",
       "phase": "compile",
       "graphql": "ok"
+    },
+    {
+      "set": "analytics",
+      "status": "pass",
+      "fingerprint": "",
+      "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/analytics.log",
+      "duration_s": 72,
+      "composer_diff_baseline": "true",
+      "phase": "compile",
+      "graphql": "ok",
+      "render": "ok"
     },
     {
       "set": "bundle",
@@ -141,10 +152,11 @@
       "status": "pass",
       "fingerprint": "",
       "log_path": "/home/jelle/mageos-maker/tests/modulargento/results/raw/release-notification.log",
-      "duration_s": 59,
+      "duration_s": 63,
       "composer_diff_baseline": "true",
       "phase": "compile",
-      "graphql": "ok"
+      "graphql": "ok",
+      "render": "ok"
     },
     {
       "set": "reviews",

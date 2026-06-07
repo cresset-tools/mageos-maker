@@ -1,0 +1,15 @@
+name: analytics
+label: Analytics & advanced reporting
+description: Adobe Advanced Reporting data collection (Magento_Analytics + per-feature contributors) and admin-usage telemetry (Magento_AdminAnalytics)
+removable: false  # AdminAnalytics owns the release-notification visibility seam in stock Mage-OS — can't be cleanly removed
+removable_modulargento: true  # decoupled in modulargento: the AdminAnalytics<->ReleaseNotification glue moved to a bridge module
+packages:
+  - mage-os/module-analytics
+  - mage-os/module-admin-analytics
+  - mage-os/module-catalog-analytics
+  - mage-os/module-customer-analytics
+  - mage-os/module-quote-analytics
+  - mage-os/module-review-analytics
+  - mage-os/module-sales-analytics
+  - mage-os/module-wishlist-analytics
+  - mage-os/module-admin-analytics-release-notification
