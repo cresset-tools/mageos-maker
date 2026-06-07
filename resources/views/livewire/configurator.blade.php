@@ -647,6 +647,15 @@ bougie init --starter mageos --start</code></pre><button type="button" class="cm
             <div class="out-tabs">
                 <div class="out-tab" :class="{ active: otab === 'composer' }" @click="otab = 'composer'">composer.json</div>
                 <div class="out-tab" :class="{ active: otab === 'tree' }" @click="otab = 'tree'">Install tree<span class="n">{{ $this->installTree['count'] }}</span></div>
+                @if ($this->usesHyva)
+                    {{-- Tab appears (and auto-activates) the moment a Hyvä build is selected. x-init
+                         fires once when Livewire morphs this element in, so it won't hijack the tab
+                         again after the user clicks away. --}}
+                    <div class="out-tab out-tab-hyva" :class="{ active: otab === 'hyva' }" @click="otab = 'hyva'" x-init="otab = 'hyva'">★ Hyvä setup</div>
+                @else
+                    {{-- When Hyvä is switched back off, drop the user off the now-gone tab. --}}
+                    <template x-if="otab === 'hyva'"><span x-init="otab = 'composer'"></span></template>
+                @endif
             </div>
 
             <div class="out-body scrollbox">
@@ -683,6 +692,62 @@ bougie init --starter mageos --start</code></pre><button type="button" class="cm
                         </div>
                     @endif
                 </div>
+                @if ($this->usesHyva)
+                    @php
+                        $token = $hyvaToken !== '' ? $hyvaToken : 'YOUR_HYVA_TOKEN';
+                        $project = $hyvaProject !== '' ? $hyvaProject : 'yourProjectName';
+                    @endphp
+                    <div class="opane hyva-pane" x-show="otab === 'hyva'" x-cloak>
+                        <p class="hyva-intro">
+                            The Hyvä Theme is free of charge but requires a packagist token.
+                            Register at <a href="https://www.hyva.io/" target="_blank" rel="noopener">hyva.io</a>
+                            to get your free token and project name, then run these commands in your project root <strong>before</strong>
+                            <code>composer install</code>.
+                            See the <a href="https://docs.hyva.io/hyva-themes/getting-started/index.html" target="_blank" rel="noopener">official docs</a>.
+                        </p>
+
+                        <div class="hyva-fields">
+                            <label>
+                                <span>Hyvä token</span>
+                                <input type="text" wire:model.live.debounce.300ms="hyvaToken" placeholder="YOUR_HYVA_TOKEN" autocomplete="off">
+                            </label>
+                            <label>
+                                <span>Project name</span>
+                                <input type="text" wire:model.live.debounce.300ms="hyvaProject" placeholder="yourProjectName" autocomplete="off">
+                            </label>
+                        </div>
+
+                        <ol class="hyva-steps">
+                            <li>
+                                <span class="step-label">Configure composer auth</span>
+                                <div class="cmd-row"><pre class="cmd"><code>composer config --auth http-basic.hyva-themes.repo.packagist.com token {{ $token }}</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div>
+                            </li>
+                            @if ($hyvaProject === '')
+                                <li>
+                                    <span class="step-label">Add the Hyvä private repository</span>
+                                    <div class="cmd-row"><pre class="cmd"><code>composer config repositories.hyva-private composer https://hyva-themes.repo.packagist.com/{{ $project }}/</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div>
+                                    <small>Skip this once you've filled in the project name above — the repo will be baked into the generated <code>composer.json</code>.</small>
+                                </li>
+                            @endif
+                            <li>
+                                <span class="step-label">Install dependencies</span>
+                                <div class="cmd-row"><pre class="cmd"><code>composer install</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div>
+                            </li>
+                            <li>
+                                <span class="step-label">Activate the theme in Magento</span>
+                                <div class="cmd-row"><pre class="cmd"><code>bin/magento setup:upgrade
+bin/magento config:set design/theme/theme_id frontend/Hyva/default
+bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div>
+                                <small>Or pick <code>Hyva/default</code> from <em>Content → Design → Configuration</em> in the admin.</small>
+                            </li>
+                            <li>
+                                <span class="step-label">Disable the legacy Magento captcha</span>
+                                <div class="cmd-row"><pre class="cmd"><code>bin/magento config:set customer/captcha/enable 0</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div>
+                                <small>Hyvä doesn't support the legacy captcha; storefront forms break with it on. Swap in Google ReCaptcha (V2/V3) from the admin if you still want bot protection.</small>
+                            </li>
+                        </ol>
+                    </div>
+                @endif
             </div>
 
             <div class="out-foot">
@@ -695,65 +760,6 @@ bougie init --starter mageos --start</code></pre><button type="button" class="cm
         </aside>
     </div>
 </div>
-
-{{-- Hyvä install steps: kept below the output, shown only when the build pulls in Hyvä. --}}
-@if ($this->usesHyva)
-    @php
-        $token = $hyvaToken !== '' ? $hyvaToken : 'YOUR_HYVA_TOKEN';
-        $project = $hyvaProject !== '' ? $hyvaProject : 'yourProjectName';
-    @endphp
-    <div class="hyva-panel">
-        <h2>Hyvä install steps</h2>
-        <p>
-            The Hyvä Theme is free of charge but requires a packagist token.
-            Register at <a href="https://www.hyva.io/" target="_blank" rel="noopener">hyva.io</a>
-            to get your free token and project name, then run these commands in your project root <strong>before</strong>
-            <code>composer install</code>.
-            See the <a href="https://docs.hyva.io/hyva-themes/getting-started/index.html" target="_blank" rel="noopener">official docs</a>.
-        </p>
-
-        <div class="hyva-fields">
-            <label>
-                <span>Hyvä token</span>
-                <input type="text" wire:model.live.debounce.300ms="hyvaToken" placeholder="YOUR_HYVA_TOKEN" autocomplete="off">
-            </label>
-            <label>
-                <span>Project name</span>
-                <input type="text" wire:model.live.debounce.300ms="hyvaProject" placeholder="yourProjectName" autocomplete="off">
-            </label>
-        </div>
-
-        <ol class="hyva-steps">
-            <li>
-                <span class="step-label">Configure composer auth</span>
-                <div class="cmd-row"><pre class="cmd"><code>composer config --auth http-basic.hyva-themes.repo.packagist.com token {{ $token }}</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div>
-            </li>
-            @if ($hyvaProject === '')
-                <li>
-                    <span class="step-label">Add the Hyvä private repository</span>
-                    <div class="cmd-row"><pre class="cmd"><code>composer config repositories.hyva-private composer https://hyva-themes.repo.packagist.com/{{ $project }}/</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div>
-                    <small>Skip this once you've filled in the project name above — the repo will be baked into the generated <code>composer.json</code>.</small>
-                </li>
-            @endif
-            <li>
-                <span class="step-label">Install dependencies</span>
-                <div class="cmd-row"><pre class="cmd"><code>composer install</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div>
-            </li>
-            <li>
-                <span class="step-label">Activate the theme in Magento</span>
-                <div class="cmd-row"><pre class="cmd"><code>bin/magento setup:upgrade
-bin/magento config:set design/theme/theme_id frontend/Hyva/default
-bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div>
-                <small>Or pick <code>Hyva/default</code> from <em>Content → Design → Configuration</em> in the admin.</small>
-            </li>
-            <li>
-                <span class="step-label">Disable the legacy Magento captcha</span>
-                <div class="cmd-row"><pre class="cmd"><code>bin/magento config:set customer/captcha/enable 0</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div>
-                <small>Hyvä doesn't support the legacy captcha; storefront forms break with it on. Swap in Google ReCaptcha (V2/V3) from the admin if you still want bot protection.</small>
-            </li>
-        </ol>
-    </div>
-@endif
 
 <script>
     function filterInstallTree(q) {

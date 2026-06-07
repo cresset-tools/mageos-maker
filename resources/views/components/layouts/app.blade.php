@@ -83,8 +83,8 @@
         /* ============================================================
            Tabbed workspace shell
            ============================================================ */
-        .shell { display: flex; flex-direction: column; height: 100vh; min-width: 1200px; }
-        .work { flex: 1; min-height: 0; display: grid; grid-template-columns: 258px minmax(0,1fr) 452px; }
+        .shell { display: flex; flex-direction: column; height: 100vh; min-width: 1280px; }
+        .work { flex: 1; min-height: 0; display: grid; grid-template-columns: 258px minmax(0,1fr) 520px; }
 
         /* ---- Left rail ---- */
         .rail { border-right: 1px solid var(--gray-200); background: #fcfcfd; overflow-y: auto; padding: 16px 12px 28px; }
@@ -285,10 +285,9 @@
         .cmd-row .cmd-copy.copied { width: auto; padding: 0 8px; }
 
         /* hyvä install steps (kept below output) */
-        .hyva-panel { margin: 18px; background: #fff; border: 1px solid var(--gray-200); border-radius: 10px; padding: 18px 20px; box-shadow: var(--shadow-sm); }
-        .hyva-panel h2 { font-size: 14px; margin: 0 0 8px; font-weight: 700; }
-        .hyva-panel > p { font-size: 13px; color: var(--gray-600); margin: 0 0 14px; line-height: 1.55; }
-        .hyva-panel a { color: var(--blue-600); }
+        .out-tab-hyva.active { background: var(--indigo-600); }
+        .hyva-pane .hyva-intro { font-size: 12.5px; color: var(--gray-600); margin: 0 0 14px; line-height: 1.55; }
+        .hyva-pane a { color: var(--blue-600); }
         .hyva-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
         .hyva-fields label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--gray-600); }
         .hyva-fields input { padding: 6px 8px; border: 1px solid var(--gray-300); border-radius: 6px; font-size: 13px; font-family: var(--mono); }
