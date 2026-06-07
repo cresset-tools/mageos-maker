@@ -75,6 +75,20 @@ class ModulargentoFlavorTest extends TestCase
         $this->assertNotContains('gift-message', $component->instance()->selection()->disabledSets);
     }
 
+    public function test_version_picker_is_locked_under_modulargento(): void
+    {
+        // Standard: the version picker is free.
+        Livewire::test(Configurator::class)
+            ->set('version', $this->mgVersion())
+            ->assertDontSee('Locked to');
+
+        // Modulargento only exists at its tracked version, so the picker locks.
+        Livewire::test(Configurator::class)
+            ->set('version', $this->mgVersion())
+            ->set('distribution', 'modulargento')
+            ->assertSee('Locked to '.$this->mgVersion());
+    }
+
     public function test_picking_a_profile_preserves_the_modulargento_distribution(): void
     {
         Livewire::test(Configurator::class)
