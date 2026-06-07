@@ -23,7 +23,10 @@ return [
         // appears when the selected version matches.
         'version' => env('MAGEOS_MODULARGENTO_VERSION', '3.0.0'),
         // Pinned for bougie's PHP runtime; emitted as a `require.php` constraint.
-        'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.3.0||~8.4.0||~8.5.0'),
+        // The modulargento 3.0.0 line targets PHP 8.4–8.5 (its metapackage still
+        // advertises 8.3 from the 2.4.8 base it tracks, but 8.3 isn't a target
+        // for the modular distribution).
+        'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.4.0||~8.5.0'),
         // The real published project-community-edition composer.json (runtime
         // keys stripped), used verbatim as the base so the generated project
         // carries every key a Mage-OS project does (require-dev, autoload-dev,

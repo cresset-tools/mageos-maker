@@ -15,11 +15,16 @@
     <div>
         <div class="panel">
             <h2>Mage-OS version</h2>
-            <select wire:model.live="version">
+            {{-- The fully-modular distribution only exists at its tracked version,
+                 so lock the picker to it while modulargento is selected. --}}
+            <select wire:model.live="version" @disabled($distribution === 'modulargento')>
                 @foreach (array_reverse($versions) as $v)
                     <option value="{{ $v }}">{{ $v }}</option>
                 @endforeach
             </select>
+            @if ($distribution === 'modulargento')
+                <p style="font-size:12px;color:#666;margin:6px 0 0;">Locked to {{ $version }} — the fully-modular distribution is only published for this version. Switch to Standard to change it.</p>
+            @endif
         </div>
 
         @if ($modulargentoAvailable)
