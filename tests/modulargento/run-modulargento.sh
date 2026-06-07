@@ -151,6 +151,10 @@ vendor_overlay_args() {
   local -a a=()
   [[ -d "$VENDOR_FORKS/module-page-builder-widget" ]] && a+=(--vendor-overlay "$VENDOR_FORKS/module-page-builder-widget:vendor/mage-os/module-page-builder-widget")
   [[ -d "$VENDOR_FORKS/module-admin-activity-log" ]] && a+=(--vendor-overlay "$VENDOR_FORKS/module-admin-activity-log:vendor/mage-os/module-admin-activity-log")
+  # Low-stock report export controllers decoupled from Magento_Reports' product
+  # report controller base (so the MSI admin UI stays installable when Reports
+  # is removed); overlay always — the patch is Reports-version-agnostic.
+  [[ -d "$VENDOR_FORKS/module-inventory-low-quantity-notification-admin-ui" ]] && a+=(--vendor-overlay "$VENDOR_FORKS/module-inventory-low-quantity-notification-admin-ui:vendor/mage-os/module-inventory-low-quantity-notification-admin-ui")
   if [[ "$disabled_csv" != *",product-alert,"* && "$disabled_csv" != *",inventory,"* \
         && -d "$VENDOR_FORKS/module-inventory-product-alert" ]]; then
     a+=(--vendor-overlay "$VENDOR_FORKS/module-inventory-product-alert:vendor/mage-os/module-inventory-product-alert")
