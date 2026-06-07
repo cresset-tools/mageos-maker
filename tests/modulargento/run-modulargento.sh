@@ -93,7 +93,7 @@ mkdir -p "$results_dir" "$per_set_dir" "$sandboxes_dir"
 # diff is composer.json metadata requiring the extracted framework-graph-ql
 # sub-packages; no code change, and the framework GraphQl classes still come
 # from stock vendor magento/framework, so overlaying it has no runtime effect.)
-DECOUPLED_MODULES=(AdminAnalytics Bundle BundleGraphQl Catalog CatalogGraphQl CatalogImportExport CatalogSearch CatalogWidget Checkout Customer CustomerGraphQl ConfigurableProductGraphQl DownloadableGraphQl GiftMessage GiftMessageGraphQl GroupedProduct GroupedProductGraphQl MediaGalleryApi MediaGalleryCatalogIntegration MediaGalleryIntegration MediaGallerySynchronization MediaGalleryUi Msrp Newsletter NewsletterGraphQl Paypal PaypalInstantPurchase ProductAlert QuoteGraphQl ReleaseNotification RemoteStorage Reports Review Sales Weee Wishlist WishlistGraphQl)
+DECOUPLED_MODULES=(AdminAnalytics Backend Bundle BundleGraphQl Catalog CatalogGraphQl CatalogImportExport CatalogSearch CatalogWidget Checkout Customer CustomerGraphQl ConfigurableProductGraphQl DownloadableGraphQl GiftMessage GiftMessageGraphQl GroupedProduct GroupedProductGraphQl MediaGalleryApi MediaGalleryCatalogIntegration MediaGalleryIntegration MediaGallerySynchronization MediaGalleryUi Msrp Newsletter NewsletterGraphQl Paypal PaypalInstantPurchase ProductAlert QuoteGraphQl ReleaseNotification RemoteStorage ReportingFramework Reports Review Sales SalesRule Search Tax Weee Wishlist WishlistGraphQl)
 # Bridge modules added by modulargento — restore reporting/glue that the decoupling
 # stripped out of staying modules. Each needs the feature(s) it bridges present:
 # Review/Wishlist reporting, the Weee<->Swatches listing glue (WeeeSwatches), and the
@@ -111,6 +111,7 @@ overlay_for_disabled() {
     case "$s" in
       wishlist)   excl[Wishlist]=1; excl[WishlistReports]=1; excl[WishlistGraphQl]=1 ;;
       reviews)    excl[Review]=1;   excl[ReviewReports]=1 ;;
+      reports)    excl[Reports]=1;  excl[ReviewReports]=1; excl[WishlistReports]=1 ;;
       newsletter) excl[Newsletter]=1; excl[NewsletterGraphQl]=1 ;;
       msrp)       excl[Msrp]=1 ;;
       grouped)    excl[GroupedProduct]=1; excl[GroupedProductGraphQl]=1 ;;
@@ -150,6 +151,10 @@ vendor_overlay_args() {
   local -a a=()
   [[ -d "$VENDOR_FORKS/module-page-builder-widget" ]] && a+=(--vendor-overlay "$VENDOR_FORKS/module-page-builder-widget:vendor/mage-os/module-page-builder-widget")
   [[ -d "$VENDOR_FORKS/module-admin-activity-log" ]] && a+=(--vendor-overlay "$VENDOR_FORKS/module-admin-activity-log:vendor/mage-os/module-admin-activity-log")
+  # Low-stock report export controllers decoupled from Magento_Reports' product
+  # report controller base (so the MSI admin UI stays installable when Reports
+  # is removed); overlay always — the patch is Reports-version-agnostic.
+  [[ -d "$VENDOR_FORKS/module-inventory-low-quantity-notification-admin-ui" ]] && a+=(--vendor-overlay "$VENDOR_FORKS/module-inventory-low-quantity-notification-admin-ui:vendor/mage-os/module-inventory-low-quantity-notification-admin-ui")
   if [[ "$disabled_csv" != *",product-alert,"* && "$disabled_csv" != *",inventory,"* \
         && -d "$VENDOR_FORKS/module-inventory-product-alert" ]]; then
     a+=(--vendor-overlay "$VENDOR_FORKS/module-inventory-product-alert:vendor/mage-os/module-inventory-product-alert")
