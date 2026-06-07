@@ -92,7 +92,11 @@ class ModulargentoDistributionTest extends TestCase
             distribution: 'modulargento',
         ));
 
-        $this->assertSame('3.0.0', $composer['require']['modulargento/project-community-edition'] ?? null);
+        // Root is named project-edition but requires the product edition
+        // (a package can't require itself).
+        $this->assertSame('modulargento/project-community-edition', $composer['name'] ?? null);
+        $this->assertSame('3.0.0', $composer['require']['modulargento/product-community-edition'] ?? null);
+        $this->assertArrayNotHasKey('modulargento/project-community-edition', $composer['require'] ?? []);
         $this->assertSame('~8.3.0||~8.4.0||~8.5.0', $composer['require']['php'] ?? null);
         $this->assertContains(
             ['type' => 'composer', 'url' => 'https://modulargento.cresset.tools/'],

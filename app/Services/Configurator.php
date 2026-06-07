@@ -319,11 +319,13 @@ class Configurator
 
     /**
      * Base composer.json for the fully-modular (modulargento) distribution: a
-     * project requiring the modulargento edition metapackage from its own
-     * Composer repo, pinned to the configured version, with a `require.php`
-     * constraint for bougie's runtime. Mirrors the shape of the stock fallback
-     * in {@see baseComposer()}; disabled sets are layered on as `replace`
-     * entries (remapped to `modulargento/*`) by {@see build()}.
+     * project requiring the modulargento *product* edition metapackage from its
+     * own Composer repo, pinned to the configured version, with a `require.php`
+     * constraint for bougie's runtime. Mirrors the stock convention where the
+     * root is named after project-community-edition but requires
+     * product-community-edition (a root package can't require itself); disabled
+     * sets are layered on as `replace` entries (remapped to `modulargento/*`)
+     * by {@see build()}.
      */
     private function modulargentoBaseComposer(string $version): array
     {
@@ -332,7 +334,12 @@ class Configurator
         $editionVersion = $this->modulargento['version'] ?? $version;
         $phpConstraint = $this->modulargento['php_constraint'] ?? null;
 
-        $require = [$edition => $editionVersion];
+        // The root carries the project-edition name but pulls the product
+        // edition (the metapackage that actually lists the modules) — a package
+        // may not require itself.
+        $productEdition = str_replace('/project-', '/product-', $edition);
+
+        $require = [$productEdition => $editionVersion];
         if (is_string($phpConstraint) && $phpConstraint !== '') {
             $require['php'] = $phpConstraint;
         }
@@ -347,6 +354,34 @@ class Configurator
             ],
             'minimum-stability' => 'stable',
             'prefer-stable' => true,
+            // Autoload + extra mirror modulargento/project-community-edition's own
+            // composer.json (i.e. what `composer create-project` would yield), so
+            // the project can bootstrap Magento — without the Magento\Setup\ and
+            // Magento\ PSR maps the Setup CLI fatals with "InitParamListener not
+            // found" at setup:install.
+            'autoload' => [
+                'psr-4' => [
+                    'Magento\\Framework\\' => 'lib/internal/Magento/Framework/',
+                    'Magento\\Setup\\' => 'setup/src/Magento/Setup/',
+                    'Magento\\' => 'app/code/Magento/',
+                    'MageOS\\Installer\\' => 'setup/src/MageOS/Installer/',
+                ],
+                'psr-0' => [
+                    '' => ['app/code/', 'generated/code/'],
+                ],
+                'files' => ['app/etc/NonComposerComponentRegistration.php'],
+                'exclude-from-classmap' => [
+                    '**/dev/**',
+                    '**/update/**',
+                    '**/Test/Fixture/**',
+                    '**/Test/Integration/**',
+                    '**/Test/Mftf/**',
+                    '**/Test/Unit/**',
+                ],
+            ],
+            'extra' => [
+                'magento-force' => 'override',
+            ],
             'config' => [
                 'allow-plugins' => [
                     'php-http/discovery' => true,
