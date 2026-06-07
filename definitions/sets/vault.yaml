@@ -1,0 +1,11 @@
+name: vault
+label: Stored cards (Vault)
+description: >-
+  Magento Vault — stored credit-card tokenization (+ its GraphQL). Removable only
+  TOGETHER WITH the PayPal and Instant Purchase sets, which hard-depend on it.
+  Keep it if your payment gateway stores cards via Magento's vault.
+removable: false  # PayPal + InstantPurchase require Vault — only removable alongside both of those sets
+removable_modulargento: true  # achievable on modulargento, where instant-purchase is also decoupled/removable
+packages:
+  - mage-os/module-vault
+  - mage-os/module-vault-graph-ql

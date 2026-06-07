@@ -118,6 +118,7 @@ overlay_for_disabled() {
       bundle)     excl[Bundle]=1; excl[BundleGraphQl]=1 ;;
       downloadable) excl[DownloadableGraphQl]=1 ;;
       instant-purchase) excl[PaypalInstantPurchase]=1 ;;
+      paypal) excl[Paypal]=1 ;;
       media-gallery-sync) excl[MediaGallerySynchronization]=1; excl[MediaGallerySynchronizationRemoteStorage]=1 ;;
       media-gallery)
         excl[MediaGalleryApi]=1; excl[MediaGalleryCatalogIntegration]=1
