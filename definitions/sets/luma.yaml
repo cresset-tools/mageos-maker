@@ -1,6 +1,11 @@
 name: luma
 label: Luma Theme
 description: Default Magento Luma frontend theme
+# The Luma storefront drives checkout, mini-cart and customer-data through the
+# REST Web API, so it can't function once the Web API set is removed. Declaring
+# the dependency force-disables Luma (and greys it out) whenever Web API is off.
+requires:
+  set: webapi
 packages:
   - mage-os/theme-frontend-luma
 group: Marketing & Content

@@ -458,20 +458,27 @@
                                     @php
                                         $removable = $setRemovable[$name] ?? true;
                                         $parentEnabled = in_array($name, $enabledSets, true);
+                                        $setReqSet = $set['requires']['set'] ?? null;
+                                        $setReqMet = $setReqSet === null || in_array($setReqSet, $enabledSets, true);
+                                        $setReqLabel = $setReqSet ? ($setDefs[$setReqSet]['label'] ?? $setReqSet) : null;
+                                        $setDisabled = ! $removable || ! $setReqMet;
                                         $hay = strtolower(trim(
                                             $name.' '.($set['label'] ?? '').' '.($set['description'] ?? '').' '
                                             .collect($set['subtoggles'] ?? [])->map(fn ($s) => ($s['label'] ?? '').' '.($s['description'] ?? ''))->implode(' ')
                                         ));
                                     @endphp
                                     @php $onExpr = $removable ? '$wire.enabledSets.includes('.\Illuminate\Support\Js::from($name).')' : 'true'; @endphp
-                                    <div class="modcard" wire:key="mod-{{ $name }}"
+                                    <div class="modcard" wire:key="mod-{{ $name }}-{{ $setReqMet ? 'ok' : 'needs' }}"
                                          x-show="rowVisible(@js($name), @js(! $removable), @js($hay))">
-                                        <label class="chk {{ $removable ? '' : 'disabled' }}"
+                                        <label class="chk {{ $setDisabled ? 'disabled' : '' }}"
                                                :class="{ on: {{ $onExpr }} }">
-                                            <input type="checkbox" class="vh" wire:model.live="enabledSets" value="{{ $name }}" @disabled(! $removable)>
+                                            <input type="checkbox" class="vh" wire:model.live="enabledSets" value="{{ $name }}" @disabled($setDisabled)>
                                             <span class="box"></span>
                                             <span class="mtext">
                                                 <span class="label">{{ $set['label'] }}
+                                                    @if ($setReqSet && ! $setReqMet)
+                                                        <span class="badge gray" title="Requires the {{ $setReqLabel }} set — it can't function without it.">needs {{ $setReqLabel }}</span>
+                                                    @endif
                                                     @unless ($removable)
                                                         <span class="badge req" title="Hard cross-module dependencies in stock Mage-OS — can't be removed without breaking di:compile or setup:install.">required</span>
                                                     @endunless
