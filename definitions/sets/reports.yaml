@@ -1,0 +1,9 @@
+name: reports
+label: Reports
+description: Admin sales/product/customer reports, the storefront "recently viewed/compared" tracking, and the Reports event log
+removable: false  # in stock Mage-OS the report-aggregation framework + dashboard live in Magento_Reports — can't be cleanly removed
+removable_modulargento: true  # decoupled in modulargento: framework extracted to Magento_ReportingFramework, dashboard/sidebar seamed
+packages:
+  - mage-os/module-reports
+  - mage-os/module-review-reports
+  - mage-os/module-wishlist-reports
