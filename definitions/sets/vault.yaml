@@ -9,3 +9,4 @@ removable_modulargento: true  # achievable on modulargento, where instant-purcha
 packages:
   - mage-os/module-vault
   - mage-os/module-vault-graph-ql
+group: Shipping, Tax & Payments

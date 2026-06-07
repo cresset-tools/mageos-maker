@@ -7,3 +7,4 @@ packages:
   - mage-os/module-reports
   - mage-os/module-review-reports
   - mage-os/module-wishlist-reports
+group: Admin, Ops & Developer
