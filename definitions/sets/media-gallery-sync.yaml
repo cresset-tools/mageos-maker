@@ -10,3 +10,4 @@ packages:
   - mage-os/module-media-gallery-synchronization
   - mage-os/module-media-gallery-synchronization-api
   - mage-os/module-media-gallery-synchronization-metadata
+  - mage-os/module-media-gallery-synchronization-remote-storage

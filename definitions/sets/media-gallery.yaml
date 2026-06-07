@@ -1,0 +1,32 @@
+name: media-gallery
+label: Enhanced media gallery
+description: Adobe-style media gallery asset manager (admin) + media content reference tracking
+removable: false  # hard cross-module deps in stock Mage-OS — can't be cleanly removed
+removable_modulargento: true  # decoupled in modulargento: RemoteStorage glue moved to bridge modules
+packages:
+  - mage-os/module-media-content
+  - mage-os/module-media-content-api
+  - mage-os/module-media-content-catalog
+  - mage-os/module-media-content-cms
+  - mage-os/module-media-content-synchronization
+  - mage-os/module-media-content-synchronization-api
+  - mage-os/module-media-content-synchronization-catalog
+  - mage-os/module-media-content-synchronization-cms
+  - mage-os/module-media-gallery
+  - mage-os/module-media-gallery-api
+  - mage-os/module-media-gallery-catalog
+  - mage-os/module-media-gallery-catalog-integration
+  - mage-os/module-media-gallery-catalog-ui
+  - mage-os/module-media-gallery-cms-ui
+  - mage-os/module-media-gallery-integration
+  - mage-os/module-media-gallery-metadata
+  - mage-os/module-media-gallery-metadata-api
+  - mage-os/module-media-gallery-metadata-remote-storage
+  - mage-os/module-media-gallery-renditions
+  - mage-os/module-media-gallery-renditions-api
+  - mage-os/module-media-gallery-synchronization
+  - mage-os/module-media-gallery-synchronization-api
+  - mage-os/module-media-gallery-synchronization-metadata
+  - mage-os/module-media-gallery-synchronization-remote-storage
+  - mage-os/module-media-gallery-ui
+  - mage-os/module-media-gallery-ui-api

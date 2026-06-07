@@ -171,6 +171,10 @@ configure_args=(--profile="$PROFILE" --output="$sandbox/composer.json")
 # EXTRA_DISABLE=newsletter,reviews,wishlist on a _max-reduction control row).
 [[ -n "${EXTRA_DISABLE:-}" ]] && configure_args+=(--disable="$EXTRA_DISABLE")
 [[ -n "$version" ]] && configure_args+=(--mageos-version="$version")
+# Modulargento matrix: removability is proven empirically by this harness
+# (install + di:compile against overlaid decoupled sources), so don't let the
+# static `removable: false` flag turn the disable into a noop on the stock base.
+[[ "${MODULARGENTO:-0}" == "1" ]] && configure_args+=(--unlock-all-sets)
 
 if ! ( cd "$PROJECT_ROOT" && php artisan mageos:configure "${configure_args[@]}" ) >> "$log" 2>&1; then
   emit_json "configure-failed" "configure-error" "unknown" "configure"
