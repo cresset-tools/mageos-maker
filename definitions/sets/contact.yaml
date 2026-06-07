@@ -1,0 +1,6 @@
+name: contact
+label: Contact Us form
+description: Storefront "Contact Us" form (+ its GraphQL resolver)
+packages:
+  - mage-os/module-contact
+  - mage-os/module-contact-graph-ql
