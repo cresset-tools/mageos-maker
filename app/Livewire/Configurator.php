@@ -239,7 +239,31 @@ class Configurator extends Component
      */
     public function updatedEnabledSets(): void
     {
+        $this->enforceSetRequires();
         $this->enforceSubtoggleRequires();
+    }
+
+    /**
+     * Drop any enabled set whose `requires.set` dependency is no longer enabled.
+     * A set that can't function without another (Luma theme → Web API) is
+     * unchecked when that set is removed. Loops to a fixpoint so chains cascade;
+     * mirrors {@see \App\Services\Configurator::cascadeSetRequires()} on the
+     * build side.
+     */
+    private function enforceSetRequires(): void
+    {
+        $defs = app(Definitions::class);
+        do {
+            $enabled = array_flip($this->enabledSets);
+            $this->enabledSets = array_values(array_filter(
+                $this->enabledSets,
+                function ($set) use ($defs, $enabled) {
+                    $needed = $defs->setRequiredSet($set);
+
+                    return $needed === null || isset($enabled[$needed]);
+                },
+            ));
+        } while (count($this->enabledSets) !== count($enabled));
     }
 
     /**

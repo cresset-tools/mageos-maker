@@ -59,6 +59,20 @@ class Definitions
         return $out;
     }
 
+    /**
+     * The set this set depends on, if any. A set declaring
+     * `requires: { set: <name> }` can't function when that set is removed, so
+     * the configurator force-disables it (and the UI greys it out) when the
+     * required set is gone — e.g. the Luma theme needs the Web API set for its
+     * storefront (checkout/customer-data REST calls). One level deep is enough
+     * for the cases we model; {@see Configurator::cascadeSetRequires()} loops to
+     * a fixpoint to also cover chains.
+     */
+    public function setRequiredSet(string $name): ?string
+    {
+        return $this->sets[$name]['requires']['set'] ?? null;
+    }
+
     public function subtogglePackages(string $set, string $sub): array
     {
         return self::entryNames($this->setSubtoggles($set)[$sub]['packages'] ?? []);

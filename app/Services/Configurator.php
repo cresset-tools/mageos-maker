@@ -29,6 +29,7 @@ class Configurator
         $resolved = $this->resolveProfileGroups($selection);
 
         $disabledSets = array_values(array_unique(array_merge($resolved['disableSets'], $selection->disabledSets)));
+        $disabledSets = $this->cascadeSetRequires($disabledSets, $selection->version);
         $disabledLayers = array_values(array_unique(array_merge($resolved['disableLayers'], $selection->disabledLayers)));
         // Forced items always go in, soft defaults only when echoed back via the form.
         $effectiveAddons = array_values(array_unique(array_merge(
@@ -285,6 +286,36 @@ class Configurator
         }
 
         return true;
+    }
+
+    /**
+     * Expand the disabled-set list to include every set whose `requires.set`
+     * dependency has itself been disabled — a set that can't function without
+     * another can't ship without it. Loops to a fixpoint so chains (A→B→C)
+     * cascade. Server-authoritative: keeps saved-config replay and CLI flag
+     * combos consistent with the UI's {@see \App\Livewire\Configurator::enforceSetRequires()}.
+     *
+     * @param  list<string>  $disabledSets
+     * @return list<string>
+     */
+    private function cascadeSetRequires(array $disabledSets, string $version): array
+    {
+        $disabled = array_flip($disabledSets);
+        do {
+            $added = false;
+            foreach (array_keys($this->defs->setsForVersion($version)) as $set) {
+                if (isset($disabled[$set])) {
+                    continue;
+                }
+                $needed = $this->defs->setRequiredSet($set);
+                if ($needed !== null && isset($disabled[$needed])) {
+                    $disabled[$set] = true;
+                    $added = true;
+                }
+            }
+        } while ($added);
+
+        return array_keys($disabled);
     }
 
     private function appendRepositories(array &$composer, array $repos): void
