@@ -5,3 +5,4 @@ packages:
   - mage-os/module-paypal
   - mage-os/module-paypal-captcha
   - mage-os/module-paypal-graph-ql
+group: Shipping, Tax & Payments

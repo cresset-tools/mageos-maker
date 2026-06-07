@@ -3,3 +3,4 @@ label: DHL shipping
 description: DHL shipping carrier integration
 packages:
   - mage-os/module-dhl
+group: Shipping, Tax & Payments

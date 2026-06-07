@@ -12,3 +12,4 @@ packages:
   - mage-os/module-login-as-customer-page-cache
   - mage-os/module-login-as-customer-quote
   - mage-os/module-login-as-customer-sales
+group: Admin, Ops & Developer

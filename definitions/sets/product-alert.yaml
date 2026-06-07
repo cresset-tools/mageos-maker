@@ -5,3 +5,4 @@ removable: false  # hard cross-module deps in stock Mage-OS — can't be cleanly
 packages:
   - mage-os/module-product-alert
   - mage-os/module-inventory-product-alert
+group: Catalog & Product Types

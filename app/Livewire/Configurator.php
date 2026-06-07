@@ -643,6 +643,31 @@ class Configurator extends Component
         $modules = array_filter($versionSets, fn ($s) => ($s['category'] ?? 'module') === 'module');
         $languages = array_filter($versionSets, fn ($s) => ($s['category'] ?? 'module') === 'language');
 
+        // Partition modules into the tabbed-workspace sub-categories (the `group`
+        // field on each set's YAML). The order here drives the Modules section
+        // layout; any module whose group isn't listed falls into "Other".
+        $groupOrder = [
+            'Catalog & Product Types' => 'Product types, swatches, reviews, wishlist',
+            'Cart, Checkout & Orders' => 'MSI, multishipping, instant purchase',
+            'Shipping, Tax & Payments' => 'DHL, FedEx, UPS, USPS, PayPal, FPT',
+            'Marketing & Content' => 'Page Builder, Google, newsletter, storefront',
+            'Security' => 'Two-Factor Auth, reCAPTCHA',
+            'Admin, Ops & Developer' => 'Admin theme, RMA, analytics, S3, Swagger',
+        ];
+        $moduleGroups = [];
+        foreach ($groupOrder as $label => $hint) {
+            $moduleGroups[$label] = ['label' => $label, 'hint' => $hint, 'sets' => []];
+        }
+        foreach ($modules as $name => $set) {
+            $label = $set['group'] ?? 'Other';
+            if (! isset($moduleGroups[$label])) {
+                $moduleGroups[$label] = ['label' => $label, 'hint' => '', 'sets' => []];
+            }
+            $moduleGroups[$label]['sets'][$name] = $set;
+        }
+        // Drop empty groups (e.g. a category whose only members are version-gated out).
+        $moduleGroups = array_values(array_filter($moduleGroups, fn ($g) => $g['sets'] !== []));
+
         $setRemovable = [];
         foreach (array_keys($versionSets) as $name) {
             $setRemovable[$name] = $defs->isSetRemovable($name, $this->distribution);
@@ -654,6 +679,8 @@ class Configurator extends Component
 
         return view('livewire.configurator', [
             'setDefs' => $modules,
+            'moduleGroups' => $moduleGroups,
+            'latestStable' => $catalog->latestStable(),
             'languageDefs' => $languages,
             'setRemovable' => $setRemovable,
             'layerRemovable' => $layerRemovable,

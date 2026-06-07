@@ -5,3 +5,4 @@ removable: false  # hard cross-module deps in stock Mage-OS — can't be cleanly
 packages:
   - mage-os/module-gift-message
   - mage-os/module-gift-message-graph-ql
+group: Catalog & Product Types

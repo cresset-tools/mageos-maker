@@ -8,3 +8,4 @@ packages:
   - mage-os/module-downloadable-import-export
   - mage-os/module-quote-downloadable-links
   - mage-os/module-customer-downloadable-graph-ql
+group: Catalog & Product Types

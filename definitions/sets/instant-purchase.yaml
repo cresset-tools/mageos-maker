@@ -4,3 +4,4 @@ description: One-click purchase using stored payment and address
 removable: false  # hard cross-module deps in stock Mage-OS — can't be cleanly removed
 packages:
   - mage-os/module-instant-purchase
+group: Cart, Checkout & Orders

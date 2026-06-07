@@ -6,3 +6,4 @@ packages:
   - mage-os/module-application-performance-monitor
   - mage-os/module-application-performance-monitor-new-relic
   - mage-os/module-graph-ql-new-relic
+group: Admin, Ops & Developer

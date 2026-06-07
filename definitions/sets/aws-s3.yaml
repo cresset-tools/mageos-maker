@@ -3,3 +3,4 @@ label: AWS S3 remote storage
 description: S3 adapter for storing media files remotely instead of pub/media
 packages:
   - mage-os/module-aws-s3
+group: Admin, Ops & Developer

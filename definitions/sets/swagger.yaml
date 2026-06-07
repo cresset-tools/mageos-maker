@@ -5,3 +5,4 @@ packages:
   - mage-os/module-swagger
   - mage-os/module-swagger-webapi
   - mage-os/module-swagger-webapi-async
+group: Admin, Ops & Developer

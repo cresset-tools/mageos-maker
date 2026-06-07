@@ -6,3 +6,4 @@ packages:
   - mage-os/module-wishlist
   - mage-os/module-wishlist-analytics
   - mage-os/module-wishlist-graph-ql
+group: Catalog & Product Types

@@ -6,3 +6,4 @@ packages:
   - mage-os/module-google-analytics
   - mage-os/module-google-gtag
   - mage-os/module-google-optimizer
+group: Marketing & Content

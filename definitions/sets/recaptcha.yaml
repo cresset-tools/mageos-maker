@@ -27,3 +27,4 @@ packages:
   - mage-os/module-re-captcha-webapi-rest
   - mage-os/module-re-captcha-webapi-ui
   - mage-os/module-re-captcha-wishlist
+group: Security

@@ -3,3 +3,4 @@ label: RSS feeds
 description: Storefront and admin RSS feeds
 packages:
   - mage-os/module-rss
+group: Catalog & Product Types

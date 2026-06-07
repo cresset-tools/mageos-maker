@@ -6,3 +6,4 @@ packages:
   - mage-os/module-msrp
   - mage-os/module-msrp-configurable-product
   - mage-os/module-msrp-grouped-product
+group: Catalog & Product Types

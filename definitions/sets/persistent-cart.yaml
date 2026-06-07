@@ -3,3 +3,4 @@ label: Persistent shopping cart
 description: Long-lived cart and "remember me" cookie for guests
 packages:
   - mage-os/module-persistent
+group: Cart, Checkout & Orders

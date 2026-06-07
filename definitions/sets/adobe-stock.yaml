@@ -11,3 +11,4 @@ packages:
   - mage-os/module-adobe-stock-image
   - mage-os/module-adobe-stock-image-admin-ui
   - mage-os/module-adobe-stock-image-api
+group: Admin, Ops & Developer

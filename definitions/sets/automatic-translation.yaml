@@ -3,3 +3,4 @@ label: Automatic Translation
 description: Admin-side automatic content translation module
 packages:
   - mage-os/module-automatic-translation
+group: Admin, Ops & Developer
