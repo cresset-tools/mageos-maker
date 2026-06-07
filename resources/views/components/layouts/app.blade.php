@@ -229,6 +229,12 @@
         .out-bougie p { font-size: 12px; color: var(--gray-600); line-height: 1.5; margin: 6px 0 9px; }
         .out-bougie p a { color: var(--indigo-600); font-weight: 600; }
         .out-bougie .bougie-note { display: block; margin-top: 8px; font-size: 11px; color: var(--gray-500); }
+        .out-bougie .bougie-note code { font-family: var(--mono); font-size: 10.5px; color: var(--indigo-700); word-break: break-all; }
+        .out-bougie .bougie-save { width: 100%; justify-content: center; }
+        .out-bougie .bougie-default { margin-top: 11px; }
+        .out-bougie .bougie-default summary { font-size: 11.5px; font-weight: 600; color: var(--indigo-700); cursor: pointer; }
+        .out-bougie .bougie-default summary::marker { color: var(--indigo-600); }
+        .out-bougie .bougie-default-note { font-size: 11px; color: var(--gray-500); margin: 7px 0 8px; }
 
         .out-tabs { display: flex; gap: 2px; padding: 14px 14px 0; }
         .out-tab { font-size: 12.5px; font-weight: 600; color: var(--gray-500); padding: 8px 13px; border-radius: 8px; cursor: pointer; user-select: none; }

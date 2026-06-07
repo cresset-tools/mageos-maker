@@ -607,14 +607,34 @@
         <aside class="out">
             <div class="out-bougie">
                 <div class="h"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l1.8 4.2 4.7.4-3.6 3 1.1 4.5L8 11.2 3.9 13.6 5 9.1 1.4 6.1l4.7-.4z" stroke="#4338ca" stroke-width="1.2" stroke-linejoin="round"/></svg> Try it with bougie</div>
-                <p>Run this exact config with <a href="https://bougie.tools" target="_blank" rel="noopener">bougie</a>, the Composer-compatible toolchain — one command, no clone:</p>
-                <div class="cmd-row"><pre class="cmd"><code># Install bougie if you don't have it yet
+                @if ($this->effectiveSavedId)
+                    <p>Run <b>this exact configuration</b> with <a href="https://bougie.tools" target="_blank" rel="noopener">bougie</a> — one command, no clone:</p>
+                    <div class="cmd-row"><pre class="cmd"><code># Install bougie if you don't have it yet
 curl -LsSf https://bougie.tools/install.sh | sh
 # Start it up!
 bougie init --starter {{ $this->starterArg }} --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
-                @unless ($this->effectiveSavedId)
-                    <small class="bougie-note">Uses the default Mage-OS starter. Hit <b>Save&nbsp;&amp;&nbsp;share</b> below for a one-command link to <em>this</em> configuration.</small>
-                @endunless
+                    <small class="bougie-note">Shareable link to this build: <code>{{ $this->starterArg }}</code></small>
+                @else
+                    <p>
+                        @if ($savedId)
+                            You've changed the configuration since it was last saved. <b>Save again</b> to refresh the one-command install link for this build.
+                        @else
+                            <b>Save your configuration</b> to get a personal one-command bougie install link for <b>this exact build</b> — no clone, no copy-paste.
+                        @endif
+                    </p>
+                    <button type="button" class="btn btn-primary btn-sm bougie-save" wire:click="save">
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3.5 2.5h7L13 5v8.5H3.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M5.5 2.5v3.5h4V2.5M5.5 13.5v-3.5h5v3.5" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+                        {{ $savedId ? 'Save again & refresh link' : 'Save & get install command' }}
+                    </button>
+                    <details class="bougie-default">
+                        <summary>Or run the default Mage-OS starter now</summary>
+                        <p class="bougie-default-note">Installs stock Mage-OS, not the configuration above.</p>
+                        <div class="cmd-row"><pre class="cmd"><code># Install bougie if you don't have it yet
+curl -LsSf https://bougie.tools/install.sh | sh
+# Start it up!
+bougie init --starter mageos --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
+                    </details>
+                @endif
             </div>
 
             <div class="out-tabs">
