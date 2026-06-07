@@ -132,9 +132,9 @@ emit_json() {
   local status="$1" fingerprint="$2" diff="$3" phase="$4"
   local end_ts dur
   end_ts=$(date +%s); dur=$((end_ts - start_ts))
-  python3 - "$set_name" "$status" "$fingerprint" "$log" "$dur" "$diff" "$phase" "${GRAPHQL_RESULT:-n/a}" <<'PY' > "$per_set_json"
+  python3 - "$set_name" "$status" "$fingerprint" "$log" "$dur" "$diff" "$phase" "${GRAPHQL_RESULT:-n/a}" "${RENDER_RESULT:-n/a}" <<'PY' > "$per_set_json"
 import json, sys
-keys = ["set","status","fingerprint","log_path","duration_s","composer_diff_baseline","phase","graphql"]
+keys = ["set","status","fingerprint","log_path","duration_s","composer_diff_baseline","phase","graphql","render"]
 vals = sys.argv[1:]
 vals[4] = int(vals[4])
 out = dict(zip(keys, vals))
@@ -485,6 +485,34 @@ if [[ "$compile_status" -eq 0 ]]; then
     else
       GRAPHQL_RESULT="$(printf '%s' "$gq_out" | tr '\n' ' ' | head -c 200)"
       [[ -z "$GRAPHQL_RESULT" ]] && GRAPHQL_RESULT="graphql-smoke-error"
+    fi
+  fi
+
+  # 6b. Optional render smoke (RENDER_SMOKE=1): install+compile+graphql never
+  # exercise storefront/admin render+dispatch, so a staying block/observer can
+  # keep a runtime reference to a removed module's price type or factory and
+  # still compile (e.g. Catalog requesting 'msrp_price', or an admin model-save
+  # observer eagerly building a removed module's factory). Render a product's
+  # price boxes (frontend) and instantiate the model-save observers (adminhtml),
+  # recording the result as a separate dimension (does not change pass/fail).
+  RENDER_RESULT="n/a"
+  if [[ "${RENDER_SMOKE:-0}" == "1" && -f "$script_dir/render-smoke.php" ]]; then
+    echo "--- render smoke ---" >> "$log"
+    render_ok=1
+    render_msgs=()
+    for render_area in adminhtml frontend; do
+      rs_out="$( cd "$sandbox" && timeout 180 php "$script_dir/render-smoke.php" "$render_area" 2>>"$log" )" || true
+      echo "$rs_out" >> "$log"
+      if [[ "$rs_out" != RENDER_OK* ]]; then
+        render_ok=0
+        render_msgs+=( "$(printf '%s' "$rs_out" | tr '\n' ' ' | head -c 160)" )
+      fi
+    done
+    if [[ "$render_ok" -eq 1 ]]; then
+      RENDER_RESULT="ok"
+    else
+      RENDER_RESULT="$(printf '%s' "${render_msgs[*]}" | head -c 200)"
+      [[ -z "$RENDER_RESULT" ]] && RENDER_RESULT="render-smoke-error"
     fi
   fi
   emit_json "pass" "" "$diff_flag" "compile"
