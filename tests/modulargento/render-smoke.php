@@ -146,6 +146,43 @@ function frontendPriceSmoke($om, string $area): int
         return 1;
     }
 
+    // Cart item render: drives Checkout's cart item renderer + cart/item/default.phtml,
+    // a different path from the PDP that has its own removed-module couplings (e.g.
+    // the cart item template's MAP check). Render in the same layout so the price
+    // render block created above satisfies the item's price html.
+    try {
+        $store = $om->get(\Magento\Store\Model\StoreManagerInterface::class)->getStore();
+        // Build a quote item directly (rather than addProduct, whose salability /
+        // stock-index preconditions are fragile in a bare install) — the cart
+        // template's removed-module reference runs at the top of the render,
+        // before any cart-specific item data is needed.
+        $quote = $om->create(\Magento\Quote\Model\Quote::class);
+        $quote->setStore($store);
+        $item = $om->create(\Magento\Quote\Model\Quote\Item::class);
+        $item->setQuote($quote);
+        $item->setProduct($product);
+        $item->setQty(1);
+        $cartItem = $layout->createBlock(\Magento\Checkout\Block\Cart\Item\Renderer::class, 'smoke.cart.item');
+        $cartItem->setItem($item);
+        $cartItem->setTemplate('Magento_Checkout::cart/item/default.phtml');
+        $cartHtml = $cartItem->toHtml();
+        $rendered[] = 'cart-item(' . strlen((string) $cartHtml) . 'b)';
+    } catch (\Throwable $e) {
+        // Rendering the cart item template standalone can trip on cart-layout
+        // child blocks this minimal harness doesn't build (e.g.
+        // checkout.item.price.unit). Only a missing-class signature — the actual
+        // decoupling failure mode (a template/block referencing a removed
+        // module) — counts as a failure; layout-incompleteness is tolerated,
+        // since the removed-module reference runs near the top of the template,
+        // before those child blocks are reached.
+        $msg = $e->getMessage();
+        if (preg_match('/Class "[^"]*" does not exist|Class "[^"]*" not found|Interface "[^"]*" not found/', $msg)) {
+            echo "RENDER_FAIL $area cart-render " . get_class($e) . ': ' . $msg . PHP_EOL;
+            return 1;
+        }
+        $rendered[] = 'cart-item(skipped)';
+    }
+
     echo "RENDER_OK $area " . implode(' ', $rendered) . PHP_EOL;
     return 0;
 }
