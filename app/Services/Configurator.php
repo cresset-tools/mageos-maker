@@ -318,14 +318,21 @@ class Configurator
     }
 
     /**
-     * Base composer.json for the fully-modular (modulargento) distribution: a
-     * project requiring the modulargento *product* edition metapackage from its
-     * own Composer repo, pinned to the configured version, with a `require.php`
-     * constraint for bougie's runtime. Mirrors the stock convention where the
-     * root is named after project-community-edition but requires
-     * product-community-edition (a root package can't require itself); disabled
+     * Base composer.json for the fully-modular (modulargento) distribution.
+     *
+     * Starts from the real published `modulargento/project-community-edition`
+     * composer.json (injected as `project_template` — runtime keys already
+     * stripped) so the generated project carries every key a Mage-OS project
+     * does (require, require-dev, autoload, autoload-dev, extra, license, type).
+     * The maker then overlays its own additions: the modulargento Composer repo,
+     * a `php` constraint for bougie, stability flags, and `allow-plugins`. The
+     * template's `require` already points at product-community-edition (the
+     * metapackage listing the modules), so there's no self-require. Disabled
      * sets are layered on as `replace` entries (remapped to `modulargento/*`)
      * by {@see build()}.
+     *
+     * Falls back to a minimal hand-built base only if the template is absent
+     * (it's shipped in the repo, so that path is purely defensive).
      */
     private function modulargentoBaseComposer(string $version): array
     {
@@ -333,12 +340,40 @@ class Configurator
         $repoUrl = $this->modulargento['repository_url'] ?? 'https://modulargento.cresset.tools/';
         $editionVersion = $this->modulargento['version'] ?? $version;
         $phpConstraint = $this->modulargento['php_constraint'] ?? null;
+        $template = $this->modulargento['project_template'] ?? null;
 
-        // The root carries the project-edition name but pulls the product
-        // edition (the metapackage that actually lists the modules) — a package
-        // may not require itself.
+        // Maker-owned config block, merged over whatever the template carries.
+        $allowPlugins = [
+            'php-http/discovery' => true,
+            'dealerdirect/phpcodesniffer-composer-installer' => true,
+            'laminas/laminas-dependency-plugin' => true,
+            'modulargento/*' => true,
+        ];
+
+        if (is_array($template) && $template !== []) {
+            $composer = $template;
+            $composer['name'] = $edition;
+            $composer['description'] = 'Mage-OS project tailored with mageos-maker (fully-modular distribution)';
+            $composer['type'] = $composer['type'] ?? 'project';
+            $composer['require'] = $composer['require'] ?? [];
+            if (is_string($phpConstraint) && $phpConstraint !== '') {
+                $composer['require']['php'] = $phpConstraint;
+            }
+            $composer['repositories'] = [
+                ['type' => 'composer', 'url' => $repoUrl],
+            ];
+            $composer['minimum-stability'] = 'stable';
+            $composer['prefer-stable'] = true;
+            $composer['config'] = $composer['config'] ?? [];
+            $composer['config']['allow-plugins'] = ($composer['config']['allow-plugins'] ?? []) + $allowPlugins;
+
+            return $composer;
+        }
+
+        // Defensive fallback (template not shipped): the root carries the
+        // project-edition name but pulls the product edition (a package may not
+        // require itself), plus the minimum autoload needed to boot Magento.
         $productEdition = str_replace('/project-', '/product-', $edition);
-
         $require = [$productEdition => $editionVersion];
         if (is_string($phpConstraint) && $phpConstraint !== '') {
             $require['php'] = $phpConstraint;
@@ -354,11 +389,6 @@ class Configurator
             ],
             'minimum-stability' => 'stable',
             'prefer-stable' => true,
-            // Autoload + extra mirror modulargento/project-community-edition's own
-            // composer.json (i.e. what `composer create-project` would yield), so
-            // the project can bootstrap Magento — without the Magento\Setup\ and
-            // Magento\ PSR maps the Setup CLI fatals with "InitParamListener not
-            // found" at setup:install.
             'autoload' => [
                 'psr-4' => [
                     'Magento\\Framework\\' => 'lib/internal/Magento/Framework/',
@@ -383,12 +413,7 @@ class Configurator
                 'magento-force' => 'override',
             ],
             'config' => [
-                'allow-plugins' => [
-                    'php-http/discovery' => true,
-                    'dealerdirect/phpcodesniffer-composer-installer' => true,
-                    'laminas/laminas-dependency-plugin' => true,
-                    'modulargento/*' => true,
-                ],
+                'allow-plugins' => $allowPlugins,
             ],
         ];
     }

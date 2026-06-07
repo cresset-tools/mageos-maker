@@ -51,7 +51,7 @@ class ModulargentoDistributionTest extends TestCase
         );
     }
 
-    private function configurator(Definitions $defs): Configurator
+    private function configurator(Definitions $defs, array $modulargentoExtra = []): Configurator
     {
         $catalog = $this->createMock(CatalogRepository::class);
         $catalog->method('packageVersions')->willReturn([]);
@@ -61,13 +61,29 @@ class ModulargentoDistributionTest extends TestCase
             $catalog,
             new AddonVersionResolver($defs, new ComposerRepoIndex([], 'mageos-catalog'), 'mageos-catalog'),
             'https://repo.mage-os.org/',
-            [
+            array_merge([
                 'repository_url' => 'https://modulargento.cresset.tools/',
                 'edition_package' => 'modulargento/project-community-edition',
                 'version' => '3.0.0',
                 'php_constraint' => '~8.3.0||~8.4.0||~8.5.0',
-            ],
+            ], $modulargentoExtra),
         );
+    }
+
+    /** A stand-in for the shipped project-community-edition composer.json template. */
+    private function projectTemplate(): array
+    {
+        return [
+            'name' => 'modulargento/project-community-edition',
+            'description' => 'Modulargento Community Edition Project',
+            'type' => 'project',
+            'require' => ['modulargento/product-community-edition' => '3.0.0'],
+            'require-dev' => ['phpunit/phpunit' => '^11', 'phpstan/phpstan' => '^2'],
+            'autoload' => ['psr-4' => ['Magento\\Setup\\' => 'setup/src/Magento/Setup/']],
+            'autoload-dev' => ['psr-4' => ['Magento\\PhpStan\\' => 'dev/tests/static/framework/Magento/PhpStan/']],
+            'extra' => ['magento-force' => 'override'],
+            'license' => ['OSL-3.0', 'AFL-3.0'],
+        ];
     }
 
     public function test_removability_is_distribution_aware(): void
@@ -107,6 +123,34 @@ class ModulargentoDistributionTest extends TestCase
             ['type' => 'composer', 'url' => 'https://repo.mage-os.org/'],
             $composer['repositories'] ?? [],
         );
+    }
+
+    public function test_base_carries_every_key_from_the_published_project_template(): void
+    {
+        $cfg = $this->configurator($this->defs(), ['project_template' => $this->projectTemplate()]);
+
+        $composer = $cfg->build(new Selection(
+            version: '3.0.0', profile: null,
+            disabledSets: [], disabledLayers: [], enabledLayers: [], enabledAddons: [], profileGroups: [],
+            distribution: 'modulargento',
+        ));
+
+        // Keys carried verbatim from the real project composer.json.
+        $this->assertSame(['OSL-3.0', 'AFL-3.0'], $composer['license'] ?? null);
+        $this->assertArrayHasKey('phpunit/phpunit', $composer['require-dev'] ?? []);
+        $this->assertArrayHasKey('Magento\\PhpStan\\', $composer['autoload-dev']['psr-4'] ?? []);
+        $this->assertArrayHasKey('Magento\\Setup\\', $composer['autoload']['psr-4'] ?? []);
+        $this->assertSame('override', $composer['extra']['magento-force'] ?? null);
+
+        // Maker overlays applied on top.
+        $this->assertSame('modulargento/project-community-edition', $composer['name'] ?? null);
+        $this->assertSame('3.0.0', $composer['require']['modulargento/product-community-edition'] ?? null);
+        $this->assertSame('~8.3.0||~8.4.0||~8.5.0', $composer['require']['php'] ?? null);
+        $this->assertContains(
+            ['type' => 'composer', 'url' => 'https://modulargento.cresset.tools/'],
+            $composer['repositories'] ?? [],
+        );
+        $this->assertTrue($composer['config']['allow-plugins']['modulargento/*'] ?? false);
     }
 
     public function test_disabling_a_set_replaces_both_vendor_names(): void

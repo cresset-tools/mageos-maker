@@ -85,13 +85,27 @@ class AppServiceProvider extends ServiceProvider
             $app['config']->get('mageos.cache_dir'),
         ));
 
-        $this->app->singleton(Configurator::class, fn ($app) => new Configurator(
-            $app->make(Definitions::class),
-            $app->make(CatalogRepository::class),
-            $app->make(AddonVersionResolver::class),
-            $app['config']->get('mageos.repository_url'),
-            $app['config']->get('mageos.modulargento', []),
-        ));
+        $this->app->singleton(Configurator::class, function ($app) {
+            $modulargento = $app['config']->get('mageos.modulargento', []);
+            // Load the real published project-community-edition composer.json so
+            // the generated project carries every key (require-dev, autoload-dev,
+            // license, …) rather than a hand-maintained subset.
+            $templatePath = $modulargento['project_template_path'] ?? null;
+            if (is_string($templatePath) && is_file($templatePath)) {
+                $decoded = json_decode((string) file_get_contents($templatePath), true);
+                if (is_array($decoded)) {
+                    $modulargento['project_template'] = $decoded;
+                }
+            }
+
+            return new Configurator(
+                $app->make(Definitions::class),
+                $app->make(CatalogRepository::class),
+                $app->make(AddonVersionResolver::class),
+                $app['config']->get('mageos.repository_url'),
+                $modulargento,
+            );
+        });
 
         $this->app->singleton(InstallTreeResolver::class, fn ($app) => new InstallTreeResolver(
             $app->make(Definitions::class),

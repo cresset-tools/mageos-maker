@@ -24,6 +24,11 @@ return [
         'version' => env('MAGEOS_MODULARGENTO_VERSION', '3.0.0'),
         // Pinned for bougie's PHP runtime; emitted as a `require.php` constraint.
         'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.3.0||~8.4.0||~8.5.0'),
+        // The real published project-community-edition composer.json (runtime
+        // keys stripped), used verbatim as the base so the generated project
+        // carries every key a Mage-OS project does (require-dev, autoload-dev,
+        // license, …). Refresh this file when bumping `version` above.
+        'project_template_path' => base_path('resources/modulargento/project-community-edition.json'),
     ],
 
     // Filesystem paths (under storage/app/private when using the local disk)
