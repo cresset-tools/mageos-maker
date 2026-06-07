@@ -3,3 +3,4 @@ label: CardinalCommerce 3-D Secure
 description: 3-D Secure 2.0 authentication via CardinalCommerce (legacy; consumed by older payment integrations)
 packages:
   - mage-os/module-cardinal-commerce
+group: Shipping, Tax & Payments

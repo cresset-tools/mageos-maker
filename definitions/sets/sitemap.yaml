@@ -3,3 +3,4 @@ label: XML Sitemap
 description: Admin-generated XML sitemaps for search engines
 packages:
   - mage-os/module-sitemap
+group: Marketing & Content
