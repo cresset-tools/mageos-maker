@@ -3,4 +3,4 @@ label: Elasticsearch 8 engine
 description: Elasticsearch 8 search engine — removable when running OpenSearch (which builds on the shared Magento_Elasticsearch base, kept)
 packages:
   - mage-os/module-elasticsearch-8
-group: Catalog & Product Types
+group: Admin, Ops & Developer
