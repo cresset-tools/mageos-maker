@@ -1,0 +1,7 @@
+name: webapi-async
+label: Async/bulk Web API
+description: Asynchronous + bulk REST endpoints (/async, /async/bulk). The bulk-operation framework stays; only the async REST layer is removed.
+removable_modulargento: true  # WebapiAsync reader seam (proxies) + NullConfig default
+removable: false  # primary-config reader hooks + AsynchronousOperations ConfigInterface — decoupled in modulargento
+packages:
+  - mage-os/module-webapi-async
