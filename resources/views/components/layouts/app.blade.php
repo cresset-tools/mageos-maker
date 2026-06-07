@@ -121,6 +121,15 @@
         .fchip.on { background: var(--gray-900); color: #fff; border-color: var(--gray-900); }
         .empty-note { font-size: 12.5px; color: var(--gray-400); margin: 4px 0 0; }
 
+        /* home / overview */
+        .home-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; max-width: 760px; margin-bottom: 26px; }
+        .home-stats .stat { background: #fff; border: 1px solid var(--gray-200); border-radius: 10px; padding: 12px 14px; }
+        .home-stats .stat .k { font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--gray-500); }
+        .home-stats .stat .v { font-size: 18px; font-weight: 700; margin-top: 4px; letter-spacing: -0.01em; }
+        .home-lead { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-500); margin: 0 0 12px; }
+        .rcard.home-nav { align-items: center; }
+        .rcard.home-nav .rt { font-size: 13.5px; }
+
         /* radio cards */
         .rcardgrid { display: grid; gap: 10px; max-width: 760px; }
         .rcardgrid.two { grid-template-columns: 1fr 1fr; }
