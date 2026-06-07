@@ -401,6 +401,24 @@
 
     document.addEventListener('livewire:initialized', () => {
         Livewire.on('composer-updated', ({json}) => paintComposer(json));
+
+        // Toggling a module is a wire:model.live update → full re-render + DOM
+        // morph, which resets the inner scroll containers to the top. Snapshot
+        // their scroll positions before each commit and restore them after the
+        // DOM has been morphed so the list stays put under the cursor.
+        const SCROLLERS = ['.rail', '.center', '.out-body'];
+        Livewire.hook('commit', ({ succeed }) => {
+            const saved = SCROLLERS.map(sel => {
+                const el = document.querySelector(sel);
+                return el ? el.scrollTop : 0;
+            });
+            succeed(() => requestAnimationFrame(() => {
+                SCROLLERS.forEach((sel, i) => {
+                    const el = document.querySelector(sel);
+                    if (el) el.scrollTop = saved[i];
+                });
+            }));
+        });
     });
 </script>
 </body>

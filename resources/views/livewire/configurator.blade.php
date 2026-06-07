@@ -424,14 +424,25 @@
                                                 @if (! empty($set['subtoggles']))
                                                     <span class="subopts" @click.stop>
                                                         @foreach ($set['subtoggles'] as $sub)
-                                                            <label class="chk mini"
+                                                            @php
+                                                                $reqSet = $sub['requires']['set'] ?? null;
+                                                                $reqMet = $reqSet === null || in_array($reqSet, $enabledSets, true);
+                                                                $subDisabled = ! $parentEnabled || ! $reqMet;
+                                                                $reqLabel = $reqSet ? ($setDefs[$reqSet]['label'] ?? $reqSet) : null;
+                                                            @endphp
+                                                            <label class="chk mini {{ $subDisabled ? 'is-disabled' : '' }}"
+                                                                   wire:key="sub-{{ $name }}-{{ $sub['name'] }}-{{ $subDisabled ? 'off' : 'on' }}"
                                                                    :class="{ on: $wire.enabledSubtoggles.includes('{{ $name }}.{{ $sub['name'] }}') }">
                                                                 <span class="box"></span>
                                                                 <input type="checkbox" class="vh"
                                                                     wire:model.live="enabledSubtoggles"
                                                                     value="{{ $name }}.{{ $sub['name'] }}"
-                                                                    @disabled(! $parentEnabled)>
-                                                                <span class="label">{{ $sub['label'] }}</span>
+                                                                    @disabled($subDisabled)>
+                                                                <span class="label">{{ $sub['label'] }}
+                                                                    @if ($reqSet && ! $reqMet)
+                                                                        <span class="badge gray" title="Requires the {{ $reqLabel }} module">needs {{ $reqLabel }}</span>
+                                                                    @endif
+                                                                </span>
                                                             </label>
                                                         @endforeach
                                                     </span>

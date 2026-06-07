@@ -1,57 +1,61 @@
 name: mageos-lite
 label: Mage-OS Lite
-description: Aggressively trimmed Mage-OS — simple products only, no GraphQL, no message queue, English only
+description: Aggressively trimmed Mage-OS — bare core only. Every removable module is stripped except Two-Factor Authentication; English only, no GraphQL, no message queue.
 selection:
+  # Disable every set except two-factor-auth. Sets stock Mage-OS locks on (hard
+  # cross-module deps) stay listed: it's a no-op on standard Mage-OS — they're
+  # force-kept — but under the fully-modular (modulargento) distribution they're
+  # genuinely stripped, making "Lite" as light as the build allows.
   disabledSets:
     - admin-analytics
     - admin-theme-m137
     - adobe-stock
+    - analytics
     - automatic-translation
     - aws-s3
+    - bundle
     - dhl
+    - downloadable
     - fedex
+    - gift-message
     - google-marketing
+    - grouped
+    - instant-purchase
     - inventory
+    - login-as-customer
+    - luma
+    - mageos-rma
+    - marketplace
+    - media-gallery
+    - media-gallery-sync
+    - msrp
+    - multishipping
+    - new-relic
+    - newsletter
+    - order-cancellation
+    - page-builder
+    - paypal
+    - persistent-cart
+    - product-alert
+    - recaptcha
+    - release-notification
+    - reviews
+    - rss
+    - sample-data
+    - send-friend
+    - swagger
+    - swatches
+    - ups
+    - usps
+    - weee
+    - wishlist
+    # English only.
     - language-de_de
     - language-es_es
     - language-fr_fr
     - language-nl_nl
     - language-pt_br
     - language-zh_hans_cn
-    - login-as-customer
-    - marketplace
-    - multishipping
-    - new-relic
-    - order-cancellation
-    - page-builder
-    - paypal
-    - persistent-cart
-    - recaptcha
-    - rss
-    - sample-data
-    - send-friend
-    - swagger
-    - ups
-    - usps
-    - weee
-    # Sets stock Mage-OS locks on (hard cross-module deps) but the fully-modular
-    # (modulargento) distribution decouples. Listing them is a no-op on standard
-    # Mage-OS — they're force-kept — but under modulargento they're stripped too,
-    # so "Lite" becomes genuinely light: simple products only, no
-    # wishlist/reviews/newsletter/gift-message/MSRP/swatches/bundle/downloadable.
-    - bundle
-    - downloadable
-    - gift-message
-    - grouped
-    - instant-purchase
-    - media-gallery-sync
-    - msrp
-    - newsletter
-    - product-alert
-    - release-notification
-    - reviews
-    - swatches
-    - wishlist
   disabledLayers:
     - graphql
   enabledLayers: []

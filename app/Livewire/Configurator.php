@@ -210,7 +210,59 @@ class Configurator extends Component
         if ($value === 'modulargento' && ! $this->modulargentoAvailable($this->version)) {
             $this->distribution = 'standard';
         }
+
+        // Switching distribution changes which sets are removable, so re-derive
+        // the set selection from the active profile: a profile like Lite that
+        // wanted sets off but couldn't strip them under Standard should now
+        // actually drop them under modulargento (and vice-versa). Only the sets
+        // are recomputed — manual theme/checkout/add-on choices are preserved.
+        $defs = app(Definitions::class);
+        if ($this->profile !== null && isset($defs->profiles[$this->profile])) {
+            $profileSel = Selection::default($this->version, $defs)
+                ->applyProfile($defs->profiles[$this->profile]);
+            $allSets = array_keys($defs->setsForVersion($this->version ?? ''));
+            $effectiveDisabled = array_values(array_filter(
+                $profileSel->disabledSets,
+                fn ($n) => $defs->isSetRemovable($n, $this->distribution),
+            ));
+            $this->enabledSets = array_values(array_diff($allSets, $effectiveDisabled));
+        }
+
         $this->forceNonRemovableSetsOn();
+        $this->enforceSubtoggleRequires();
+    }
+
+    /**
+     * Toggling a set may invalidate a subtoggle that depends on it (e.g. Page
+     * Builder analytics requires the Analytics set). Re-run the requires pass so
+     * the dependent subtoggle is force-disabled when its set is removed.
+     */
+    public function updatedEnabledSets(): void
+    {
+        $this->enforceSubtoggleRequires();
+    }
+
+    /**
+     * Drop any enabled subtoggle whose `requires.set` is not currently enabled.
+     * A subtoggle that builds on another set (Page Builder analytics → Analytics)
+     * can't stand on its own, so it's removed from the positive list — which
+     * sends its packages to `replace` — when that set is gone.
+     */
+    private function enforceSubtoggleRequires(): void
+    {
+        $defs = app(Definitions::class);
+        $this->enabledSubtoggles = array_values(array_filter(
+            $this->enabledSubtoggles,
+            function ($key) use ($defs) {
+                [$set, $sub] = array_pad(explode('.', $key, 2), 2, null);
+                if ($sub === null) {
+                    return true;
+                }
+                $needed = $defs->subtoggleRequiredSet($set, $sub);
+
+                return $needed === null || in_array($needed, $this->enabledSets, true);
+            },
+        ));
     }
 
     /**
@@ -623,6 +675,7 @@ class Configurator extends Component
         $defaulted = $configurator->defaultedAddons($sel);
         $this->enabledAddons = array_values(array_unique(array_merge($sel->enabledAddons, $defaulted)));
         $this->previousDefaultedAddons = $defaulted;
+        $this->enforceSubtoggleRequires();
     }
 
     public function render()
