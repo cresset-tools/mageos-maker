@@ -35,6 +35,17 @@ ksort($rows);
 
 $icon = fn($s) => $s === 'pass' ? '✅' : ($s === 'noop' ? '➖' : '❌');
 
+// Runtime-smoke dimensions (graphql, render) are recorded separately and do NOT
+// change a set's install/compile pass/fail — a set can compile yet crash at
+// runtime (e.g. a staying block requesting a removed module's price type). Treat
+// any value that isn't "ok"/"n/a"/missing as a failure to surface.
+$smokeIcon = function ($v) {
+    if ($v === null || $v === '' || $v === 'n/a') return '·';
+    return $v === 'ok' ? '✅' : '❌';
+};
+$smokeFailed = fn($v) => !($v === null || $v === '' || $v === 'n/a' || $v === 'ok');
+$smokeCell = fn($r) => 'gql ' . $smokeIcon($r['graphql'] ?? 'n/a') . ' · render ' . $smokeIcon($r['render'] ?? 'n/a');
+
 echo "# Modulargento removal matrix — profile: `$profile`";
 if ($version !== '') echo " — version: `$version`";
 echo "\n\n";
@@ -66,9 +77,31 @@ if ($maxreduce) {
        . ($maxreduce['status'] === 'pass' ? " — the reduced-feature install still boots + compiles.\n\n" : " — see log.\n\n");
 }
 
+// Runtime-smoke failures — sets that install + compile but crash at runtime
+// (storefront price render or admin model-save). These are the gaps install +
+// di:compile can't see, so call them out prominently.
+$smokeRows = $rows;
+if ($baseline) $smokeRows['_baseline'] = $baseline;
+if ($maxreduce) $smokeRows['_max-reduction'] = $maxreduce;
+$smokeBad = [];
+foreach ($smokeRows as $set => $r) {
+    foreach (['graphql' => 'GraphQL', 'render' => 'render'] as $dim => $label) {
+        if ($smokeFailed($r[$dim] ?? null)) {
+            $smokeBad[] = "- `$set` — $label smoke: " . trim((string) $r[$dim]);
+        }
+    }
+}
+if ($smokeBad) {
+    echo "## ⚠️ Runtime smoke failures (" . count($smokeBad) . ")\n\n";
+    echo "These sets pass install + di:compile but **break at runtime** — a staying "
+       . "module references something a removed module provided (a price type, factory, "
+       . "schema, …). install/compile can't catch these.\n\n";
+    echo implode("\n", $smokeBad) . "\n\n";
+}
+
 // Per-set comparison table.
 echo "## Per-set: stock vs modulargento\n\n";
-echo "| Set | Stock | Modulargento | Change |\n|---|---|---|---|\n";
+echo "| Set | Stock | Modulargento | Change | Smoke |\n|---|---|---|---|---|\n";
 foreach ($rows as $set => $r) {
     $was = $stock[$set] ?? '—';
     $now = $r['status'];
@@ -76,8 +109,8 @@ foreach ($rows as $set => $r) {
     if ($was !== '—' && $was !== 'pass' && $was !== 'noop' && $now === 'pass') $change = '**fail → pass** 🎉';
     elseif ($was === 'pass' && $now !== 'pass')                                $change = '⚠️ regressed';
     elseif ($was === $now)                                                     $change = 'same';
-    printf("| `%s` | %s %s | %s %s | %s |\n",
-        $set, $icon($was === '—' ? 'x' : $was), $was, $icon($now), $now, $change);
+    printf("| `%s` | %s %s | %s %s | %s | %s |\n",
+        $set, $icon($was === '—' ? 'x' : $was), $was, $icon($now), $now, $change, $smokeCell($r));
 }
 echo "\n";
 

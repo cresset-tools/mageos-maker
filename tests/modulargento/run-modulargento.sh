@@ -78,6 +78,12 @@ export COMPOSER_CACHE_DIR="${COMPOSER_CACHE_DIR:-$HOME/.cache/composer}"
 # runtime-stitched schema still builds + introspects after a set's *GraphQl modules
 # are removed — something install+di:compile never checks).
 export GRAPHQL_SMOKE="${GRAPHQL_SMOKE:-0}"
+# RENDER_SMOKE: after compile, render a product's price boxes (frontend) and
+# instantiate the model-save observers (adminhtml) to catch runtime decoupling
+# gaps that install+di:compile+graphql miss — a staying block/observer holding a
+# reference to a removed module's price type or factory (e.g. Catalog →
+# 'msrp_price', admin-activity-log → a removed module's factory).
+export RENDER_SMOKE="${RENDER_SMOKE:-0}"
 
 mkdir -p "$results_dir" "$per_set_dir" "$sandboxes_dir"
 
