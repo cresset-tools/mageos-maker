@@ -4,3 +4,4 @@ description: Legacy "email a friend" product sharing feature
 packages:
   - mage-os/module-send-friend
   - mage-os/module-send-friend-graph-ql
+group: Catalog & Product Types

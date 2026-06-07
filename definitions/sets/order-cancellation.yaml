@@ -5,3 +5,4 @@ packages:
   - mage-os/module-order-cancellation
   - mage-os/module-order-cancellation-graph-ql
   - mage-os/module-order-cancellation-ui
+group: Cart, Checkout & Orders

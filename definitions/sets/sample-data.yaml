@@ -3,3 +3,4 @@ label: Sample data
 description: Demo catalog, CMS and customer sample data modules
 packages:
   - mage-os/module-sample-data
+group: Admin, Ops & Developer

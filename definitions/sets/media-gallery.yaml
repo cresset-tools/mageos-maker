@@ -30,3 +30,4 @@ packages:
   - mage-os/module-media-gallery-synchronization-remote-storage
   - mage-os/module-media-gallery-ui
   - mage-os/module-media-gallery-ui-api
+group: Admin, Ops & Developer

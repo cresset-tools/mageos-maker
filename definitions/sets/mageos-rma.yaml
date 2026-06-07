@@ -5,3 +5,4 @@ category: module
 since: 3.0.0
 packages:
   - mage-os/module-rma
+group: Admin, Ops & Developer

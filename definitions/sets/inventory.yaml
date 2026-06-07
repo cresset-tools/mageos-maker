@@ -78,3 +78,4 @@ packages:
   - mage-os/module-inventory-swatches-frontend-ui
   - mage-os/module-inventory-visual-merchandiser
   - mage-os/module-inventory-wishlist
+group: Cart, Checkout & Orders

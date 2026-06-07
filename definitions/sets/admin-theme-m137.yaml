@@ -4,3 +4,4 @@ description: New Mage-OS admin theme and the admin theme switcher module
 packages:
   - mage-os/theme-adminhtml-m137
   - mage-os/module-theme-adminhtml-switcher
+group: Admin, Ops & Developer

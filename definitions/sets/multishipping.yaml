@@ -3,3 +3,4 @@ label: Multishipping checkout
 description: Ship one order to multiple addresses
 packages:
   - mage-os/module-multishipping
+group: Cart, Checkout & Orders

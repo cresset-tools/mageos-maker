@@ -210,7 +210,59 @@ class Configurator extends Component
         if ($value === 'modulargento' && ! $this->modulargentoAvailable($this->version)) {
             $this->distribution = 'standard';
         }
+
+        // Switching distribution changes which sets are removable, so re-derive
+        // the set selection from the active profile: a profile like Lite that
+        // wanted sets off but couldn't strip them under Standard should now
+        // actually drop them under modulargento (and vice-versa). Only the sets
+        // are recomputed — manual theme/checkout/add-on choices are preserved.
+        $defs = app(Definitions::class);
+        if ($this->profile !== null && isset($defs->profiles[$this->profile])) {
+            $profileSel = Selection::default($this->version, $defs)
+                ->applyProfile($defs->profiles[$this->profile]);
+            $allSets = array_keys($defs->setsForVersion($this->version ?? ''));
+            $effectiveDisabled = array_values(array_filter(
+                $profileSel->disabledSets,
+                fn ($n) => $defs->isSetRemovable($n, $this->distribution),
+            ));
+            $this->enabledSets = array_values(array_diff($allSets, $effectiveDisabled));
+        }
+
         $this->forceNonRemovableSetsOn();
+        $this->enforceSubtoggleRequires();
+    }
+
+    /**
+     * Toggling a set may invalidate a subtoggle that depends on it (e.g. Page
+     * Builder analytics requires the Analytics set). Re-run the requires pass so
+     * the dependent subtoggle is force-disabled when its set is removed.
+     */
+    public function updatedEnabledSets(): void
+    {
+        $this->enforceSubtoggleRequires();
+    }
+
+    /**
+     * Drop any enabled subtoggle whose `requires.set` is not currently enabled.
+     * A subtoggle that builds on another set (Page Builder analytics → Analytics)
+     * can't stand on its own, so it's removed from the positive list — which
+     * sends its packages to `replace` — when that set is gone.
+     */
+    private function enforceSubtoggleRequires(): void
+    {
+        $defs = app(Definitions::class);
+        $this->enabledSubtoggles = array_values(array_filter(
+            $this->enabledSubtoggles,
+            function ($key) use ($defs) {
+                [$set, $sub] = array_pad(explode('.', $key, 2), 2, null);
+                if ($sub === null) {
+                    return true;
+                }
+                $needed = $defs->subtoggleRequiredSet($set, $sub);
+
+                return $needed === null || in_array($needed, $this->enabledSets, true);
+            },
+        ));
     }
 
     /**
@@ -623,6 +675,7 @@ class Configurator extends Component
         $defaulted = $configurator->defaultedAddons($sel);
         $this->enabledAddons = array_values(array_unique(array_merge($sel->enabledAddons, $defaulted)));
         $this->previousDefaultedAddons = $defaulted;
+        $this->enforceSubtoggleRequires();
     }
 
     public function render()
@@ -643,6 +696,31 @@ class Configurator extends Component
         $modules = array_filter($versionSets, fn ($s) => ($s['category'] ?? 'module') === 'module');
         $languages = array_filter($versionSets, fn ($s) => ($s['category'] ?? 'module') === 'language');
 
+        // Partition modules into the tabbed-workspace sub-categories (the `group`
+        // field on each set's YAML). The order here drives the Modules section
+        // layout; any module whose group isn't listed falls into "Other".
+        $groupOrder = [
+            'Catalog & Product Types' => 'Product types, swatches, reviews, wishlist',
+            'Cart, Checkout & Orders' => 'MSI, multishipping, instant purchase',
+            'Shipping, Tax & Payments' => 'DHL, FedEx, UPS, USPS, PayPal, FPT',
+            'Marketing & Content' => 'Page Builder, Google, newsletter, storefront',
+            'Security' => 'Two-Factor Auth, reCAPTCHA',
+            'Admin, Ops & Developer' => 'Admin theme, RMA, analytics, S3, Swagger',
+        ];
+        $moduleGroups = [];
+        foreach ($groupOrder as $label => $hint) {
+            $moduleGroups[$label] = ['label' => $label, 'hint' => $hint, 'sets' => []];
+        }
+        foreach ($modules as $name => $set) {
+            $label = $set['group'] ?? 'Other';
+            if (! isset($moduleGroups[$label])) {
+                $moduleGroups[$label] = ['label' => $label, 'hint' => '', 'sets' => []];
+            }
+            $moduleGroups[$label]['sets'][$name] = $set;
+        }
+        // Drop empty groups (e.g. a category whose only members are version-gated out).
+        $moduleGroups = array_values(array_filter($moduleGroups, fn ($g) => $g['sets'] !== []));
+
         $setRemovable = [];
         foreach (array_keys($versionSets) as $name) {
             $setRemovable[$name] = $defs->isSetRemovable($name, $this->distribution);
@@ -654,6 +732,8 @@ class Configurator extends Component
 
         return view('livewire.configurator', [
             'setDefs' => $modules,
+            'moduleGroups' => $moduleGroups,
+            'latestStable' => $catalog->latestStable(),
             'languageDefs' => $languages,
             'setRemovable' => $setRemovable,
             'layerRemovable' => $layerRemovable,

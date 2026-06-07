@@ -13,3 +13,4 @@ packages:
   - mage-os/module-sales-analytics
   - mage-os/module-wishlist-analytics
   - mage-os/module-admin-analytics-release-notification
+group: Admin, Ops & Developer

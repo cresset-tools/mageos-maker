@@ -64,6 +64,18 @@ class Definitions
         return self::entryNames($this->setSubtoggles($set)[$sub]['packages'] ?? []);
     }
 
+    /**
+     * The set a subtoggle depends on, if any. A subtoggle declaring
+     * `requires: { set: <name> }` is only meaningful while that set is enabled;
+     * the configurator force-disables it (and the UI greys it out) when the
+     * required set is removed — e.g. Page Builder analytics needs the Analytics
+     * framework set.
+     */
+    public function subtoggleRequiredSet(string $set, string $sub): ?string
+    {
+        return $this->setSubtoggles($set)[$sub]['requires']['set'] ?? null;
+    }
+
     /** @return list<array{name:string,requires?:array<string,string>}> */
     public function subtogglePackageEntries(string $set, string $sub): array
     {

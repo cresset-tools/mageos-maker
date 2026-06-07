@@ -3,3 +3,4 @@ label: UPS shipping
 description: UPS shipping carrier integration
 packages:
   - mage-os/module-ups
+group: Shipping, Tax & Payments

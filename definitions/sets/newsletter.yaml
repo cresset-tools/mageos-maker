@@ -5,3 +5,4 @@ removable: false  # hard cross-module deps in stock Mage-OS — can't be cleanly
 packages:
   - mage-os/module-newsletter
   - mage-os/module-newsletter-graph-ql
+group: Marketing & Content

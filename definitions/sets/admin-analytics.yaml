@@ -6,3 +6,4 @@ packages:
   - mage-os/module-customer-analytics
   - mage-os/module-sales-analytics
   - mage-os/module-wishlist-analytics
+group: Admin, Ops & Developer

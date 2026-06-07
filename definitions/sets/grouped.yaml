@@ -11,3 +11,4 @@ packages:
   - mage-os/module-inventory-grouped-product
   - mage-os/module-inventory-grouped-product-admin-ui
   - mage-os/module-inventory-grouped-product-indexer
+group: Catalog & Product Types

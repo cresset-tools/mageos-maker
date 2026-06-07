@@ -3,3 +3,4 @@ label: Luma Theme
 description: Default Magento Luma frontend theme
 packages:
   - mage-os/theme-frontend-luma
+group: Marketing & Content

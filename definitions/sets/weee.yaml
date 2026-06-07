@@ -4,3 +4,4 @@ description: Fixed product tax (FPT) for WEEE and similar levies
 packages:
   - mage-os/module-weee
   - mage-os/module-weee-graph-ql
+group: Shipping, Tax & Payments

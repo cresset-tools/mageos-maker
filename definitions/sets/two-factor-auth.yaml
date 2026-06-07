@@ -22,3 +22,4 @@ subtoggles:
       - spomky-labs/otphp
       - christian-riesen/base32
       - endroid/qr-code
+group: Security
