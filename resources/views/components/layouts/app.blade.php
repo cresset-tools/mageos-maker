@@ -297,6 +297,184 @@
         .hyva-steps small { display: block; margin-top: 4px; color: var(--gray-500); font-size: 11px; }
         .hyva-steps small code { background: var(--gray-100); padding: 1px 4px; border-radius: 3px; }
     </style>
+    <style>
+        /* ============================================================
+           Mobile accordion layout (.device) — single-column rendering of
+           the same configurator, shown only on phone-width screens. All
+           rules are scoped under .device so they never touch the desktop
+           shell. Mirrors the design bundle's MageOS Maker - Mobile.html.
+           ============================================================ */
+        .device { display: none; }
+
+        @media (max-width: 767px) {
+            html, body { background: #e7e9ee; }
+            .shell { display: none !important; }
+            .device { display: block; }
+        }
+
+        /* phone column — fills narrow screens, centers as a card above 480px */
+        .device { width: 100%; max-width: 440px; margin: 0 auto; min-height: 100vh; background: var(--gray-100);
+                  box-shadow: 0 0 0 1px var(--gray-200), 0 24px 64px rgba(16,24,40,0.16); position: relative; }
+        @media (min-width: 480px) and (max-width: 767px) {
+            .device { margin: 24px auto; min-height: calc(100vh - 48px); border-radius: 22px; overflow: hidden; }
+        }
+
+        /* ---- app bar ---- */
+        .device .appbar { position: sticky; top: 0; z-index: 40; padding: 0 14px; height: 48px; }
+        .device .appbar .brand { font-size: 14px; }
+        .device .appbar .status { font-size: 10.5px; color: #f0a868; font-weight: 600; white-space: nowrap; }
+        .device .appbar .status code { font-family: var(--mono); color: #cfd3da; }
+
+        /* ---- summary header ---- */
+        .device .m-summary { background: #fff; border-bottom: 1px solid var(--gray-200); padding: 16px 16px 15px; }
+        .device .m-summary .pf { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
+        .device .m-summary .meta { font-size: 12px; color: var(--gray-500); margin-top: 3px; line-height: 1.45; }
+        .device .m-summary .row2 { display: flex; gap: 7px; margin-top: 12px; }
+        .device .m-summary .stat { flex: 1; background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 9px; padding: 9px 11px; }
+        .device .m-summary .stat .n { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+        .device .m-summary .stat .l { font-size: 10.5px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1px; }
+
+        /* ---- section group label ---- */
+        .device .m-grouplbl { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--gray-400); padding: 18px 18px 8px; }
+
+        /* ---- accordion ---- */
+        .device .acc { border-bottom: 1px solid var(--gray-200); background: #fff; }
+        .device .acc-head { display: flex; align-items: center; gap: 12px; padding: 15px 16px; cursor: pointer; user-select: none; }
+        .device .acc-head .ic { width: 17px; height: 17px; color: var(--gray-400); flex: none; }
+        .device .acc.open .acc-head .ic { color: var(--blue-600); }
+        .device .acc-head .nm { font-size: 14px; font-weight: 700; flex: 1; letter-spacing: -0.01em; }
+        .device .acc-head .val { font-size: 12px; font-weight: 600; color: var(--gray-500); max-width: 46%; text-align: right;
+                                 overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .device .acc-head .chev { width: 15px; height: 15px; color: var(--gray-400); flex: none; transition: transform .18s; }
+        .device .acc.open .acc-head .chev { transform: rotate(180deg); }
+        .device .acc-body { display: none; padding: 2px 16px 20px; }
+        .device .acc.open .acc-body { display: block; }
+        .device .acc.open .acc-head .val { display: none; }
+
+        /* radio cards */
+        .device .rcardgrid { display: grid; gap: 8px; max-width: none; }
+        .device .rcard { border: 1.5px solid var(--gray-200); border-radius: 11px; padding: 12px 13px; cursor: pointer; display: flex; gap: 11px; align-items: flex-start; background: #fff; }
+        .device .rcard.sel { border-color: var(--blue-600); box-shadow: var(--ring); }
+        .device .rcard.disabled { opacity: 0.5; cursor: not-allowed; }
+        .device .rcard .rdot { flex: none; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--gray-300); margin-top: 1px; position: relative; background: #fff; }
+        .device .rcard.sel .rdot { border-color: var(--blue-600); }
+        .device .rcard.sel .rdot::after { content: ""; position: absolute; inset: 3.5px; border-radius: 50%; background: var(--blue-600); }
+        .device .rcard .rt { font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+        .device .rcard .rd { font-size: 12px; color: var(--gray-500); margin-top: 3px; line-height: 1.5; }
+        .device .rcard code { font-family: var(--mono); font-size: 11px; }
+
+        .device .col-lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-500); margin: 14px 0 9px; }
+        .device .col-lbl:first-child { margin-top: 2px; }
+
+        .device .infonote { display: flex; gap: 9px; max-width: none; margin-top: 14px; background: var(--blue-50); border: 1px solid var(--blue-100); border-radius: 9px; padding: 11px 12px; }
+        .device .infonote .ic { width: 15px; height: 15px; color: var(--blue-600); flex: none; margin-top: 1px; }
+        .device .infonote p { margin: 0; font-size: 12px; color: var(--gray-600); line-height: 1.55; }
+        .device .infonote code { font-family: var(--mono); font-size: 11px; background: #fff; padding: 1px 5px; border-radius: 4px; color: var(--blue-700); }
+
+        /* modules toolbar */
+        .device .m-tools { position: sticky; top: 48px; z-index: 20; background: rgba(255,255,255,0.94); backdrop-filter: blur(8px); padding: 12px 16px 11px; border-bottom: 1px solid var(--gray-200); }
+        .device .m-tools .search { margin-bottom: 9px; }
+        .device .filterchips { display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .device .filterchips::-webkit-scrollbar { display: none; }
+        .device .fchip { font-size: 12px; font-weight: 600; padding: 6px 13px; border-radius: 7px; border: 1px solid var(--gray-300); background: #fff; color: var(--gray-600); cursor: pointer; white-space: nowrap; flex: none; }
+        .device .fchip.on { background: var(--gray-900); color: #fff; border-color: var(--gray-900); }
+
+        .device .m-modwrap { background: #fff; padding: 16px 16px 22px; }
+        .device .catblock { margin-bottom: 18px; }
+        .device .catblock:last-child { margin-bottom: 0; }
+        .device .cathead { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; cursor: pointer; user-select: none; }
+        .device .cathead .ct-name { font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--gray-600); }
+        .device .cathead .ct-line { flex: 1; height: 1px; background: var(--gray-200); }
+        .device .cathead .ct-count { font-size: 11px; color: var(--gray-400); font-weight: 600; white-space: nowrap; }
+        .device .cathead .ct-count b { color: var(--gray-700); }
+        .device .cathead .ct-fold { width: 13px; height: 13px; color: var(--gray-400); transition: transform .15s; }
+        .device .catblock.folded .ct-fold { transform: rotate(-90deg); }
+        .device .catblock.folded .modgrid { display: none; }
+        .device .modgrid { display: flex; flex-direction: column; gap: 2px; }
+        .device .modcard { display: flex; border-radius: 8px; border: 1px solid transparent; }
+        .device .modcard > .chk { padding: 9px 9px; flex: 1; align-items: flex-start; }
+        .device .modcard:active { background: var(--gray-50); }
+        .device .modcard .chk:not(.disabled) { cursor: pointer; }
+        .device .mtext { min-width: 0; }
+        .device .subopts { margin: 6px 0 2px 2px; padding-left: 12px; border-left: 2px solid var(--gray-200); }
+        .device .chk.mini { padding: 4px 0; cursor: pointer; }
+        .device .chk.mini .label { font-size: 12.5px; }
+
+        /* languages — 2 col */
+        .device .langgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; max-width: none; }
+        .device .langcard { display: flex; align-items: center; gap: 9px; border: 1px solid var(--gray-200); border-radius: 9px; padding: 9px 10px; cursor: pointer; background: #fff; }
+        .device .langcard.on { border-color: var(--green-600); background: var(--green-50); }
+        .device .langcard .lcode { width: 26px; height: 26px; border-radius: 6px; background: var(--gray-100); color: var(--gray-600); flex: none; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 600; }
+        .device .langcard.on .lcode { background: #fff; color: var(--green-600); box-shadow: inset 0 0 0 1px rgba(22,163,74,0.3); }
+        .device .langcard .ln { font-size: 12.5px; font-weight: 600; }
+        .device .langcard .lc { font-size: 10px; color: var(--gray-400); font-family: var(--mono); margin-top: 1px; }
+        .device .langcard .grow { flex: 1; }
+        .device .langcard .tick { width: 17px; height: 17px; border-radius: 5px; border: 1.5px solid var(--gray-300); flex: none; position: relative; background: #fff; }
+        .device .langcard.on .tick { background: var(--green-600); border-color: var(--green-600); }
+        .device .langcard.on .tick::after { content: ""; position: absolute; left: 5px; top: 2px; width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(42deg); }
+        .device .addon-card .lc { font-family: var(--sans); color: var(--gray-500); font-size: 11px; margin-top: 2px; }
+
+        /* layers */
+        .device .layerlist { display: flex; flex-direction: column; gap: 8px; max-width: none; }
+        .device .layerrow { display: flex; align-items: center; gap: 13px; border: 1px solid var(--gray-200); border-radius: 10px; padding: 12px 13px; background: #fff; }
+        .device .layerrow .lt { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
+        .device .layerrow .ld { font-size: 11.5px; color: var(--gray-500); margin-top: 2px; line-height: 1.45; }
+        .device .layerrow .grow { flex: 1; }
+        .device .switch { width: 40px; height: 23px; border-radius: 12px; background: var(--gray-300); position: relative; transition: background .15s; flex: none; cursor: pointer; }
+        .device .switch.on { background: var(--green-600); }
+        .device .switch.switch-locked { opacity: 0.6; cursor: default; }
+        .device .switch::after { content: ""; position: absolute; width: 19px; height: 19px; border-radius: 50%; background: #fff; top: 2px; left: 2px; transition: left .15s; box-shadow: var(--shadow-sm); }
+        .device .switch.on::after { left: 19px; }
+
+        /* ---- OUTPUT block ---- */
+        .device .m-output { background: var(--gray-100); padding: 4px 0 0; }
+        .device .out-bougie { margin: 16px 16px 0; background: var(--indigo-50); border: 1px solid var(--indigo-100); border-radius: 11px; padding: 14px; }
+        .device .out-bougie .h { font-size: 10.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--indigo-700); display: flex; align-items: center; gap: 7px; }
+        .device .out-bougie p { font-size: 12px; color: var(--gray-600); line-height: 1.5; margin: 7px 0 10px; }
+        .device .out-bougie p a { color: var(--indigo-600); font-weight: 600; }
+        .device .out-bougie .bougie-save { width: 100%; justify-content: center; }
+        .device .out-bougie .bougie-note { display: block; margin-top: 8px; font-size: 11px; color: var(--gray-500); }
+        .device .out-bougie .bougie-note code { font-family: var(--mono); font-size: 10.5px; color: var(--indigo-700); word-break: break-all; }
+        .device .out-bougie .bougie-default { margin-top: 11px; }
+        .device .out-bougie .bougie-default summary { font-size: 11.5px; font-weight: 600; color: var(--indigo-700); cursor: pointer; }
+        .device .out-bougie .bougie-default-note { font-size: 11px; color: var(--gray-500); margin: 7px 0 8px; }
+
+        .device .out-head { padding: 20px 16px 0; }
+        .device .out-head h2 { font-size: 15px; font-weight: 800; margin: 0; letter-spacing: -0.01em; }
+        .device .out-tabs { display: flex; gap: 4px; padding: 12px 16px 0; overflow-x: auto; scrollbar-width: none; }
+        .device .out-tabs::-webkit-scrollbar { display: none; }
+        .device .out-tab { font-size: 12px; font-weight: 600; color: var(--gray-500); padding: 8px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; flex: none; }
+        .device .out-tab.active { color: #fff; background: var(--gray-900); }
+        .device .out-tab-hyva.active { background: var(--indigo-600); }
+        .device .out-tab .n { opacity: 0.6; margin-left: 5px; }
+        .device .out-panes { padding: 12px 16px 0; }
+        .device .out-panes .opane { display: block; }
+        .device .out-panes pre.composer { padding: 0; border-radius: 10px; overflow: auto; font-size: 11.5px; line-height: 1.65; margin: 0; height: auto; max-height: 420px; }
+        .device .out-panes pre.composer code.hljs { display: block; padding: 14px 15px; background: var(--code-bg); border-radius: 10px; }
+        .device .out-panes .install-tree-root { font-family: var(--mono); font-size: 11.5px; line-height: 1.7; color: var(--gray-700); background: #fff; border: 1px solid var(--gray-200); border-radius: 10px; padding: 12px 13px; max-height: 360px; overflow: auto; }
+        .device .out-panes .install-tree-types { font-size: 11px; color: var(--gray-500); margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .device .out-note { font-size: 11.5px; color: var(--gray-500); line-height: 1.55; padding: 10px 16px 0; }
+        .device .out-note code { font-family: var(--mono); font-size: 10.5px; background: var(--gray-150); padding: 1px 5px; border-radius: 4px; color: var(--gray-700); }
+
+        /* sticky bottom action bar */
+        .device .m-actionbar { position: sticky; bottom: 0; z-index: 35; margin-top: 20px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--gray-200); padding: 11px 16px calc(11px + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 9px; }
+        .device .m-actionbar .counts { display: flex; gap: 6px; flex: 1; }
+        .device .m-actionbar .btn-sm { padding: 9px 13px; }
+
+        /* hyvä pane */
+        .device .hyva-intro { font-size: 12px; color: var(--gray-600); line-height: 1.55; margin: 0 0 12px; }
+        .device .hyva-intro a, .device .hyva-pane a { color: var(--blue-600); }
+        .device .hyva-fields { display: flex; gap: 9px; margin-bottom: 16px; }
+        .device .hyva-fields label { flex: 1; display: flex; flex-direction: column; gap: 5px; font-size: 11px; font-weight: 600; color: var(--gray-600); }
+        .device .hyva-fields input { font-family: var(--mono); font-size: 11.5px; }
+        .device .hyva-steps { list-style: decimal; padding-left: 20px; margin: 0; display: flex; flex-direction: column; gap: 14px; }
+        .device .hyva-steps li { font-size: 12.5px; }
+        .device .hyva-steps .step-label { display: block; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+        .device .hyva-steps .cmd { font-size: 11px; padding: 11px 12px; }
+        .device .hyva-steps small { display: block; font-size: 11px; color: var(--gray-500); line-height: 1.5; margin: 6px 0 0; }
+        .device .hyva-steps small code { background: var(--gray-100); padding: 1px 4px; border-radius: 3px; }
+    </style>
     @livewireStyles
 </head>
 <body>
@@ -377,19 +555,25 @@
     }
 
     function paintComposer(json) {
-        const el = document.getElementById('composer-out');
-        if (!el) return;
-        const pre = el.parentElement;
+        // The desktop and mobile layouts each render a composer pane (both tagged
+        // `code.composer-code`); repaint them all so whichever is visible is fresh.
+        const els = document.querySelectorAll('code.composer-code');
+        if (!els.length) return;
         const changed = diffLineIndices(lastJson, json);
         lastJson = json;
-        el.textContent = json;
-        delete el.dataset.highlighted;
-        hljs.highlightElement(el);
-        flashChangedLines(pre, el, groupRanges(changed));
+        els.forEach(el => {
+            el.textContent = json;
+            delete el.dataset.highlighted;
+            hljs.highlightElement(el);
+        });
+        // Diff-flash only the desktop pane — it lives in a fixed-height scroller
+        // that the overlay positioning depends on; mobile is read-first, no flash.
+        const desktop = document.getElementById('composer-out');
+        if (desktop) flashChangedLines(desktop.parentElement, desktop, groupRanges(changed));
     }
 
     function copyComposer() {
-        const el = document.getElementById('composer-out');
+        const el = document.querySelector('code.composer-code');
         if (el) navigator.clipboard.writeText(el.textContent);
     }
 
@@ -409,8 +593,7 @@
 
     // Initial highlight; subsequent updates come via the Livewire event.
     document.addEventListener('DOMContentLoaded', () => {
-        const el = document.getElementById('composer-out');
-        if (el) hljs.highlightElement(el);
+        document.querySelectorAll('code.composer-code').forEach(el => hljs.highlightElement(el));
     });
 
     document.addEventListener('livewire:initialized', () => {
