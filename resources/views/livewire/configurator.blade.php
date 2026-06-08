@@ -660,7 +660,7 @@ bougie init --starter mageos --start</code></pre><button type="button" class="cm
 
             <div class="out-body scrollbox">
                 <div class="opane" x-show="otab === 'composer'">
-                    <pre class="composer" wire:ignore><code id="composer-out" class="language-json">{{ $this->composerJson }}</code></pre>
+                    <pre class="composer" wire:ignore><code id="composer-out" class="language-json composer-code">{{ $this->composerJson }}</code></pre>
                 </div>
                 <div class="opane" x-show="otab === 'tree'" x-cloak>
                     @php $tree = $this->installTree; @endphp
@@ -761,6 +761,497 @@ bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" oncli
     </div>
 </div>
 
+{{-- ============================================================
+     MOBILE — single-column accordion rendering of the same
+     configurator. Hidden above the phone breakpoint (see the
+     .device rules in the layout); shares the root Alpine state
+     (otab) and binds to the same Livewire properties as the
+     desktop shell, so the two stay perfectly in sync.
+     ============================================================ --}}
+<div class="device">
+    <div class="appbar">
+        <span class="brand"><span class="glyph">M</span>mageos-maker</span>
+        @if ($this->effectiveSavedId)
+            <span class="status">Saved <code>{{ $this->effectiveSavedId }}</code></span>
+        @elseif ($savedId)
+            <span class="status">Modified</span>
+        @endif
+        <span class="sp"></span>
+        <a class="ghost" href="{{ route('configurator.index') }}" wire:navigate>Reset</a>
+    </div>
+
+    <div class="m-summary">
+        <div class="pf">{{ $profileLabel }}</div>
+        <div class="meta">v{{ $version }} · {{ $distLabel }} · {{ $themeLabel }} · {{ $checkoutLabel }}</div>
+        <div class="row2">
+            <div class="stat"><div class="n">{{ $pkgCount }}</div><div class="l">packages</div></div>
+            <div class="stat"><div class="n">{{ $enabledModuleCount }}</div><div class="l">modules</div></div>
+            <div class="stat"><div class="n">{{ $enabledLanguageCount }}</div><div class="l">languages</div></div>
+        </div>
+    </div>
+
+    {{-- ===== CONFIGURATION ===== --}}
+    <div class="m-grouplbl">Configuration</div>
+
+    {{-- Version --}}
+    <div class="acc" x-data="{ open: false }" :class="{ open }">
+        <div class="acc-head" @click="open = !open">
+            <svg class="ic" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l5.5 3v7L8 14.5l-5.5-3v-7z" stroke="currentColor" stroke-width="1.3"/></svg>
+            <span class="nm">Version</span><span class="val">{{ $version }}</span>
+            <svg class="chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="acc-body">
+            @php $mLocked = $distribution === 'modulargento'; @endphp
+            <div class="rcardgrid">
+                @foreach (array_reverse($versions) as $v)
+                    @php $isSel = $v === $version; $disabled = $mLocked && ! $isSel; @endphp
+                    <div class="rcard {{ $isSel ? 'sel' : '' }} {{ $disabled ? 'disabled' : '' }}"
+                         @if (! $disabled && ! $isSel) wire:click="$set('version', '{{ $v }}')" @endif>
+                        <span class="rdot"></span>
+                        <div>
+                            <div class="rt">{{ $v }}
+                                @if ($v === $latestStable)<span class="badge green">latest stable</span>
+                                @elseif (str_contains($v, '-p'))<span class="badge gray">security</span>@endif
+                            </div>
+                            <div class="rd">Mage-OS {{ $v }} release line.</div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            @if ($mLocked)
+                <div class="infonote"><svg class="ic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 7.5v3.5M8 5.2v.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><p>Locked to {{ $version }} — the fully-modular distribution is only published for this version. Switch to Standard in Distribution to change it.</p></div>
+            @endif
+        </div>
+    </div>
+
+    {{-- Distribution --}}
+    @if ($modulargentoAvailable)
+        <div class="acc" x-data="{ open: false }" :class="{ open }">
+            <div class="acc-head" @click="open = !open">
+                <svg class="ic" viewBox="0 0 16 16" fill="none"><path d="M8 2l6 3v6l-6 3-6-3V5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 2v12M2 5l6 3 6-3" stroke="currentColor" stroke-width="1.1"/></svg>
+                <span class="nm">Distribution</span><span class="val">{{ $distLabel }}</span>
+                <svg class="chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="acc-body">
+                <div class="rcardgrid">
+                    <div class="rcard {{ $distribution === 'standard' ? 'sel' : '' }}"
+                         @if ($distribution !== 'standard') wire:click="$set('distribution', 'standard')" @endif>
+                        <span class="rdot"></span>
+                        <div><div class="rt">Standard Mage-OS</div><div class="rd">The canonical <code>mage-os/*</code> metapackages. Some sets are locked on.</div></div>
+                    </div>
+                    <div class="rcard {{ $distribution === 'modulargento' ? 'sel' : '' }}"
+                         @if ($distribution !== 'modulargento') wire:click="$set('distribution', 'modulargento')" @endif>
+                        <span class="rdot"></span>
+                        <div><div class="rt">Fully modular <span class="badge auto">modulargento</span></div><div class="rd">Every module as an independently versioned package — decoupled, so every set below is removable.</div></div>
+                    </div>
+                </div>
+                <div class="infonote"><svg class="ic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 7.5v3.5M8 5.2v.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><p>Modular adds the <code>modulargento.cresset.tools</code> Composer repository and swaps the root package to <code>modulargento/project-community-edition</code>.</p></div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Profile --}}
+    <div class="acc" x-data="{ open: false }" :class="{ open }">
+        <div class="acc-head" @click="open = !open">
+            <svg class="ic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 13c0-2.5 2.2-4 5-4s5 1.5 5 4" stroke="currentColor" stroke-width="1.3"/></svg>
+            <span class="nm">Profile</span><span class="val">{{ $profileLabel }}</span>
+            <svg class="chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="acc-body">
+            <div class="rcardgrid">
+                @foreach ($profileDefs as $name => $profileDef)
+                    <div class="rcard {{ $profile === $name ? 'sel' : '' }}"
+                         @if ($profile !== $name) wire:click="setProfile('{{ $name }}')" @endif>
+                        <span class="rdot"></span>
+                        <div><div class="rt">{{ $profileDef['label'] }}</div><div class="rd">{{ $profileDef['description'] ?? '' }}</div></div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    {{-- Theme & Checkout --}}
+    <div class="acc" x-data="{ open: false }" :class="{ open }">
+        <div class="acc-head" @click="open = !open">
+            <svg class="ic" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2 6h12" stroke="currentColor" stroke-width="1.3"/></svg>
+            <span class="nm">Theme &amp; Checkout</span><span class="val">{{ $themeLabel }} · {{ $checkoutLabel }}</span>
+            <svg class="chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="acc-body">
+            @php $mDefs = app(\App\Services\Definitions::class); @endphp
+            @foreach ($profileGroupDefs as $groupName => $group)
+                <div class="col-lbl">{{ $group['label'] }}</div>
+                <div class="rcardgrid">
+                    @foreach ($group['options'] as $opt)
+                        @php
+                            $available = $mDefs->optionMeetsRequires($groupName, $opt['name'], $profileGroups);
+                            $isPicked = ($profileGroups[$groupName] ?? null) === $opt['name'];
+                            $hint = '';
+                            if (! $available) {
+                                $reqs = [];
+                                foreach (($opt['requires']['profileGroups'] ?? []) as $g => $needed) {
+                                    $reqOpt = collect($profileGroupDefs[$g]['options'] ?? [])->firstWhere('name', $needed);
+                                    $reqs[] = ($profileGroupDefs[$g]['label'] ?? $g).' = '.($reqOpt['label'] ?? $needed);
+                                }
+                                $hint = 'Needs '.implode(', ', $reqs).'.';
+                            }
+                        @endphp
+                        <div class="rcard {{ $isPicked ? 'sel' : '' }} {{ $available ? '' : 'disabled' }}"
+                             @if ($available && ! $isPicked) wire:click="$set('profileGroups.{{ $groupName }}', '{{ $opt['name'] }}')" @endif>
+                            <span class="rdot"></span>
+                            <div><div class="rt">{{ $opt['label'] }}</div>@if ($hint !== '')<div class="rd">{{ $hint }}</div>@endif</div>
+                        </div>
+                    @endforeach
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- Add-ons --}}
+    <div class="acc" x-data="{ open: false }" :class="{ open }">
+        <div class="acc-head" @click="open = !open">
+            <svg class="ic" viewBox="0 0 16 16" fill="none"><path d="M2.5 3h11l-1.2 7H4z" stroke="currentColor" stroke-width="1.3"/><circle cx="5.5" cy="13" r="1" fill="currentColor"/><circle cx="11" cy="13" r="1" fill="currentColor"/></svg>
+            <span class="nm">Add-ons</span><span class="val">{{ $enabledAddonCount ?: 'None' }}</span>
+            <svg class="chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="acc-body">
+            <div class="rcardgrid">
+                @foreach ($addonDefs as $name => $addon)
+                    @php $isForced = in_array($name, $this->forcedAddons, true); @endphp
+                    <label class="langcard addon-card {{ $isForced ? 'forced' : '' }}"
+                           wire:key="m-addon-{{ $name }}-{{ $isForced ? 'forced' : 'free' }}"
+                           :class="{ on: {{ $isForced ? 'true' : "\$wire.enabledAddons.includes('$name')" }} }">
+                        @if ($isForced)
+                            <input type="checkbox" class="vh" disabled checked>
+                        @else
+                            <input type="checkbox" class="vh" wire:model.live="enabledAddons" value="{{ $name }}">
+                        @endif
+                        <div class="grow"><div class="ln">{{ $addon['label'] }} @if ($isForced)<span class="badge req">required</span>@endif</div><div class="lc">{{ $addon['description'] ?? '' }}</div></div>
+                        <span class="tick"></span>
+                    </label>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== PACKAGES ===== --}}
+    <div class="m-grouplbl">Packages</div>
+
+    {{-- Modules (open by default) --}}
+    <div class="acc open" x-data="{
+            open: true, q: '', filter: 'all', folded: {},
+            en(name){ return $wire.enabledSets.includes(name); },
+            rowVisible(name, required, hay){
+                if (this.filter === 'enabled' && !this.en(name)) return false;
+                if (this.filter === 'off' && this.en(name)) return false;
+                if (this.filter === 'required' && !required) return false;
+                const q = this.q.trim().toLowerCase();
+                if (q && hay.indexOf(q) === -1) return false;
+                return true;
+            },
+            catVisible(mods){ return mods.some(m => this.rowVisible(m.name, m.required, m.hay)); },
+            onCount(mods){ return mods.filter(m => this.en(m.name)).length; },
+        }" :class="{ open }">
+        <div class="acc-head" @click="open = !open">
+            <svg class="ic" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+            <span class="nm">Modules</span><span class="val">{{ $enabledModuleCount }} / {{ $totalModuleCount }}</span>
+            <svg class="chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="acc-body" style="padding:0">
+            <div class="m-tools">
+                <div class="search"><svg class="ic" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.4"/></svg><input class="input" placeholder="Filter modules…" autocomplete="off" x-model="q"></div>
+                <div class="filterchips">
+                    <span class="fchip" :class="{ on: filter === 'all' }" @click="filter = 'all'">All</span>
+                    <span class="fchip" :class="{ on: filter === 'enabled' }" @click="filter = 'enabled'">Enabled</span>
+                    <span class="fchip" :class="{ on: filter === 'required' }" @click="filter = 'required'">Required</span>
+                    <span class="fchip" :class="{ on: filter === 'off' }" @click="filter = 'off'">Off</span>
+                </div>
+            </div>
+            <div class="m-modwrap">
+                @foreach ($moduleGroups as $gi => $mg)
+                    @php
+                        $cid = 'cat'.$gi;
+                        $jsMods = [];
+                        foreach ($mg['sets'] as $sName => $sDef) {
+                            $removable = $setRemovable[$sName] ?? true;
+                            $hay = strtolower(trim(
+                                $sName.' '.($sDef['label'] ?? '').' '.($sDef['description'] ?? '').' '
+                                .collect($sDef['subtoggles'] ?? [])->map(fn ($s) => ($s['label'] ?? '').' '.($s['description'] ?? ''))->implode(' ')
+                            ));
+                            $jsMods[] = ['name' => $sName, 'required' => ! $removable, 'hay' => $hay];
+                        }
+                    @endphp
+                    <div class="catblock" wire:key="m-cat-{{ $cid }}"
+                         x-data="{ mods: @js($jsMods), cid: '{{ $cid }}' }"
+                         :class="{ folded: folded[cid] }"
+                         x-show="catVisible(mods)">
+                        <div class="cathead" @click="folded[cid] = !folded[cid]">
+                            <span class="ct-name">{{ $mg['label'] }}</span>
+                            <span class="ct-line"></span>
+                            <span class="ct-count"><b x-text="onCount(mods)">{{ collect($mg['sets'])->keys()->intersect($enabledSets)->count() }}</b> / {{ count($mg['sets']) }} on</span>
+                            <svg class="ct-fold" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                        <div class="modgrid">
+                            @foreach ($mg['sets'] as $name => $set)
+                                @php
+                                    $removable = $setRemovable[$name] ?? true;
+                                    $parentEnabled = in_array($name, $enabledSets, true);
+                                    $setReqSet = $set['requires']['set'] ?? null;
+                                    $setReqMet = $setReqSet === null || in_array($setReqSet, $enabledSets, true);
+                                    $setReqLabel = $setReqSet ? ($setDefs[$setReqSet]['label'] ?? $setReqSet) : null;
+                                    $setDisabled = ! $removable || ! $setReqMet;
+                                    $hay = strtolower(trim(
+                                        $name.' '.($set['label'] ?? '').' '.($set['description'] ?? '').' '
+                                        .collect($set['subtoggles'] ?? [])->map(fn ($s) => ($s['label'] ?? '').' '.($s['description'] ?? ''))->implode(' ')
+                                    ));
+                                    $onExpr = $removable ? '$wire.enabledSets.includes('.\Illuminate\Support\Js::from($name).')' : 'true';
+                                @endphp
+                                <div class="modcard" wire:key="m-mod-{{ $name }}-{{ $setReqMet ? 'ok' : 'needs' }}"
+                                     x-show="rowVisible(@js($name), @js(! $removable), @js($hay))">
+                                    <label class="chk {{ $setDisabled ? 'disabled' : '' }}" :class="{ on: {{ $onExpr }} }">
+                                        <input type="checkbox" class="vh" wire:model.live="enabledSets" value="{{ $name }}" @disabled($setDisabled)>
+                                        <span class="box"></span>
+                                        <span class="mtext">
+                                            <span class="label">{{ $set['label'] }}
+                                                @if ($setReqSet && ! $setReqMet)<span class="badge gray">needs {{ $setReqLabel }}</span>@endif
+                                                @unless ($removable)<span class="badge req">required</span>@endunless
+                                            </span>
+                                            <span class="desc">{{ $set['description'] ?? '' }}</span>
+                                            @if (! empty($set['subtoggles']))
+                                                <span class="subopts" @click.stop>
+                                                    @foreach ($set['subtoggles'] as $sub)
+                                                        @php
+                                                            $reqSet = $sub['requires']['set'] ?? null;
+                                                            $reqMet = $reqSet === null || in_array($reqSet, $enabledSets, true);
+                                                            $subDisabled = ! $parentEnabled || ! $reqMet;
+                                                            $reqLabel = $reqSet ? ($setDefs[$reqSet]['label'] ?? $reqSet) : null;
+                                                        @endphp
+                                                        <label class="chk mini {{ $subDisabled ? 'is-disabled' : '' }}"
+                                                               wire:key="m-sub-{{ $name }}-{{ $sub['name'] }}-{{ $subDisabled ? 'off' : 'on' }}"
+                                                               :class="{ on: $wire.enabledSubtoggles.includes('{{ $name }}.{{ $sub['name'] }}') }">
+                                                            <span class="box"></span>
+                                                            <input type="checkbox" class="vh" wire:model.live="enabledSubtoggles" value="{{ $name }}.{{ $sub['name'] }}" @disabled($subDisabled)>
+                                                            <span class="label">{{ $sub['label'] }}@if ($reqSet && ! $reqMet)<span class="badge gray">needs {{ $reqLabel }}</span>@endif</span>
+                                                        </label>
+                                                    @endforeach
+                                                </span>
+                                            @endif
+                                        </span>
+                                    </label>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+                @php
+                    $allJsMods = [];
+                    foreach ($moduleGroups as $mg) {
+                        foreach ($mg['sets'] as $sName => $sDef) {
+                            $removable = $setRemovable[$sName] ?? true;
+                            $hay = strtolower(trim(
+                                $sName.' '.($sDef['label'] ?? '').' '.($sDef['description'] ?? '').' '
+                                .collect($sDef['subtoggles'] ?? [])->map(fn ($s) => ($s['label'] ?? '').' '.($s['description'] ?? ''))->implode(' ')
+                            ));
+                            $allJsMods[] = ['name' => $sName, 'required' => ! $removable, 'hay' => $hay];
+                        }
+                    }
+                @endphp
+                <p class="empty-note" x-show="!@js($allJsMods).some(m => rowVisible(m.name, m.required, m.hay))" x-cloak>No modules match.</p>
+            </div>
+        </div>
+    </div>
+
+    {{-- Languages --}}
+    @if (count($languageDefs) > 0)
+        <div class="acc" x-data="{ open: false }" :class="{ open }">
+            <div class="acc-head" @click="open = !open">
+                <svg class="ic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M2 8h12M8 2c1.8 1.6 1.8 10.4 0 12M8 2c-1.8 1.6-1.8 10.4 0 12" stroke="currentColor" stroke-width="1.1"/></svg>
+                <span class="nm">Languages</span><span class="val">{{ $enabledLanguageCount }} locales</span>
+                <svg class="chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="acc-body">
+                <div class="langgrid">
+                    @foreach ($languageDefs as $name => $lang)
+                        @php
+                            $loc = \Illuminate\Support\Str::after($name, 'language-');
+                            $parts = explode('_', $loc);
+                            $code = $parts[0];
+                            $locale = collect($parts)->map(fn ($p, $i) => $i === 0 ? $p : (strlen($p) === 2 ? strtoupper($p) : ucfirst($p)))->implode('_');
+                            $lname = trim(\Illuminate\Support\Str::before($lang['label'] ?? $name, '('));
+                        @endphp
+                        <label class="langcard" wire:key="m-lang-{{ $name }}"
+                               :class="{ on: $wire.enabledSets.includes(@js($name)) }">
+                            <input type="checkbox" class="vh" wire:model.live="enabledSets" value="{{ $name }}">
+                            <span class="lcode">{{ $code }}</span>
+                            <div><div class="ln">{{ $lname }}</div><div class="lc">{{ $locale }}</div></div>
+                            <span class="grow"></span><span class="tick"></span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Layers --}}
+    <div class="acc" x-data="{ open: false }" :class="{ open }">
+        <div class="acc-head" @click="open = !open">
+            <svg class="ic" viewBox="0 0 16 16" fill="none"><path d="M8 2l6 3-6 3-6-3z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M2 8l6 3 6-3M2 11l6 3 6-3" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+            <span class="nm">Layers</span><span class="val">{{ $enabledLayerCount }} on</span>
+            <svg class="chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="acc-body">
+            <div class="layerlist">
+                @foreach ($layerDefs as $name => $layer)
+                    @php
+                        $isStock = ($layer['stock'] ?? true) !== false;
+                        $isForced = in_array($name, $this->forcedLayers, true);
+                    @endphp
+                    @if ($isStock)
+                        @php $removable = $layerRemovable[$name] ?? true; @endphp
+                        <label class="layerrow {{ $removable ? '' : 'forced' }}" wire:key="m-layer-{{ $name }}">
+                            <div class="grow">
+                                <div class="lt">{{ $layer['label'] }}@unless ($removable) <span class="badge req">required</span>@endunless</div>
+                                <div class="ld">{{ $layer['description'] ?? '' }}</div>
+                            </div>
+                            <input type="checkbox" class="vh" wire:model.live="enabledStockLayers" value="{{ $name }}" @disabled(! $removable)>
+                            @php $swExpr = $removable ? '$wire.enabledStockLayers.includes('.\Illuminate\Support\Js::from($name).')' : 'true'; @endphp
+                            <span class="switch {{ $removable ? '' : 'switch-locked' }}" :class="{ on: {{ $swExpr }} }"></span>
+                        </label>
+                    @else
+                        <div class="layerrow forced" wire:key="m-layer-{{ $name }}">
+                            <div class="grow">
+                                <div class="lt">{{ $layer['label'] }} @if ($isForced)<span class="badge req">required</span>@else<span class="badge auto">auto</span>@endif</div>
+                                <div class="ld">{{ $layer['description'] ?? '' }}</div>
+                            </div>
+                            <span class="switch {{ $isForced ? 'on' : '' }} switch-locked"></span>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== OUTPUT ===== --}}
+    <div class="m-output">
+        <div class="out-bougie">
+            <div class="h"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l1.8 4.2 4.7.4-3.6 3 1.1 4.5L8 11.2 3.9 13.6 5 9.1 1.4 6.1l4.7-.4z" stroke="#4338ca" stroke-width="1.2" stroke-linejoin="round"/></svg> Try it with bougie</div>
+            @if ($this->effectiveSavedId)
+                <p>Run <b>this exact configuration</b> with <a href="https://bougie.tools" target="_blank" rel="noopener">bougie</a> — one command, no clone:</p>
+                <div class="cmd-row"><pre class="cmd"><code># Install bougie if you don't have it yet
+curl -LsSf https://bougie.tools/install.sh | sh
+# Start it up!
+bougie init --starter {{ $this->starterArg }} --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
+                <small class="bougie-note">Shareable link to this build: <code>{{ $this->starterArg }}</code></small>
+            @else
+                <p>
+                    @if ($savedId)
+                        You've changed the configuration since it was last saved. <b>Save again</b> to refresh the one-command install link.
+                    @else
+                        <b>Save your configuration</b> to get a personal one-command bougie install link for <b>this exact build</b>.
+                    @endif
+                </p>
+                <button type="button" class="btn btn-primary btn-sm bougie-save" wire:click="save">
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3.5 2.5h7L13 5v8.5H3.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M5.5 2.5v3.5h4V2.5M5.5 13.5v-3.5h5v3.5" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+                    {{ $savedId ? 'Save again & refresh link' : 'Save & get install command' }}
+                </button>
+                <details class="bougie-default">
+                    <summary>Or run the default Mage-OS starter now</summary>
+                    <p class="bougie-default-note">Installs stock Mage-OS, not the configuration above.</p>
+                    <div class="cmd-row"><pre class="cmd"><code># Install bougie if you don't have it yet
+curl -LsSf https://bougie.tools/install.sh | sh
+# Start it up!
+bougie init --starter mageos --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
+                </details>
+            @endif
+        </div>
+
+        <div class="out-head"><h2>Generated output</h2></div>
+        <div class="out-tabs">
+            <div class="out-tab" :class="{ active: otab === 'composer' }" @click="otab = 'composer'">composer.json</div>
+            <div class="out-tab" :class="{ active: otab === 'tree' }" @click="otab = 'tree'">Install tree<span class="n">{{ $this->installTree['count'] }}</span></div>
+            @if ($this->usesHyva)
+                <div class="out-tab out-tab-hyva" :class="{ active: otab === 'hyva' }" @click="otab = 'hyva'">★ Hyvä setup</div>
+            @endif
+        </div>
+
+        <div class="out-panes">
+            <div class="opane" x-show="otab === 'composer'">
+                <pre class="composer" wire:ignore><code id="composer-out-m" class="language-json composer-code">{{ $this->composerJson }}</code></pre>
+            </div>
+            <div class="opane" x-show="otab === 'tree'" x-cloak>
+                @php $mtree = $this->installTree; @endphp
+                @if ($mtree['count'] === 0 && ! $mtree['missing'])
+                    <p class="out-note">No packages — nothing to show.</p>
+                @else
+                    <div class="install-tree-types">
+                        @foreach ($mtree['byType'] as $type => $n)<span>{{ $type }}: {{ $n }}</span>@endforeach
+                    </div>
+                    <div id="install-tree-root-m" class="install-tree-root">
+                        @include('livewire.partials.install-tree-node', ['nodes' => $mtree['tree'], 'depth' => 0])
+                    </div>
+                @endif
+            </div>
+            @if ($this->usesHyva)
+                @php
+                    $mToken = $hyvaToken !== '' ? $hyvaToken : 'YOUR_HYVA_TOKEN';
+                    $mProject = $hyvaProject !== '' ? $hyvaProject : 'yourProjectName';
+                @endphp
+                <div class="opane hyva-pane" x-show="otab === 'hyva'" x-cloak>
+                    <p class="hyva-intro">
+                        The Hyvä Theme is free of charge but requires a packagist token. Register at
+                        <a href="https://www.hyva.io/" target="_blank" rel="noopener">hyva.io</a> for your token and project name,
+                        then run these in your project root <strong>before</strong> <code>composer install</code>.
+                    </p>
+                    <div class="hyva-fields">
+                        <label><span>Hyvä token</span><input type="text" class="input" wire:model.live.debounce.300ms="hyvaToken" placeholder="YOUR_HYVA_TOKEN" autocomplete="off"></label>
+                        <label><span>Project name</span><input type="text" class="input" wire:model.live.debounce.300ms="hyvaProject" placeholder="yourProjectName" autocomplete="off"></label>
+                    </div>
+                    <ol class="hyva-steps">
+                        <li>
+                            <span class="step-label">Configure composer auth</span>
+                            <div class="cmd-row"><pre class="cmd"><code>composer config --auth http-basic.hyva-themes.repo.packagist.com token {{ $mToken }}</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div>
+                        </li>
+                        @if ($hyvaProject === '')
+                            <li>
+                                <span class="step-label">Add the Hyvä private repository</span>
+                                <div class="cmd-row"><pre class="cmd"><code>composer config repositories.hyva-private composer https://hyva-themes.repo.packagist.com/{{ $mProject }}/</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div>
+                                <small>Fill in the project name above to bake the repo into the generated <code>composer.json</code>.</small>
+                            </li>
+                        @endif
+                        <li>
+                            <span class="step-label">Install dependencies</span>
+                            <div class="cmd-row"><pre class="cmd"><code>composer install</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div>
+                        </li>
+                        <li>
+                            <span class="step-label">Activate the theme in Magento</span>
+                            <div class="cmd-row"><pre class="cmd"><code>bin/magento setup:upgrade
+bin/magento config:set design/theme/theme_id frontend/Hyva/default
+bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div>
+                        </li>
+                        <li>
+                            <span class="step-label">Disable the legacy Magento captcha</span>
+                            <div class="cmd-row"><pre class="cmd"><code>bin/magento config:set customer/captcha/enable 0</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div>
+                            <small>Hyvä doesn't support the legacy captcha; storefront forms break with it on.</small>
+                        </li>
+                    </ol>
+                </div>
+            @endif
+        </div>
+
+        <p class="out-note">Tip: <code>composer create-project</code> against the generated <code>composer.json</code> reproduces this exact tree.</p>
+    </div>
+
+    {{-- sticky bottom action bar --}}
+    <div class="m-actionbar">
+        <div class="counts">
+            <span class="countchip"><b>require</b> {{ $this->requireCount }}</span>
+            <span class="countchip"><b>replace</b> {{ $this->replaceCount }}</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" wire:click="save">Save</button>
+        <button class="btn btn-primary btn-sm" onclick="copyComposer()">Copy</button>
+    </div>
+</div>
+
 <script>
     function filterInstallTree(q) {
         q = q.trim().toLowerCase();
@@ -785,5 +1276,3 @@ bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" oncli
     }
 </script>
 </div>
-</content>
-</invoke>
