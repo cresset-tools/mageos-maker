@@ -334,6 +334,16 @@
         .device .m-summary .stat .n { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
         .device .m-summary .stat .l { font-size: 10.5px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1px; }
 
+        /* ---- home intro ---- */
+        .device .m-home { background: #fff; border-bottom: 1px solid var(--gray-200); padding: 18px 16px 20px; }
+        .device .m-home-title { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+        .device .m-home-lead { font-size: 12.5px; color: var(--gray-500); line-height: 1.55; margin: 6px 0 0; }
+        .device .m-home-sublbl { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-500); margin: 16px 0 9px; }
+        .device .m-home-grid { display: grid; gap: 8px; }
+        .device .m-home .rcard.home-nav { align-items: center; }
+        .device .m-home .rcard.home-nav .big-ic { width: 32px; height: 32px; border-radius: 9px; background: var(--gray-100); color: var(--gray-500); display: flex; align-items: center; justify-content: center; flex: none; }
+        .device .m-home .infonote { margin-top: 16px; }
+
         /* ---- section group label ---- */
         .device .m-grouplbl { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--gray-400); padding: 18px 18px 8px; }
 

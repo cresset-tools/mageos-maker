@@ -790,6 +790,48 @@ bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" oncli
         </div>
     </div>
 
+    {{-- Home intro — mirrors the desktop Home section. Tapping a quick-jump
+         card opens and scrolls to the matching accordion below (mGoto). --}}
+    <div class="m-home">
+        <h1 class="m-home-title">Build your Mage-OS project</h1>
+        <p class="m-home-lead">mageos-maker composes a tailored Mage-OS distribution. Pick a version, profile and modules below — the generated <b>composer.json</b> and the one-command bougie install live in the <b>Output</b> section at the bottom.</p>
+
+        <div class="m-home-sublbl">Configure your build</div>
+        <div class="m-home-grid">
+            <div class="rcard home-nav" onclick="mGoto('Version')">
+                <span class="big-ic"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l5.5 3v7L8 14.5l-5.5-3v-7z" stroke="currentColor" stroke-width="1.3"/></svg></span>
+                <div><div class="rt">Version</div><div class="rd">Choose the Mage-OS release line your metapackage targets.</div></div>
+            </div>
+            @if ($modulargentoAvailable)
+                <div class="rcard home-nav" onclick="mGoto('Distribution')">
+                    <span class="big-ic"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/></svg></span>
+                    <div><div class="rt">Distribution</div><div class="rd">Standard Mage-OS or the fully-modular modulargento build.</div></div>
+                </div>
+            @endif
+            <div class="rcard home-nav" onclick="mGoto('Profile')">
+                <span class="big-ic"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 13c0-2.5 2.2-4 5-4s5 1.5 5 4" stroke="currentColor" stroke-width="1.3"/></svg></span>
+                <div><div class="rt">Profile</div><div class="rd">Start from a preset — Full, Headless or Lite — then tweak.</div></div>
+            </div>
+            <div class="rcard home-nav" onclick="mGoto('Theme &amp; Checkout')">
+                <span class="big-ic"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2 6h12" stroke="currentColor" stroke-width="1.3"/></svg></span>
+                <div><div class="rt">Theme &amp; Checkout</div><div class="rd">Pick the storefront theme and checkout experience.</div></div>
+            </div>
+            <div class="rcard home-nav" onclick="mGoto('Modules')">
+                <span class="big-ic"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg></span>
+                <div><div class="rt">Modules</div><div class="rd">Toggle individual modules, grouped by category.</div></div>
+            </div>
+            <div class="rcard home-nav" onclick="mGoto('Layers')">
+                <span class="big-ic"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M8 2l6 3-6 3-6-3z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M2 8l6 3 6-3M2 11l6 3 6-3" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg></span>
+                <div><div class="rt">Layers</div><div class="rd">Cross-cutting concerns like GraphQL and message queues.</div></div>
+            </div>
+        </div>
+
+        <div class="infonote">
+            <svg class="ic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 7.5v3.5M8 5.2v.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <p>Ready to go? Copy the generated <b>composer.json</b> from the <b>Output</b> section below, or run <code>bougie init</code> with the one-liner there — no clone required. Tap <b>Save</b> for a link to this exact configuration.</p>
+        </div>
+    </div>
+
     {{-- ===== CONFIGURATION ===== --}}
     <div class="m-grouplbl">Configuration</div>
 
@@ -1273,6 +1315,17 @@ bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" oncli
     }
     function installTreeToggleAll(open) {
         document.querySelectorAll('#install-tree-root details').forEach(d => d.open = open);
+    }
+
+    // Mobile home quick-jump: find the accordion whose header label matches,
+    // open it (via the header click so Alpine owns the state), and scroll to it.
+    function mGoto(label) {
+        const nm = [...document.querySelectorAll('.device .acc .acc-head .nm')]
+            .find(el => el.textContent.trim() === label);
+        if (!nm) return;
+        const acc = nm.closest('.acc');
+        if (!acc.classList.contains('open')) acc.querySelector('.acc-head').click();
+        acc.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 </script>
 </div>
