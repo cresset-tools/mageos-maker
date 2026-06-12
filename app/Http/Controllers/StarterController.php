@@ -11,7 +11,7 @@ use Illuminate\Http\JsonResponse;
 
 /**
  * Serves the bougie "starter-pack" manifest (schema 1) so
- * `bougie init --starter <url>` can scaffold a Mage-OS project from a
+ * `bougie new --starter <url>` can scaffold a Mage-OS project from a
  * configuration. The consumer side lives in bougie at
  * crates/bougie/src/commands/starter.rs.
  *

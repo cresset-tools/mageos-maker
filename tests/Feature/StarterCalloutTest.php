@@ -7,7 +7,7 @@ use Tests\TestCase;
 
 /**
  * The "try it with bougie" callout shown above the composer.json dump
- * builds its `bougie init --starter <arg>` command from
+ * builds its `bougie new --starter <arg>` command from
  * Configurator::starterArg(): the shareable /c/{id} URL once a config is
  * saved, the `mageos` alias (default starter) otherwise.
  */
