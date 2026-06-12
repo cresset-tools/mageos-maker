@@ -160,7 +160,7 @@
 
                     <div class="infonote">
                         <svg class="ic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 7.5v3.5M8 5.2v.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-                        <p>Ready to go? Copy the generated <b>composer.json</b> from the panel on the right, or run <code>bougie init</code> with the one-liner above it — no clone required. Hit <b>Save &amp; share</b> for a link to this exact configuration.</p>
+                        <p>Ready to go? Copy the generated <b>composer.json</b> from the panel on the right, or run <code>bougie new</code> with the one-liner above it — no clone required. Hit <b>Save &amp; share</b> for a link to this exact configuration.</p>
                     </div>
                 </div>
             </section>
@@ -619,7 +619,7 @@
                     <div class="cmd-row"><pre class="cmd"><code># Install bougie if you don't have it yet
 curl -LsSf https://bougie.tools/install.sh | sh
 # Start it up!
-bougie init --starter {{ $this->starterArg }} --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
+bougie new bougie-store --starter {{ $this->starterArg }} --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
                     <small class="bougie-note">Shareable link to this build: <code>{{ $this->starterArg }}</code></small>
                 @else
                     <p>
@@ -639,7 +639,7 @@ bougie init --starter {{ $this->starterArg }} --start</code></pre><button type="
                         <div class="cmd-row"><pre class="cmd"><code># Install bougie if you don't have it yet
 curl -LsSf https://bougie.tools/install.sh | sh
 # Start it up!
-bougie init --starter mageos --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
+bougie new bougie-store --starter mageos --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
                     </details>
                 @endif
             </div>
@@ -828,7 +828,7 @@ bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" oncli
 
         <div class="infonote">
             <svg class="ic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 7.5v3.5M8 5.2v.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-            <p>Ready to go? Copy the generated <b>composer.json</b> from the <b>Output</b> section below, or run <code>bougie init</code> with the one-liner there — no clone required. Tap <b>Save</b> for a link to this exact configuration.</p>
+            <p>Ready to go? Copy the generated <b>composer.json</b> from the <b>Output</b> section below, or run <code>bougie new</code> with the one-liner there — no clone required. Tap <b>Save</b> for a link to this exact configuration.</p>
         </div>
     </div>
 
@@ -1182,7 +1182,7 @@ bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" oncli
                 <div class="cmd-row"><pre class="cmd"><code># Install bougie if you don't have it yet
 curl -LsSf https://bougie.tools/install.sh | sh
 # Start it up!
-bougie init --starter {{ $this->starterArg }} --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
+bougie new bougie-store --starter {{ $this->starterArg }} --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
                 <small class="bougie-note">Shareable link to this build: <code>{{ $this->starterArg }}</code></small>
             @else
                 <p>
@@ -1202,7 +1202,7 @@ bougie init --starter {{ $this->starterArg }} --start</code></pre><button type="
                     <div class="cmd-row"><pre class="cmd"><code># Install bougie if you don't have it yet
 curl -LsSf https://bougie.tools/install.sh | sh
 # Start it up!
-bougie init --starter mageos --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
+bougie new bougie-store --starter mageos --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
                 </details>
             @endif
         </div>
