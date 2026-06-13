@@ -188,7 +188,7 @@ bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" oncli
                 <span class="countchip"><b>replace</b> <span id="replace-count">{{ $replaceCount }}</span></span>
                 <span class="sp"></span>
                 <button class="btn btn-ghost btn-sm" id="dock-save">Save</button>
-                <button class="btn btn-primary btn-sm" onclick="copyComposer()">Copy</button>
+                <button class="btn btn-primary btn-sm" onclick="copyComposer(this)">Copy</button>
             </div>
         </aside>
     </div>

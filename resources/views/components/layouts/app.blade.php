@@ -107,7 +107,7 @@
 
         .chips { display: none; }
 
-        .work { display: grid; grid-template-columns: 240px minmax(0,1fr) 386px; align-items: start; }
+        .work { display: grid; grid-template-columns: 240px minmax(0,1fr) 440px; align-items: start; }
 
         .spine { position: sticky; top: var(--appbar-h); height: calc(100vh - var(--appbar-h)); overflow-y: auto; border-right: 1px solid var(--gray-200); background: #fcfcfd; padding: 16px 16px 28px; }
         .sum-card { background: #fff; border: 1px solid var(--gray-200); border-radius: 11px; padding: 13px 14px; margin-bottom: 6px; }
@@ -516,9 +516,15 @@
         const desktop = document.getElementById('composer-out');
         if (desktop) flashChangedLines(desktop.parentElement, desktop, groupRanges(changed));
     };
-    window.copyComposer = function () {
+    window.copyComposer = function (btn) {
         const el = document.querySelector('code.composer-code');
         if (el) navigator.clipboard.writeText(el.textContent);
+        if (btn) {
+            const original = btn.textContent;
+            btn.textContent = 'Copied';
+            btn.disabled = true;
+            setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1200);
+        }
     };
     window.copyCmd = function (btn) {
         const pre = btn.closest('.cmd-row')?.querySelector('pre.cmd code');

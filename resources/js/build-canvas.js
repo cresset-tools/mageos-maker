@@ -287,6 +287,7 @@ function renderAll() {
   buildVersion(); buildDistribution(); buildProfiles(); buildThemeCheckout();
   buildAddons(); buildModules(); buildLangs(); buildLayers();
   updateSummary(); buildNav(); syncHyvaTab(); refreshBougie();
+  fitScrollSpacer();
 }
 
 /* ---------- change narration (dock strip + mobile toast) ---------- */
@@ -321,12 +322,30 @@ function onScroll() {
     const el = $('sec-' + id);
     if (el && !el.hidden && (window.scrollY + el.getBoundingClientRect().top) <= y) found = id;
   });
-  // At the very bottom the last (often short) section never crosses the offset
-  // line, so it would never become current — pin it once we've hit the end.
+  // Safety net for the very bottom (mainly mobile, where the spacer below is
+  // not applied): pin the last section once the page is fully scrolled.
   if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
     found = ORDER[ORDER.length - 1];
   }
   if (found !== current) { current = found; buildNav(); }
+}
+
+/**
+ * Pad the canvas so the last (often short) section can scroll its top up to the
+ * scrollspy offset line. Without this the page bottom is reached while an
+ * earlier short section is still under the line, so the nav jumps straight to
+ * the last section — skipping the one before it (Modules → Layers, skipping
+ * Languages). Desktop only; the mobile layout has its own bottom spacer.
+ */
+function fitScrollSpacer() {
+  const canvas = $('canvas');
+  if (!canvas) return;
+  if (isMobile()) { canvas.style.paddingBottom = ''; return; }
+  const ORDER = order();
+  const last = $('sec-' + ORDER[ORDER.length - 1]);
+  if (!last) return;
+  const need = Math.max(0, window.innerHeight - 90 - last.offsetHeight - 16);
+  canvas.style.paddingBottom = need + 'px';
 }
 
 /* ---------- output tabs + Hyvä ---------- */
@@ -492,7 +511,7 @@ function switchProfile(name) {
 /* ---------- wiring ---------- */
 function wire() {
   window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', buildNav);
+  window.addEventListener('resize', () => { buildNav(); fitScrollSpacer(); });
 
   document.addEventListener('click', (e) => {
     const jmp = e.target.closest('[data-jump]');
