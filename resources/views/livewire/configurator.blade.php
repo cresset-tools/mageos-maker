@@ -459,8 +459,13 @@
                                         $removable = $setRemovable[$name] ?? true;
                                         $parentEnabled = in_array($name, $enabledSets, true);
                                         $setReqSet = $set['requires']['set'] ?? null;
-                                        $setReqMet = $setReqSet === null || in_array($setReqSet, $enabledSets, true);
-                                        $setReqLabel = $setReqSet ? ($setDefs[$setReqSet]['label'] ?? $setReqSet) : null;
+                                        $setReqLayer = $set['requires']['layer'] ?? null;
+                                        $setReqMet = ($setReqSet === null || in_array($setReqSet, $enabledSets, true))
+                                            && ($setReqLayer === null || in_array($setReqLayer, $enabledStockLayers, true));
+                                        $setReqLabel = $setReqSet
+                                            ? ($setDefs[$setReqSet]['label'] ?? $setReqSet)
+                                            : ($setReqLayer ? ($layerDefs[$setReqLayer]['label'] ?? $setReqLayer) : null);
+                                        $setReqShow = $setReqSet ?? $setReqLayer;
                                         $setDisabled = ! $removable || ! $setReqMet;
                                         $hay = strtolower(trim(
                                             $name.' '.($set['label'] ?? '').' '.($set['description'] ?? '').' '
@@ -476,8 +481,8 @@
                                             <span class="box"></span>
                                             <span class="mtext">
                                                 <span class="label">{{ $set['label'] }}
-                                                    @if ($setReqSet && ! $setReqMet)
-                                                        <span class="badge gray" title="Requires the {{ $setReqLabel }} set — it can't function without it.">needs {{ $setReqLabel }}</span>
+                                                    @if ($setReqShow && ! $setReqMet)
+                                                        <span class="badge gray" title="Requires {{ $setReqLabel }} — it can't function without it.">needs {{ $setReqLabel }}</span>
                                                     @endif
                                                     @unless ($removable)
                                                         <span class="badge req" title="Hard cross-module dependencies in stock Mage-OS — can't be removed without breaking di:compile or setup:install.">required</span>
@@ -1039,8 +1044,13 @@ bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" oncli
                                     $removable = $setRemovable[$name] ?? true;
                                     $parentEnabled = in_array($name, $enabledSets, true);
                                     $setReqSet = $set['requires']['set'] ?? null;
-                                    $setReqMet = $setReqSet === null || in_array($setReqSet, $enabledSets, true);
-                                    $setReqLabel = $setReqSet ? ($setDefs[$setReqSet]['label'] ?? $setReqSet) : null;
+                                    $setReqLayer = $set['requires']['layer'] ?? null;
+                                    $setReqMet = ($setReqSet === null || in_array($setReqSet, $enabledSets, true))
+                                        && ($setReqLayer === null || in_array($setReqLayer, $enabledStockLayers, true));
+                                    $setReqLabel = $setReqSet
+                                        ? ($setDefs[$setReqSet]['label'] ?? $setReqSet)
+                                        : ($setReqLayer ? ($layerDefs[$setReqLayer]['label'] ?? $setReqLayer) : null);
+                                    $setReqShow = $setReqSet ?? $setReqLayer;
                                     $setDisabled = ! $removable || ! $setReqMet;
                                     $hay = strtolower(trim(
                                         $name.' '.($set['label'] ?? '').' '.($set['description'] ?? '').' '
@@ -1055,7 +1065,7 @@ bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" oncli
                                         <span class="box"></span>
                                         <span class="mtext">
                                             <span class="label">{{ $set['label'] }}
-                                                @if ($setReqSet && ! $setReqMet)<span class="badge gray">needs {{ $setReqLabel }}</span>@endif
+                                                @if ($setReqShow && ! $setReqMet)<span class="badge gray">needs {{ $setReqLabel }}</span>@endif
                                                 @unless ($removable)<span class="badge req">required</span>@endunless
                                             </span>
                                             <span class="desc">{{ $set['description'] ?? '' }}</span>
