@@ -6,7 +6,7 @@
                     class="pkg-version">{{ $node['version'] }}</span><span
                     class="pkg-type">{{ $node['type'] }}</span>
             </summary>
-            @include('livewire.partials.install-tree-node', ['nodes' => $node['children'], 'depth' => $depth + 1])
+            @include('partials.install-tree-node', ['nodes' => $node['children'], 'depth' => $depth + 1])
         </details>
     @else
         <div class="leaf" data-name="{{ $node['name'] }}"><span

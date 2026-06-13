@@ -2,34 +2,38 @@
 
 namespace Tests\Feature;
 
-use App\Livewire\Configurator;
+use App\Models\SavedConfig;
+use App\Services\CatalogRepository;
+use App\Services\Definitions;
+use App\Services\Selection;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * The "try it with bougie" callout shown above the composer.json dump
- * builds its `bougie new --starter <arg>` command from
- * Configurator::starterArg(): the shareable /c/{id} URL once a config is
- * saved, the `mageos` alias (default starter) otherwise.
+ * The "try it with bougie" callout in the output dock builds its
+ * `bougie new --starter <arg>` command from the shareable `/c/{id}` URL once a
+ * config is saved, and the `mageos` alias (default starter) otherwise.
  */
 class StarterCalloutTest extends TestCase
 {
-    public function test_starter_arg_is_default_alias_when_unsaved(): void
-    {
-        $c = new Configurator();
-        $c->savedId = null;
+    use RefreshDatabase;
 
-        $this->assertSame('mageos', $c->starterArg());
+    public function test_default_page_uses_the_mageos_alias(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('--starter mageos', false);
     }
 
-    public function test_starter_arg_is_share_url_when_saved(): void
+    public function test_saved_page_uses_the_share_url(): void
     {
-        $c = new Configurator();
-        $c->savedId = '019e7f69-7bb2-7253-8705-85f4068b8d99';
+        $defs = app(Definitions::class);
+        $catalog = app(CatalogRepository::class);
+        $sel = Selection::default($catalog->latestStable(), $defs);
+        $cfg = SavedConfig::create(['mageos_version' => $sel->version, 'selection' => $sel->toArray()]);
 
-        $this->assertSame(
-            url('/c/019e7f69-7bb2-7253-8705-85f4068b8d99'),
-            $c->starterArg(),
-        );
-        $this->assertStringContainsString('/c/019e7f69-', $c->starterArg());
+        $this->get("/c/{$cfg->id}")
+            ->assertOk()
+            ->assertSee(url("/c/{$cfg->id}"), false);
     }
 }
