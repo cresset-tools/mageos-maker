@@ -48,6 +48,10 @@
         .input { width: 100%; appearance: none; border: 1px solid var(--gray-300); border-radius: 7px; padding: 8px 12px; font-size: 13px; font-family: var(--sans); color: var(--gray-900); background: #fff; }
         .input::placeholder { color: var(--gray-400); }
         .input:focus { outline: none; border-color: var(--blue-600); box-shadow: var(--ring); }
+        .select { width: 100%; appearance: none; border: 1px solid var(--gray-300); border-radius: 7px; padding: 9px 32px 9px 12px; font-size: 14px; font-family: var(--sans); color: var(--gray-900); cursor: pointer;
+            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M2.5 4.5L6 8l3.5-3.5z'/%3E%3C/svg%3E") no-repeat right 12px center; }
+        .select:focus { outline: none; border-color: var(--blue-600); box-shadow: var(--ring); }
+        .select:disabled { opacity: 0.6; cursor: not-allowed; }
         .search { position: relative; }
         .search input { padding-left: 32px; }
         .search .ic { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--gray-400); pointer-events: none; }
@@ -116,7 +120,7 @@
         .sum-card .lead { font-size: 11.5px; color: var(--gray-500); line-height: 1.5; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-150); }
 
         .steps { position: relative; padding-left: 4px; margin-top: 8px; }
-        .steps::before { content: ""; position: absolute; left: 15px; top: 14px; bottom: 16px; width: 1.5px; background: var(--gray-200); }
+        .steps::before { content: ""; position: absolute; left: 18.25px; top: 14px; bottom: 16px; width: 1.5px; background: var(--gray-200); }
         .grpname { font-size: 10px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: var(--gray-400); margin: 17px 0 5px 38px; }
         .stepgrp:first-child .grpname { margin-top: 4px; }
         .step { display: flex; align-items: center; gap: 13px; padding: 7px 10px 7px 0; cursor: pointer; position: relative; border-radius: 9px; transition: background .12s; }
