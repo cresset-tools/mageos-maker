@@ -220,7 +220,7 @@
         .langgrid.addon-grid { grid-template-columns: 1fr 1fr; }
         .langcard { display: flex; align-items: center; gap: 10px; border: 1px solid var(--gray-200); border-radius: 10px; padding: 10px 12px; cursor: pointer; background: #fff; min-width: 0; }
         .langcard.on { border-color: var(--green-600); background: var(--green-50); }
-        .langcard.forced { cursor: not-allowed; }
+        .langcard.forced { cursor: not-allowed; opacity: 0.6; }
         .langcard > div { min-width: 0; }
         .langcard .lcode { width: 28px; height: 28px; border-radius: 7px; background: var(--gray-100); color: var(--gray-600); flex: none; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 12px; font-weight: 600; }
         .langcard.on .lcode { background: #fff; color: var(--green-600); box-shadow: inset 0 0 0 1px rgba(22,163,74,0.3); }

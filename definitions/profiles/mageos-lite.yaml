@@ -50,6 +50,7 @@ selection:
     - swatches
     - ups
     - usps
+    - vault
     - weee
     - webapi-async
     - wishlist

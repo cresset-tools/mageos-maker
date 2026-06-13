@@ -181,10 +181,13 @@ function buildAddons() {
   const defaulted = E.defaultedAddons();
   $('addon-host').innerHTML = Object.values(D.addons).filter((a) => E.isAddonAvailable(a.name)).map((a) => {
     const isForced = forced.includes(a.name);
-    const on = isForced || E.s.enabledAddons.includes(a.name);
-    const isAuto = !isForced && on && defaulted.includes(a.name);
+    const isAuto = !isForced && defaulted.includes(a.name);
+    // Add-ons pulled in automatically by the theme/checkout (forced or
+    // soft-defaulted) are locked: greyed out and not user-toggleable.
+    const locked = isForced || isAuto;
+    const on = locked || E.s.enabledAddons.includes(a.name);
     const badge = isForced ? ' <span class="badge req">required</span>' : (isAuto ? ' <span class="badge auto">auto</span>' : '');
-    return '<label class="langcard addon-card' + (on ? ' on' : '') + (isForced ? ' forced' : '') + '"' + (isForced ? '' : ' data-addon="' + esc(a.name) + '"') + '><div class="grow"><div class="ln">' + esc(a.label) + badge + '</div><div class="lc addon-desc">' + esc(a.description) + '</div></div><span class="tick"></span></label>';
+    return '<label class="langcard addon-card' + (on ? ' on' : '') + (locked ? ' forced' : '') + '"' + (locked ? '' : ' data-addon="' + esc(a.name) + '"') + '><div class="grow"><div class="ln">' + esc(a.label) + badge + '</div><div class="lc addon-desc">' + esc(a.description) + '</div></div><span class="tick"></span></label>';
   }).join('');
 }
 
