@@ -95,12 +95,11 @@ function pulseSection(id) {
 /* ---------- section: version ---------- */
 function buildVersion() {
   const locked = E.s.distribution === 'modulargento';
-  $('version-grid').innerHTML = [...D.versions].reverse().map((v) => {
-    const sel = v === E.s.version, dis = locked && !sel;
-    const badge = v === D.latestStable ? ' <span class="badge green">latest stable</span>'
-      : (v.includes('-p') ? ' <span class="badge gray">security</span>' : '');
-    return '<div class="rcard' + (sel ? ' sel' : '') + (dis ? ' disabled' : '') + '" data-version="' + esc(v) + '"><span class="rdot"></span><div><div class="rt">' + esc(v) + badge + '</div><div class="rd">Mage-OS ' + esc(v) + ' release line.</div></div></div>';
+  const opts = [...D.versions].reverse().map((v) => {
+    const tag = v === D.latestStable ? '  (latest stable)' : (v.includes('-p') ? '  (security)' : '');
+    return '<option value="' + esc(v) + '"' + (v === E.s.version ? ' selected' : '') + '>' + esc(v + tag) + '</option>';
   }).join('');
+  $('version-grid').innerHTML = '<select class="select" id="version-select" style="max-width:280px"' + (locked ? ' disabled' : '') + '>' + opts + '</select>';
   $('version-note').innerHTML = locked
     ? '<div class="infonote"><svg class="ic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 7.5v3.5M8 5.2v.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><p>Locked to ' + esc(E.s.version) + ' — the fully-modular distribution is only published for this version. Switch to Standard in <b>Distribution</b> to change it.</p></div>'
     : '';
@@ -522,8 +521,6 @@ function wire() {
     const go = e.target.closest('[data-goto]');
     if (go && !e.target.closest('[data-option],[data-variant],[data-optsub]')) { jumpTo(go.getAttribute('data-goto')); return; }
 
-    const ver = e.target.closest('[data-version]');
-    if (ver) { E.setVersion(ver.getAttribute('data-version')); renderAll(); scheduleBuild(); return; }
     const dist = e.target.closest('[data-distribution]');
     if (dist) { E.setDistribution(dist.getAttribute('data-distribution')); renderAll(); scheduleBuild(); return; }
     const prof = e.target.closest('[data-profile]');
@@ -570,6 +567,13 @@ function wire() {
 
   const search = $('mod-search');
   if (search) search.addEventListener('input', () => { modQuery = (search.value || '').trim().toLowerCase(); applyFilter(); });
+
+  // Version <select> is re-rendered each pass, so listen via delegation.
+  document.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 'version-select') {
+      E.setVersion(e.target.value); renderAll(); scheduleBuild();
+    }
+  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
