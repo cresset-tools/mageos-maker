@@ -14,8 +14,11 @@ selection:
     - automatic-translation
     - aws-s3
     - bundle
+    - cardinal-commerce
+    - contact
     - dhl
     - downloadable
+    - elasticsearch8
     - fedex
     - gift-message
     - google-marketing
@@ -38,6 +41,7 @@ selection:
     - product-alert
     - recaptcha
     - release-notification
+    - reports
     - reviews
     - rss
     - sample-data
@@ -47,6 +51,7 @@ selection:
     - ups
     - usps
     - weee
+    - webapi-async
     - wishlist
     # English only.
     - language-de_de

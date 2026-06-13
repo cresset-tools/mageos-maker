@@ -313,13 +313,19 @@ function jumpTo(id) {
   window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
 }
 function onScroll() {
+  const ORDER = order();
   const offset = isMobile() ? 130 : 90;
   const y = window.scrollY + offset;
-  let found = order()[0];
-  order().forEach((id) => {
+  let found = ORDER[0];
+  ORDER.forEach((id) => {
     const el = $('sec-' + id);
     if (el && !el.hidden && (window.scrollY + el.getBoundingClientRect().top) <= y) found = id;
   });
+  // At the very bottom the last (often short) section never crosses the offset
+  // line, so it would never become current — pin it once we've hit the end.
+  if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+    found = ORDER[ORDER.length - 1];
+  }
   if (found !== current) { current = found; buildNav(); }
 }
 
@@ -511,7 +517,7 @@ function wire() {
       const prevHyva = E.usesHyva();
       E.setProfileGroup(g, o);
       renderAll();
-      if (E.usesHyva() && !prevHyva) { syncHyvaTab(true); logChange('Theme → <b>Hyvä</b> · <b>★ Hyvä setup</b> steps added', 'hyva'); }
+      if (E.usesHyva() && !prevHyva) { syncHyvaTab(true); logChange('Theme → <b>Hyvä</b> · <b>★ Hyvä setup</b> steps added', null); }
       else if (!E.usesHyva() && prevHyva) { logChange('Theme → <b>' + esc(optLabel('theme')) + '</b> · Hyvä setup no longer needed', null); }
       scheduleBuild();
       return;

@@ -24,7 +24,6 @@
             <div class="sum-card">
                 <div class="pf" id="spine-pf">Build</div>
                 <div class="meta" id="spine-meta"></div>
-                <div class="lead">One build, top to bottom. Jump to any step — changes ripple in place, so you always see what moved.</div>
             </div>
             <div class="steps" id="spine"></div>
         </aside>
@@ -34,8 +33,12 @@
             <div class="m-sum">
                 <div class="pf" id="m-pf">Build</div>
                 <div class="mmeta" id="m-meta"></div>
-                <div class="lead">One build, top to bottom. Tap a step to jump — changes ripple in place.</div>
             </div>
+
+            <section class="intro-sec">
+                <h1>Build your own Mage-OS distribution</h1>
+                <p>Tailor a Mage-OS project end to end — choose a release line and distribution, start from a profile, then turn individual modules, languages and architectural layers on or off. The generated <b>composer.json</b> and install tree update live as you go, and <b>Save</b> hands you a one-command <a href="https://bougie.tools" target="_blank" rel="noopener">bougie</a> install link for the exact build.</p>
+            </section>
 
             <section class="csec" id="sec-version" data-step="version">
                 <div class="kicker"><span class="num">01</span> Foundation</div>
@@ -132,17 +135,16 @@
                     <details class="bougie-default" style="margin-top:11px">
                         <summary class="alt">▶ Or run the default Mage-OS starter now</summary>
                         <div class="cmd-row" style="margin-top:8px"><pre class="cmd"><code># Install bougie if you don't have it yet
-curl -LsSf https://bougie.tools/install.sh | sh
-# Start it up (stock Mage-OS, not the build above)
-bougie new bougie-store --starter mageos --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
+curl -LsSf https://bougie.tools/install.sh | sh</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy install command">{!! $copyIcon !!}</button></div>
+                        <div class="cmd-row" style="margin-top:7px"><pre class="cmd"><code># Stock Mage-OS, not the build above
+bougie new bougie-store --starter mageos --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy start command">{!! $copyIcon !!}</button></div>
                     </details>
                 </div>
                 <div class="bg-result" id="bg-result" @unless ($savedId) style="display:none" @endunless>
-                    <p>Run <b>this exact configuration</b> with bougie — one command, no clone:</p>
+                    <p>Run <b>this exact configuration</b> with bougie — no clone:</p>
                     <div class="cmd-row"><pre class="cmd"><code># Install bougie if you don't have it yet
-curl -LsSf https://bougie.tools/install.sh | sh
-# Start it up!
-bougie new bougie-store --starter <span id="bougie-starter">{{ $starterArg }}</span> --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy command">{!! $copyIcon !!}</button></div>
+curl -LsSf https://bougie.tools/install.sh | sh</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy install command">{!! $copyIcon !!}</button></div>
+                    <div class="cmd-row" style="margin-top:7px"><pre class="cmd"><code>bougie new bougie-store --starter <span id="bougie-starter">{{ $starterArg }}</span> --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy start command">{!! $copyIcon !!}</button></div>
                     <small class="bougie-note">Shareable link to this build: <code id="bougie-share">{{ $savedId ? $starterArg : '' }}</code></small>
                     <div class="alt" id="bougie-edit">↺ Edit configuration</div>
                 </div>

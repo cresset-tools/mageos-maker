@@ -139,6 +139,11 @@
         .step.changed .ping { opacity: 1; }
 
         .canvas { min-width: 0; }
+        .intro-sec { background: #fff; border-bottom: 1px solid var(--gray-200); padding: 30px 34px 26px; }
+        .intro-sec h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.025em; margin: 0; }
+        .intro-sec p { font-size: 13.5px; color: var(--gray-600); line-height: 1.6; margin: 9px 0 0; max-width: 76ch; }
+        .intro-sec a { color: var(--blue-600); font-weight: 600; text-decoration: none; }
+        .intro-sec a:hover { text-decoration: underline; }
         .m-sum { display: none; }
         .csec { background: #fff; border-bottom: 1px solid var(--gray-200); padding: 28px 34px 20px; scroll-margin-top: calc(var(--appbar-h) + 12px); }
         .csec .kicker { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-400); }
@@ -378,6 +383,9 @@
             .m-sum .mmeta { font-size: 12px; color: var(--gray-500); margin-top: 3px; line-height: 1.5; }
             .m-sum .lead { font-size: 12px; color: var(--gray-500); line-height: 1.55; margin-top: 9px; padding-top: 11px; border-top: 1px solid var(--gray-150); }
 
+            .intro-sec { padding: 20px 16px 20px; border-bottom: 8px solid var(--gray-100); }
+            .intro-sec h1 { font-size: 20px; }
+            .intro-sec p { font-size: 12.5px; }
             .csec { border-bottom: 8px solid var(--gray-100); padding: 20px 16px 22px; scroll-margin-top: calc(var(--appbar-h) + var(--chips-h) + 6px); }
             .csec h2 { font-size: 18px; }
             .csec .curval { display: block; }
