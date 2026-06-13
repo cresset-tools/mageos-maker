@@ -189,6 +189,7 @@ class Configurator extends Component
         if ($this->distribution === 'modulargento' && ! $this->modulargentoAvailable($value)) {
             $this->distribution = 'standard';
             $this->forceNonRemovableSetsOn();
+            $this->forceNonRemovableLayersOn();
         }
     }
 
@@ -229,6 +230,8 @@ class Configurator extends Component
         }
 
         $this->forceNonRemovableSetsOn();
+        $this->forceNonRemovableLayersOn();
+        $this->enforceSetRequires();
         $this->enforceSubtoggleRequires();
     }
 
@@ -244,10 +247,22 @@ class Configurator extends Component
     }
 
     /**
-     * Drop any enabled set whose `requires.set` dependency is no longer enabled.
-     * A set that can't function without another (Luma theme → Web API) is
-     * unchecked when that set is removed. Loops to a fixpoint so chains cascade;
-     * mirrors {@see \App\Services\Configurator::cascadeSetRequires()} on the
+     * Toggling a stock layer may invalidate a set that depends on it (Luma theme
+     * → Web API layer). Re-run the requires pass so the dependent set is
+     * force-unchecked when its required layer is removed.
+     */
+    public function updatedEnabledStockLayers(): void
+    {
+        $this->enforceSetRequires();
+        $this->enforceSubtoggleRequires();
+    }
+
+    /**
+     * Drop any enabled set whose `requires.set` / `requires.layer` dependency is
+     * no longer enabled. A set that can't function without another set, or
+     * without a cross-cutting layer (Luma theme → Web API layer), is unchecked
+     * when that dependency is removed. Loops to a fixpoint so chains cascade;
+     * mirrors {@see ConfiguratorService::cascadeSetRequires()} on the
      * build side.
      */
     private function enforceSetRequires(): void
@@ -258,9 +273,16 @@ class Configurator extends Component
             $this->enabledSets = array_values(array_filter(
                 $this->enabledSets,
                 function ($set) use ($defs, $enabled) {
-                    $needed = $defs->setRequiredSet($set);
+                    $neededSet = $defs->setRequiredSet($set);
+                    if ($neededSet !== null && ! isset($enabled[$neededSet])) {
+                        return false;
+                    }
+                    $neededLayer = $defs->setRequiredLayer($set);
+                    if ($neededLayer !== null && ! in_array($neededLayer, $this->enabledStockLayers, true)) {
+                        return false;
+                    }
 
-                    return $needed === null || isset($enabled[$needed]);
+                    return true;
                 },
             ));
         } while (count($this->enabledSets) !== count($enabled));
@@ -303,6 +325,26 @@ class Configurator extends Component
             fn ($n) => ! $defs->isSetRemovable($n, $this->distribution),
         ));
         $this->enabledSets = array_values(array_unique(array_merge($this->enabledSets, $nonRemovable)));
+    }
+
+    /**
+     * Ensure every stock layer that is NOT removable under the current
+     * distribution is checked (e.g. the Web API layer is locked on standard
+     * Mage-OS — switching modulargento → standard must re-enable it so it isn't
+     * silently dropped, which would also strand sets that depend on it).
+     */
+    private function forceNonRemovableLayersOn(): void
+    {
+        $defs = app(Definitions::class);
+        $stockLayers = array_values(array_filter(
+            array_keys($defs->layers),
+            fn ($n) => $defs->isLayerStock($n),
+        ));
+        $nonRemovable = array_values(array_filter(
+            $stockLayers,
+            fn ($n) => ! $defs->isLayerRemovable($n, $this->distribution),
+        ));
+        $this->enabledStockLayers = array_values(array_unique(array_merge($this->enabledStockLayers, $nonRemovable)));
     }
 
     /**
@@ -543,7 +585,7 @@ class Configurator extends Component
         // removed. They never enter disabledSets / disabledLayers.
         $nonRemovableSets = array_values(array_filter($allSetNames, fn ($n) => ! $defs->isSetRemovable($n, $this->distribution)));
         $disabled = array_values(array_diff($allSetNames, $this->enabledSets, $nonRemovableSets));
-        $nonRemovableLayers = array_values(array_filter($stockLayerNames, fn ($n) => ! $defs->isLayerRemovable($n)));
+        $nonRemovableLayers = array_values(array_filter($stockLayerNames, fn ($n) => ! $defs->isLayerRemovable($n, $this->distribution)));
         $disabledLayers = array_values(array_diff($stockLayerNames, $this->enabledStockLayers, $nonRemovableLayers));
 
         return new Selection(
@@ -687,7 +729,7 @@ class Configurator extends Component
         $this->enabledSets = array_values(array_diff($allSets, $effectiveDisabled));
         $effectiveDisabledLayers = array_values(array_filter(
             $sel->disabledLayers,
-            fn ($n) => $defs->isLayerRemovable($n),
+            fn ($n) => $defs->isLayerRemovable($n, $this->distribution),
         ));
         $this->enabledStockLayers = array_values(array_diff($stockLayers, $effectiveDisabledLayers));
         $this->profileGroups = $sel->profileGroups;
@@ -751,7 +793,7 @@ class Configurator extends Component
         }
         $layerRemovable = [];
         foreach (array_keys($defs->layers) as $name) {
-            $layerRemovable[$name] = $defs->isLayerRemovable($name);
+            $layerRemovable[$name] = $defs->isLayerRemovable($name, $this->distribution);
         }
 
         return view('livewire.configurator', [

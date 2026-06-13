@@ -12,7 +12,7 @@ class Definitions
 {
     /**
      * @param  array<string, array{name:string, label:string, description?:string, since?:string, until?:string, packages:list<string>}>  $sets  Stock module groups; only meaningful when DISABLED (added to `replace`). Optional `since`/`until` (inclusive lower / exclusive upper) gate the set to a version range — e.g. RMA, bundled as a removable set from 3.0.0 on.
-     * @param  array<string, array{name:string, label:string, description?:string, stock?:bool, packages:list<string>, repositories?:list<array<string,mixed>>}>  $layers  Stock cross-cutting concerns; only meaningful when DISABLED. Non-stock layers may declare extra composer repositories.
+     * @param  array<string, array{name:string, label:string, description?:string, stock?:bool, removable?:bool, removable_modulargento?:bool, packages:list<string>, repositories?:list<array<string,mixed>>}>  $layers  Stock cross-cutting concerns; only meaningful when DISABLED. Non-stock layers may declare extra composer repositories. `removable`/`removable_modulargento` gate whether a stock layer can be stripped, distribution-aware like sets (e.g. the Web API layer is locked in stock Mage-OS but removable under modulargento).
      * @param  array<string, array{name:string, label:string, description?:string, since?:string, until?:string, packages:list<string>, repositories?:list<array<string,mixed>>}>  $addons  Extra packages NOT in stock Mage-OS; only meaningful when ENABLED (added to `require`). May declare extra composer repositories. Optional `since`/`until` gate the add-on to a version range — e.g. RMA, opt-in only before 3.0.0.
      * @param  array<string, array{name:string, label:string, description?:string, options:list<array<string,mixed>>}>  $profileGroups
      * @param  array<string, array{name:string, label:string, description?:string, default?:bool, selection:array<string,mixed>}>  $profiles
@@ -63,14 +63,26 @@ class Definitions
      * The set this set depends on, if any. A set declaring
      * `requires: { set: <name> }` can't function when that set is removed, so
      * the configurator force-disables it (and the UI greys it out) when the
-     * required set is gone — e.g. the Luma theme needs the Web API set for its
-     * storefront (checkout/customer-data REST calls). One level deep is enough
-     * for the cases we model; {@see Configurator::cascadeSetRequires()} loops to
-     * a fixpoint to also cover chains.
+     * required set is gone. One level deep is enough for the cases we model;
+     * {@see Configurator::cascadeSetRequires()} loops to a fixpoint to also
+     * cover chains.
      */
     public function setRequiredSet(string $name): ?string
     {
         return $this->sets[$name]['requires']['set'] ?? null;
+    }
+
+    /**
+     * The layer this set depends on, if any. A set declaring
+     * `requires: { layer: <name> }` can't function when that layer is removed,
+     * so the configurator force-disables it (and the UI greys it out) when the
+     * required layer is gone — e.g. the Luma theme needs the Web API layer for
+     * its storefront (checkout/customer-data REST calls). Handled alongside
+     * `requires.set` by {@see Configurator::cascadeSetRequires()}.
+     */
+    public function setRequiredLayer(string $name): ?string
+    {
+        return $this->sets[$name]['requires']['layer'] ?? null;
     }
 
     public function subtogglePackages(string $set, string $sub): array
@@ -328,11 +340,20 @@ class Definitions
      * package is wired into stock Mage-OS bootstrap). Defaults to true.
      * Only meaningful for stock layers — non-stock layers are profile-group
      * driven and never user-toggled in the first place.
+     *
+     * Distribution-aware like {@see isSetRemovable()}: under the fully-modular
+     * (modulargento) distribution a layer locked in stock Mage-OS becomes
+     * removable — e.g. the Web API layer, decoupled there — unless it opts out
+     * via `removable_modulargento: false`.
      */
-    public function isLayerRemovable(string $name): bool
+    public function isLayerRemovable(string $name, string $distribution = 'standard'): bool
     {
         if (! array_key_exists($name, $this->layers)) {
             return true;
+        }
+
+        if ($distribution === 'modulargento') {
+            return ($this->layers[$name]['removable_modulargento'] ?? true) !== false;
         }
 
         return ($this->layers[$name]['removable'] ?? true) !== false;

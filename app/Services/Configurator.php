@@ -29,8 +29,19 @@ class Configurator
         $resolved = $this->resolveProfileGroups($selection);
 
         $disabledSets = array_values(array_unique(array_merge($resolved['disableSets'], $selection->disabledSets)));
-        $disabledSets = $this->cascadeSetRequires($disabledSets, $selection->version);
         $disabledLayers = array_values(array_unique(array_merge($resolved['disableLayers'], $selection->disabledLayers)));
+        // Layers that will actually be stripped: stock layers that are removable
+        // under the chosen distribution (or forced). A set whose `requires.layer`
+        // points at one of these can't function, so the cascade drops it too. We
+        // gate on *effective* removal — not the raw disabled list — so a set isn't
+        // wrongly stripped when its required layer is force-kept (e.g. Luma stays
+        // on standard Mage-OS, where the Web API layer is locked on).
+        $removedLayers = array_values(array_filter(
+            $disabledLayers,
+            fn ($l) => $this->defs->isLayerStock($l)
+                && ($forceRemovable || $this->defs->isLayerRemovable($l, $selection->distribution)),
+        ));
+        $disabledSets = $this->cascadeSetRequires($disabledSets, $removedLayers, $selection->version);
         // Forced items always go in, soft defaults only when echoed back via the form.
         $effectiveAddons = array_values(array_unique(array_merge(
             $resolved['forceAddons'],
@@ -127,8 +138,8 @@ class Configurator
                         continue;
                     }
                     foreach ($this->replacePackageNames($entry['name'], $modulargento) as $replaceName) {
-                    $replace[$replaceName] = '*';
-                }
+                        $replace[$replaceName] = '*';
+                    }
                 }
             }
         }
@@ -150,6 +161,13 @@ class Configurator
         }
         foreach ($disabledLayers as $layer) {
             if (! $this->defs->isLayerStock($layer)) {
+                continue;
+            }
+            // A layer that isn't removable under the chosen distribution can't be
+            // cleanly stripped — emitting a replace for it would break the install
+            // (e.g. the Web API layer is locked on standard Mage-OS, removable only
+            // under modulargento). Skip it; mirrors the per-set guard above.
+            if (! $forceRemovable && ! $this->defs->isLayerRemovable($layer, $selection->distribution)) {
                 continue;
             }
             foreach ($this->defs->layerPackageEntries($layer) as $entry) {
@@ -289,26 +307,31 @@ class Configurator
     }
 
     /**
-     * Expand the disabled-set list to include every set whose `requires.set`
-     * dependency has itself been disabled — a set that can't function without
-     * another can't ship without it. Loops to a fixpoint so chains (A→B→C)
-     * cascade. Server-authoritative: keeps saved-config replay and CLI flag
-     * combos consistent with the UI's {@see \App\Livewire\Configurator::enforceSetRequires()}.
+     * Expand the disabled-set list to include every set whose `requires.set` /
+     * `requires.layer` dependency is gone — a set that can't function without
+     * another set, or without a cross-cutting layer (e.g. Luma → Web API), can't
+     * ship without it. Loops to a fixpoint so chains (A→B→C) cascade.
+     * Server-authoritative: keeps saved-config replay and CLI flag combos
+     * consistent with the UI's {@see \App\Livewire\Configurator::enforceSetRequires()}.
      *
      * @param  list<string>  $disabledSets
+     * @param  list<string>  $removedLayers  layers that are actually being stripped
      * @return list<string>
      */
-    private function cascadeSetRequires(array $disabledSets, string $version): array
+    private function cascadeSetRequires(array $disabledSets, array $removedLayers, string $version): array
     {
         $disabled = array_flip($disabledSets);
+        $removedLayerMap = array_flip($removedLayers);
         do {
             $added = false;
             foreach (array_keys($this->defs->setsForVersion($version)) as $set) {
                 if (isset($disabled[$set])) {
                     continue;
                 }
-                $needed = $this->defs->setRequiredSet($set);
-                if ($needed !== null && isset($disabled[$needed])) {
+                $neededSet = $this->defs->setRequiredSet($set);
+                $neededLayer = $this->defs->setRequiredLayer($set);
+                if (($neededSet !== null && isset($disabled[$neededSet]))
+                    || ($neededLayer !== null && isset($removedLayerMap[$neededLayer]))) {
                     $disabled[$set] = true;
                     $added = true;
                 }
