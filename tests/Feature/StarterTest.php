@@ -59,6 +59,15 @@ class StarterTest extends TestCase
             static fn ($r): bool => is_array($r) && str_contains($r['url'] ?? '', 'hyva-themes.repo.packagist.com'),
         );
         $this->assertSame($requiresHyva, $hasRepo, 'Hyvä repo must appear iff a hyva-themes/* package is required');
+
+        // The license-key auth prompt rides the same gate: present iff a
+        // hyva-themes/* package is required, so no-Hyvä starters don't ask
+        // for a token the user doesn't need.
+        $hasAuth = (bool) array_filter(
+            $json['auth'] ?? [],
+            static fn ($a): bool => is_array($a) && str_contains($a['host'] ?? '', 'hyva-themes.repo.packagist.com'),
+        );
+        $this->assertSame($requiresHyva, $hasAuth, 'Hyvä auth prompt must appear iff a hyva-themes/* package is required');
     }
 
     /**
@@ -105,6 +114,17 @@ class StarterTest extends TestCase
         $this->assertNotEmpty($placeholder['prompt'] ?? '');
         // The description tells the user what they're entering.
         $this->assertNotEmpty($placeholder['description'] ?? '');
+
+        // The license token is a secret, so it must be declared via `auth`
+        // (bougie prompts and stores it outside the project) — never as a
+        // placeholder that would land in the committed composer.json.
+        $auth = collect($json['auth'] ?? [])
+            ->first(static fn ($a): bool => is_array($a) && ($a['host'] ?? null) === 'hyva-themes.repo.packagist.com');
+        $this->assertNotNull($auth, 'an auth entry must declare the Hyvä repo host');
+        $this->assertSame('token', $auth['username'] ?? null);
+        $this->assertTrue($auth['required'] ?? false);
+        $this->assertNotEmpty($auth['prompt'] ?? '');
+        $this->assertNotEmpty($auth['description'] ?? '');
     }
 
     public function test_default_starter_has_no_placeholders(): void
