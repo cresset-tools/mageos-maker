@@ -151,8 +151,9 @@ class ConfiguratorController extends Controller
         }
         $data['version'] = $version;
 
+        $modulargentoVersions = array_keys((array) config('mageos.modulargento.versions', []));
         if (($data['distribution'] ?? 'standard') === 'modulargento'
-            && $version !== (string) config('mageos.modulargento.version', '')) {
+            && ! in_array($version, $modulargentoVersions, true)) {
             $data['distribution'] = 'standard';
         }
 

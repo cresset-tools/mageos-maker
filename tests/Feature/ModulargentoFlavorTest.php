@@ -14,9 +14,15 @@ use Tests\TestCase;
  */
 class ModulargentoFlavorTest extends TestCase
 {
+    /** @return list<string> Every Mage-OS version the modulargento flavor is published for. */
+    private function mgVersions(): array
+    {
+        return array_keys((array) config('mageos.modulargento.versions', []));
+    }
+
     private function mgVersion(): string
     {
-        return (string) config('mageos.modulargento.version', '3.0.0');
+        return $this->mgVersions()[0] ?? '3.0.0';
     }
 
     /** @param array<string,mixed> $overrides */
@@ -42,14 +48,32 @@ class ModulargentoFlavorTest extends TestCase
         return json_decode($resp['composerJson'], true);
     }
 
-    public function test_modulargento_strips_a_normally_locked_set(): void
+    public function test_modulargento_strips_a_normally_locked_set_for_every_published_version(): void
     {
-        $resp = $this->build([
-            'distribution' => 'modulargento',
-            'disabledSets' => ['gift-message'],
-        ]);
-        $replace = $this->composer($resp)['replace'] ?? [];
-        $this->assertArrayHasKey('modulargento/module-gift-message', $replace);
+        $versions = $this->mgVersions();
+        $this->assertNotEmpty($versions, 'expected at least one configured modulargento version');
+
+        foreach ($versions as $version) {
+            $resp = $this->build([
+                'version' => $version,
+                'distribution' => 'modulargento',
+                'disabledSets' => ['gift-message'],
+            ]);
+            $composer = $this->composer($resp);
+
+            $this->assertArrayHasKey(
+                'modulargento/module-gift-message',
+                $composer['replace'] ?? [],
+                "modulargento $version should strip the locked gift-message set",
+            );
+            // The per-version template resolves end-to-end: the project pins the
+            // matching product edition for the selected version.
+            $this->assertSame(
+                $version,
+                $composer['require']['modulargento/product-community-edition'] ?? null,
+                "modulargento $version should pin the matching product edition",
+            );
+        }
     }
 
     public function test_standard_keeps_the_locked_set(): void

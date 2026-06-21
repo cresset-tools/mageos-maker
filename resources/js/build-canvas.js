@@ -94,14 +94,19 @@ function pulseSection(id) {
 
 /* ---------- section: version ---------- */
 function buildVersion() {
-  const locked = E.s.distribution === 'modulargento';
-  const opts = [...D.versions].reverse().map((v) => {
+  // Under the modulargento distribution the dropdown is restricted to the
+  // versions the fully-modular flavor is published for (so switching between
+  // them keeps the distribution), instead of being locked to a single one.
+  const mg = E.s.distribution === 'modulargento';
+  const mgVersions = D.modulargentoVersions || [];
+  const list = [...D.versions].reverse().filter((v) => !mg || mgVersions.includes(v));
+  const opts = list.map((v) => {
     const tag = v === D.latestStable ? '  (latest stable)' : (v.includes('-p') ? '  (security)' : '');
     return '<option value="' + esc(v) + '"' + (v === E.s.version ? ' selected' : '') + '>' + esc(v + tag) + '</option>';
   }).join('');
-  $('version-grid').innerHTML = '<select class="select" id="version-select" style="max-width:280px"' + (locked ? ' disabled' : '') + '>' + opts + '</select>';
-  $('version-note').innerHTML = locked
-    ? '<div class="infonote"><svg class="ic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 7.5v3.5M8 5.2v.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><p>Locked to ' + esc(E.s.version) + ' — the fully-modular distribution is only published for this version. Switch to Standard in <b>Distribution</b> to change it.</p></div>'
+  $('version-grid').innerHTML = '<select class="select" id="version-select" style="max-width:280px">' + opts + '</select>';
+  $('version-note').innerHTML = mg
+    ? '<div class="infonote"><svg class="ic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 7.5v3.5M8 5.2v.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><p>The fully-modular distribution is published for ' + esc(mgVersions.join(', ')) + '. Switch to Standard in <b>Distribution</b> to pick any Mage-OS version.</p></div>'
     : '';
 }
 

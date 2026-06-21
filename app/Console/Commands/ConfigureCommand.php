@@ -64,6 +64,22 @@ class ConfigureCommand extends Command
 
         $distribution = $this->option('distribution') ?: 'standard';
 
+        // The fully-modular distribution is only published for specific Mage-OS
+        // releases — fail clearly rather than silently emit a project that can't
+        // resolve, mirroring the configurator's server-side clamp.
+        if ($distribution === 'modulargento') {
+            $modulargentoVersions = array_keys((array) config('mageos.modulargento.versions', []));
+            if (! in_array($version, $modulargentoVersions, true)) {
+                $this->error(sprintf(
+                    'The modulargento distribution is only available for: %s. Got: %s',
+                    implode(', ', $modulargentoVersions) ?: '(none configured)',
+                    $version,
+                ));
+
+                return self::FAILURE;
+            }
+        }
+
         $selection = new Selection(
             version: $version,
             profile: $selection->profile,

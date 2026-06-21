@@ -10,28 +10,37 @@ return [
     // The package whose versions are exposed in the version dropdown.
     'edition_package' => 'mage-os/project-community-edition',
 
-    // The "fully modular" (modulargento) distribution — a flavor of the Mage-OS
-    // release named in `version` below, served from its own Composer repo. When
-    // the user picks it in the configurator (offered only when the selected
-    // version equals `version`), every otherwise-locked set becomes removable
-    // because the modulargento packages are decoupled. See the Configurator and
+    // The "fully modular" (modulargento) distribution — a flavor of a Mage-OS
+    // release, served from its own Composer repo. When the user picks it in the
+    // configurator (offered only when the selected version is one of the keys in
+    // `versions` below), every otherwise-locked set becomes removable because the
+    // modulargento packages are decoupled. See the Configurator and
     // Definitions::isSetRemovable() for how the backing swaps.
     'modulargento' => [
         'repository_url' => env('MAGEOS_MODULARGENTO_REPOSITORY_URL', 'https://modulargento.cresset.tools/'),
         'edition_package' => 'modulargento/project-community-edition',
-        // The Mage-OS release this flavor tracks; the distribution toggle only
-        // appears when the selected version matches.
-        'version' => env('MAGEOS_MODULARGENTO_VERSION', '3.0.0'),
-        // Pinned for bougie's PHP runtime; emitted as a `require.php` constraint.
-        // The modulargento 3.0.0 line targets PHP 8.4–8.5 (its metapackage still
-        // advertises 8.3 from the 2.4.8 base it tracks, but 8.3 isn't a target
-        // for the modular distribution).
-        'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.4.0||~8.5.0'),
-        // The real published project-community-edition composer.json (runtime
-        // keys stripped), used verbatim as the base so the generated project
-        // carries every key a Mage-OS project does (require-dev, autoload-dev,
-        // license, …). Refresh this file when bumping `version` above.
-        'project_template_path' => base_path('resources/modulargento/project-community-edition.json'),
+        // Every published modulargento release, keyed by the Mage-OS version it
+        // tracks. The distribution toggle appears whenever the selected version
+        // is one of these keys; each entry carries that release's PHP constraint
+        // and its published project-community-edition template.
+        //
+        // Each `project_template_path` is the real published
+        // project-community-edition composer.json (runtime keys stripped), used
+        // verbatim as the base so the generated project carries every key a
+        // Mage-OS project does (require-dev, autoload-dev, license, …). Add a new
+        // entry (and its template under resources/modulargento/<version>/) when a
+        // new modulargento release ships. The modulargento line targets PHP
+        // 8.4–8.5 regardless of the PHP the upstream 2.4.x metapackage advertises.
+        'versions' => [
+            '3.0.0' => [
+                'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.4.0||~8.5.0'),
+                'project_template_path' => base_path('resources/modulargento/3.0.0/project-community-edition.json'),
+            ],
+            '3.1.0' => [
+                'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.4.0||~8.5.0'),
+                'project_template_path' => base_path('resources/modulargento/3.1.0/project-community-edition.json'),
+            ],
+        ],
     ],
 
     // Filesystem paths (under storage/app/private when using the local disk)

@@ -14,7 +14,7 @@ namespace App\Services;
 class Configurator
 {
     /**
-     * @param  array{repository_url?:string, edition_package?:string, version?:string, php_constraint?:string}  $modulargento
+     * @param  array{repository_url?:string, edition_package?:string, versions?:array<string,array{php_constraint?:string, project_template?:array<string,mixed>}>}  $modulargento
      */
     public function __construct(
         private readonly Definitions $defs,
@@ -390,11 +390,15 @@ class Configurator
      */
     private function modulargentoBaseComposer(string $version): array
     {
-        $edition = $this->modulargento['edition_package'] ?? 'modulargento/project-community-edition';
-        $repoUrl = $this->modulargento['repository_url'] ?? 'https://modulargento.cresset.tools/';
-        $editionVersion = $this->modulargento['version'] ?? $version;
-        $phpConstraint = $this->modulargento['php_constraint'] ?? null;
-        $template = $this->modulargento['project_template'] ?? null;
+        // Per-version entry (php_constraint + project_template), falling back to
+        // any flat top-level fields for the legacy single-version config shape.
+        $entry = ($this->modulargento['versions'][$version] ?? []) + $this->modulargento;
+
+        $edition = $entry['edition_package'] ?? 'modulargento/project-community-edition';
+        $repoUrl = $entry['repository_url'] ?? 'https://modulargento.cresset.tools/';
+        $editionVersion = $version;
+        $phpConstraint = $entry['php_constraint'] ?? null;
+        $template = $entry['project_template'] ?? null;
 
         // Maker-owned config block, merged over whatever the template carries.
         $allowPlugins = [

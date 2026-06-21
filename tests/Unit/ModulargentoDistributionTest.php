@@ -219,4 +219,54 @@ class ModulargentoDistributionTest extends TestCase
         $this->assertArrayNotHasKey('modulargento/module-core-thing', $mgOptOut['replace'] ?? []);
         $this->assertArrayNotHasKey('mage-os/module-core-thing', $mgOptOut['replace'] ?? []);
     }
+
+    public function test_per_version_template_and_php_constraint_are_selected_by_build_version(): void
+    {
+        $defs = $this->defs();
+        $catalog = $this->createMock(CatalogRepository::class);
+        $catalog->method('packageVersions')->willReturn([]);
+
+        $template = fn (string $v): array => [
+            'name' => 'modulargento/project-community-edition',
+            'type' => 'project',
+            'require' => ['modulargento/product-community-edition' => $v],
+            'license' => ['OSL-3.0', 'AFL-3.0'],
+        ];
+
+        // The version-keyed config shape: each published release carries its own
+        // template (different product-edition pin) and PHP constraint.
+        $cfg = new Configurator(
+            $defs,
+            $catalog,
+            new AddonVersionResolver($defs, new ComposerRepoIndex([], 'mageos-catalog'), 'mageos-catalog'),
+            'https://repo.mage-os.org/',
+            [
+                'repository_url' => 'https://modulargento.cresset.tools/',
+                'edition_package' => 'modulargento/project-community-edition',
+                'versions' => [
+                    '3.0.0' => ['php_constraint' => '~8.4.0', 'project_template' => $template('3.0.0')],
+                    '3.1.0' => ['php_constraint' => '~8.5.0', 'project_template' => $template('3.1.0')],
+                ],
+            ],
+        );
+
+        foreach (['3.0.0' => '~8.4.0', '3.1.0' => '~8.5.0'] as $version => $php) {
+            $composer = $cfg->build(new Selection(
+                version: $version, profile: null,
+                disabledSets: [], disabledLayers: [], enabledLayers: [], enabledAddons: [], profileGroups: [],
+                distribution: 'modulargento',
+            ));
+
+            $this->assertSame(
+                $version,
+                $composer['require']['modulargento/product-community-edition'] ?? null,
+                "build $version should resolve the $version template",
+            );
+            $this->assertSame(
+                $php,
+                $composer['require']['php'] ?? null,
+                "build $version should use the $version php constraint",
+            );
+        }
+    }
 }

@@ -61,7 +61,7 @@ export const engine = {
     return g && (g.options || []).find((o) => o.name === option);
   },
   modulargentoAvailable() {
-    return D.modulargentoVersion !== '' && this.s.version === D.modulargentoVersion;
+    return Array.isArray(D.modulargentoVersions) && D.modulargentoVersions.includes(this.s.version);
   },
 
   /* ---------- version gating ---------- */

@@ -48,8 +48,8 @@ class Selection
         /**
          * Which distribution backs the project: 'standard' (stock Mage-OS) or
          * 'modulargento' (the fully-modular flavor, where every set is
-         * removable). Only meaningful when {@see $version} matches the
-         * configured modulargento version; the configurator forces it back to
+         * removable). Only meaningful when {@see $version} is one of the
+         * configured modulargento versions; the configurator forces it back to
          * 'standard' otherwise.
          */
         public readonly string $distribution = 'standard',

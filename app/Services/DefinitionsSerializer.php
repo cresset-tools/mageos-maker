@@ -45,7 +45,10 @@ class DefinitionsSerializer
         return [
             'versions' => array_values($this->catalog->availableVersions()),
             'latestStable' => $this->catalog->latestStable(),
-            'modulargentoVersion' => (string) config('mageos.modulargento.version', ''),
+            'modulargentoVersions' => array_values(array_map(
+                'strval',
+                array_keys((array) config('mageos.modulargento.versions', [])),
+            )),
             'defaultProfile' => $this->defs->defaultProfile(),
             'profiles' => $this->profiles(),
             'profileGroups' => array_values($this->defs->profileGroups),
