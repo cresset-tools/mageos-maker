@@ -29,15 +29,18 @@ return [
         // verbatim as the base so the generated project carries every key a
         // Mage-OS project does (require-dev, autoload-dev, license, …). Add a new
         // entry (and its template under resources/modulargento/<version>/) when a
-        // new modulargento release ships. The modulargento line targets PHP
-        // 8.4–8.5 regardless of the PHP the upstream 2.4.x metapackage advertises.
+        // new modulargento release ships. Both 3.0.0 and 3.1.0 target PHP 8.4:
+        // their published packages inherit the Magento 2.4.9 base's
+        // ~8.2.0||~8.3.0||~8.4.0 ceiling (e.g. modulargento/framework-graph-ql),
+        // so the project must NOT advertise 8.5 — composer would refuse to
+        // install it on 8.5.
         'versions' => [
             '3.0.0' => [
-                'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.4.0||~8.5.0'),
+                'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.4.0'),
                 'project_template_path' => base_path('resources/modulargento/3.0.0/project-community-edition.json'),
             ],
             '3.1.0' => [
-                'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.4.0||~8.5.0'),
+                'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.4.0'),
                 'project_template_path' => base_path('resources/modulargento/3.1.0/project-community-edition.json'),
             ],
         ],

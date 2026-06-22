@@ -65,7 +65,7 @@ class ModulargentoDistributionTest extends TestCase
                 'repository_url' => 'https://modulargento.cresset.tools/',
                 'edition_package' => 'modulargento/project-community-edition',
                 'version' => '3.0.0',
-                'php_constraint' => '~8.4.0||~8.5.0',
+                'php_constraint' => '~8.4.0',
             ], $modulargentoExtra),
         );
     }
@@ -113,7 +113,7 @@ class ModulargentoDistributionTest extends TestCase
         $this->assertSame('modulargento/project-community-edition', $composer['name'] ?? null);
         $this->assertSame('3.0.0', $composer['require']['modulargento/product-community-edition'] ?? null);
         $this->assertArrayNotHasKey('modulargento/project-community-edition', $composer['require'] ?? []);
-        $this->assertSame('~8.4.0||~8.5.0', $composer['require']['php'] ?? null);
+        $this->assertSame('~8.4.0', $composer['require']['php'] ?? null);
         $this->assertContains(
             ['type' => 'composer', 'url' => 'https://modulargento.cresset.tools/'],
             $composer['repositories'] ?? [],
@@ -145,7 +145,7 @@ class ModulargentoDistributionTest extends TestCase
         // Maker overlays applied on top.
         $this->assertSame('modulargento/project-community-edition', $composer['name'] ?? null);
         $this->assertSame('3.0.0', $composer['require']['modulargento/product-community-edition'] ?? null);
-        $this->assertSame('~8.4.0||~8.5.0', $composer['require']['php'] ?? null);
+        $this->assertSame('~8.4.0', $composer['require']['php'] ?? null);
         $this->assertContains(
             ['type' => 'composer', 'url' => 'https://modulargento.cresset.tools/'],
             $composer['repositories'] ?? [],
@@ -245,12 +245,12 @@ class ModulargentoDistributionTest extends TestCase
                 'edition_package' => 'modulargento/project-community-edition',
                 'versions' => [
                     '3.0.0' => ['php_constraint' => '~8.4.0', 'project_template' => $template('3.0.0')],
-                    '3.1.0' => ['php_constraint' => '~8.5.0', 'project_template' => $template('3.1.0')],
+                    '3.1.0' => ['php_constraint' => '~8.3.0', 'project_template' => $template('3.1.0')],
                 ],
             ],
         );
 
-        foreach (['3.0.0' => '~8.4.0', '3.1.0' => '~8.5.0'] as $version => $php) {
+        foreach (['3.0.0' => '~8.4.0', '3.1.0' => '~8.3.0'] as $version => $php) {
             $composer = $cfg->build(new Selection(
                 version: $version, profile: null,
                 disabledSets: [], disabledLayers: [], enabledLayers: [], enabledAddons: [], profileGroups: [],
