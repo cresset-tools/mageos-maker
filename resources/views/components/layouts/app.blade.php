@@ -9,6 +9,12 @@
     <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/languages/json.min.js"></script>
     @vite('resources/js/app.js')
+    <!-- Privacy-friendly analytics by Plausible -->
+    <script async src="https://analytics.yele.dev/js/pa-XYaw3HemB7OBy4YJHD3o7.js"></script>
+    <script>
+        window.plausible = window.plausible || function () { (plausible.q = plausible.q || []).push(arguments) }, plausible.init = plausible.init || function (i) { plausible.o = i || {} };
+        plausible.init()
+    </script>
     <style>
         /* ============================================================
            Design tokens — mirror the design bundle's maker.css
