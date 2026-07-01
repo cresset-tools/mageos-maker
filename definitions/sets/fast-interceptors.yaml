@@ -1,0 +1,6 @@
+name: fast-interceptors
+label: Fast Interceptor Generator
+description: Creatuity's faster interceptor generator, bundled by Mage-OS CE. Absent from mage-os/product-minimal-edition; removing reverts to stock interceptor generation.
+packages:
+  - creatuity/magento2-interceptors
+group: Admin, Ops & Developer

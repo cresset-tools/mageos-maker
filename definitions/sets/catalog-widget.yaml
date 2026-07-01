@@ -1,0 +1,8 @@
+name: catalog-widget
+label: Catalog Widgets
+description: CMS "Catalog Products List/Link" widgets for pages, blocks and Page Builder content. Dropped by mage-os/product-minimal-edition.
+removable: false  # CMS / Page Builder content may reference the widgets at runtime in stock Mage-OS
+removable_modulargento: false  # Magento_ConfigurableProduct's di.xml declares a plugin on Magento\CatalogWidget\Block\Product\ProductsList → dangling interceptor target at di:compile (ConfigurableProduct isn't decoupled — see [[no-configurable-product-decouple]]). Verified via the modulargento-lite boot.
+packages:
+  - mage-os/module-catalog-widget
+group: Marketing & Content

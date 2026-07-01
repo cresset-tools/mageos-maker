@@ -1,0 +1,6 @@
+name: varnish-extended
+label: Varnish Extended
+description: Elgentos' extended Varnish helpers, bundled by Mage-OS CE. Absent from mage-os/product-minimal-edition; not required by core.
+packages:
+  - elgentos/magento2-varnish-extended
+group: Admin, Ops & Developer

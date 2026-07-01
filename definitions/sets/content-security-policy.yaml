@@ -1,0 +1,8 @@
+name: content-security-policy
+label: Content Security Policy
+description: CSP header management (Magento_Csp). Report-only by default; other modules contribute csp_whitelist.xml. Dropped by mage-os/product-minimal-edition.
+removable: false  # core modules ship csp_whitelist.xml consumed by Magento_Csp in stock Mage-OS
+removable_modulargento: false  # Magento_Checkout's CspPolicyObserver has a REQUIRED Magento\Csp\Model\Collector\DynamicCollector constructor arg (still present in modulargento's decoupled Checkout) → di:compile-breaking. Verified via the modulargento-lite boot.
+packages:
+  - mage-os/module-csp
+group: Security

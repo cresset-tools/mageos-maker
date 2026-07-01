@@ -1,0 +1,19 @@
+name: search
+label: Search engine
+description: Catalog search engine. OpenSearch is Mage-OS's default; the shared Magento_Elasticsearch base stays for either choice (both engines build on it).
+order: 15
+options:
+  - name: opensearch
+    label: OpenSearch
+    default: true
+    # Mage-OS's default engine. Elasticsearch 8 is the only independently
+    # removable engine module — module-elasticsearch is the shared base both
+    # OpenSearch and ES8 require, so it always stays — so picking OpenSearch
+    # simply strips the ES8 engine (matching mage-os/product-minimal-edition,
+    # which ships OpenSearch only).
+    disables:
+      sets: [elasticsearch8]
+  - name: elasticsearch8
+    label: Elasticsearch 8
+    # Keep Magento_Elasticsearch8 installed alongside the shared base to
+    # standardise on Elasticsearch instead of OpenSearch.

@@ -1,0 +1,8 @@
+name: backup
+label: System Backup
+description: Admin database/media backup tooling (Magento_Backup, deprecated upstream). Dropped by mage-os/product-minimal-edition.
+removable: false  # Magento_Backend composer-requires it AND types `?Magento\Backup\Helper\Data` in System\Store\Delete\Form (di:compile-breaking). Verified via the standard mageos-lite boot test.
+removable_modulargento: false  # modulargento's Backend keeps the same reference (not decoupled), so it can't be stripped there either.
+packages:
+  - mage-os/module-backup
+group: Admin, Ops & Developer

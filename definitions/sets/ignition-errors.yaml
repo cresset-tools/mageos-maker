@@ -1,0 +1,6 @@
+name: ignition-errors
+label: Ignition Error Page
+description: Swissup's Ignition pretty developer error page, bundled by Mage-OS CE. Absent from mage-os/product-minimal-edition; not required by core.
+packages:
+  - swissup/module-ignition
+group: Admin, Ops & Developer

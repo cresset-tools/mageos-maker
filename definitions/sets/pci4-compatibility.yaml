@@ -1,0 +1,6 @@
+name: pci4-compatibility
+label: PCI 4 Compatibility
+description: Aligent's PCI-DSS 4 compatibility patches, bundled by Mage-OS CE. Absent from mage-os/product-minimal-edition; removing reverts to stock behaviour.
+packages:
+  - aligent/magento2-pci-4-compatibility
+group: Admin, Ops & Developer

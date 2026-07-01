@@ -1,0 +1,8 @@
+name: checkout-agreements
+label: Terms & Conditions
+description: Checkout "Terms and Conditions" agreements (admin-managed, shown at checkout). Dropped by mage-os/product-minimal-edition. The GraphQL companion lives in the graphql layer.
+removable: false  # checkout layout/DI reference the agreements collection in stock Mage-OS
+removable_modulargento: true  # provisional — confirm with the modulargento removal-matrix
+packages:
+  - mage-os/module-checkout-agreements
+group: Cart, Checkout & Orders

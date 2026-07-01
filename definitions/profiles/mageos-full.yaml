@@ -10,3 +10,7 @@ selection:
   profileGroups:
     theme: luma
     checkout: default
+    # Keep Elasticsearch 8 installed — "everything enabled" includes the ES8
+    # engine. (The search group otherwise defaults to OpenSearch, which strips
+    # the elasticsearch8 set.)
+    search: elasticsearch8

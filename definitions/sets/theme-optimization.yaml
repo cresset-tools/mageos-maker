@@ -1,0 +1,6 @@
+name: theme-optimization
+label: Theme JS Optimization
+description: Advanced JavaScript bundling/minification configuration (Magento_ThemeOptimization). Dropped by mage-os/product-minimal-edition.
+packages:
+  - mage-os/module-theme-optimization
+group: Admin, Ops & Developer
