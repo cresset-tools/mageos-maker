@@ -10,6 +10,21 @@ return [
     // The package whose versions are exposed in the version dropdown.
     'edition_package' => 'mage-os/project-community-edition',
 
+    // The minimal edition used as the base in ADDITIVE ("inverse") mode: start
+    // from this lean set and `require` the features you add, instead of starting
+    // from the full edition and `replace`-ing what you remove.
+    'minimal_edition_package' => 'mage-os/project-minimal-edition',
+
+    // Packages force-added to the minimal base's `require` in additive mode.
+    // The published mage-os/product-minimal-edition 3.x drops laminas/laminas-view
+    // while keeping laminas/laminas-i18n, whose view helpers reference it — so
+    // `setup:di:compile` fatals without this. (Fixed upstream via the mirror-repo
+    // allowlist; kept here so additive builds compile regardless of which minimal
+    // metapackage version resolves.)
+    'minimal_base_extra_require' => [
+        'laminas/laminas-view' => '^2.20',
+    ],
+
     // The "fully modular" (modulargento) distribution — a flavor of a Mage-OS
     // release, served from its own Composer repo. When the user picks it in the
     // configurator (offered only when the selected version is one of the keys in

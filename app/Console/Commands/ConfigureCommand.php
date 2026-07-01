@@ -24,6 +24,8 @@ class ConfigureCommand extends Command
         {--disable-layer=* : Comma-separated stock layer names to disable (added to replace)}
         {--enable-layer=* : Comma-separated non-stock layer names to enable (added to require)}
         {--enable-addon=* : Comma-separated add-on names to enable (added to require)}
+        {--mode= : Build strategy: subtractive (full base + replace) or additive (minimal base + require); defaults to the profile mode, else subtractive}
+        {--enable-set=* : Comma-separated set names to ADD in additive mode (added to require)}
         {--profile-group=* : Profile-group choices, e.g. theme:hyva}
         {--output= : Write composer.json to this file (default: stdout)}
         {--interactive : Prompt for choices (otherwise pure flag-driven)}';
@@ -54,6 +56,7 @@ class ConfigureCommand extends Command
         $disabledLayers = $this->splitMulti($this->option('disable-layer'));
         $enabledLayers = $this->splitMulti($this->option('enable-layer'));
         $enabledAddons = $this->splitMulti($this->option('enable-addon'));
+        $enabledSets = $this->splitMulti($this->option('enable-set'));
         $profileGroups = $selection->profileGroups;
         foreach ($this->splitMulti($this->option('profile-group')) as $pair) {
             [$group, $option] = explode(':', $pair, 2) + [null, null];
@@ -89,6 +92,8 @@ class ConfigureCommand extends Command
             enabledAddons: array_values(array_unique(array_merge($selection->enabledAddons, $enabledAddons))),
             profileGroups: $profileGroups,
             distribution: $distribution,
+            mode: $this->option('mode') ?: $selection->mode,
+            enabledSets: array_values(array_unique(array_merge($selection->enabledSets, $enabledSets))),
         );
 
         if ($this->option('interactive')) {

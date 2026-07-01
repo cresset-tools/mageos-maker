@@ -51,9 +51,10 @@ class Configurator
         $effectiveEnabledLayers = array_values(array_unique(array_merge($resolved['forceLayers'], $selection->enabledLayers)));
 
         $modulargento = $selection->isModulargento();
+        $additive = $selection->isAdditive();
         $composer = $modulargento
-            ? $this->modulargentoBaseComposer($selection->version)
-            : $this->baseComposer($selection->version);
+            ? $this->modulargentoBaseComposer($selection->version, $additive)
+            : $this->baseComposer($selection->version, $additive);
 
         $hyvaProject = trim($hyvaProject);
 
@@ -86,19 +87,48 @@ class Configurator
             }
             $this->appendRepositories($composer, $this->defs->addonRepositories($addon));
         }
-        // Non-stock layers that are enabled: append to require.
+        // Enabled layers → require. Subtractive: only NON-stock layers (stock
+        // layers are already in the full base, so "enabled" just means "not
+        // disabled" — nothing to require). Additive: the minimal base lacks stock
+        // layers too, so an enabled stock layer (e.g. graphql) is required in,
+        // pinned to the edition version (core module) rather than the add-on map.
         foreach ($effectiveEnabledLayers as $layer) {
-            if ($this->defs->isLayerStock($layer)) {
+            $stock = $this->defs->isLayerStock($layer);
+            if (! $additive && $stock) {
                 continue;
             }
             foreach ($this->defs->layerPackageEntries($layer) as $entry) {
                 if (! $this->packageAllowed($entry, $ctx, $composer['require'])) {
                     continue;
                 }
-                $pkg = $entry['name'];
-                $composer['require'][$pkg] = $this->addonVersions->constraint($pkg) ?? '*';
+                $pkg = $this->requirePackageName($entry['name'], $modulargento);
+                $composer['require'][$pkg] = $stock
+                    ? $selection->version
+                    : ($this->addonVersions->constraint($pkg) ?? '*');
             }
             $this->appendRepositories($composer, $this->defs->layerRepositories($layer));
+        }
+
+        // Additive mode: enabled SETS → require (the mirror of the subtractive
+        // replace path below). No `replace` is emitted — you start minimal and
+        // add. Core module packages pin to the edition version.
+        if ($additive) {
+            $enabledSets = array_values(array_unique(array_merge($resolved['enableSets'] ?? [], $selection->enabledSets)));
+            foreach ($enabledSets as $set) {
+                if (! $this->defs->isSetAvailable($set, $selection->version)) {
+                    continue;
+                }
+                foreach ($this->defs->setPackageEntries($set) as $entry) {
+                    if (! $this->packageAllowed($entry, $ctx, $composer['require'])) {
+                        continue;
+                    }
+                    $pkg = $this->requirePackageName($entry['name'], $modulargento);
+                    $composer['require'][$pkg] = $selection->version;
+                }
+            }
+            ksort($composer['require']);
+
+            return $this->finishComposer($composer, $hyvaProject);
         }
         ksort($composer['require']);
 
@@ -184,10 +214,20 @@ class Configurator
             $composer['replace'] = $replace;
         }
 
-        // Hyvä's theme packages live in a licensed composer repo. Only wire
-        // it in when the selection actually pulls a `hyva-themes/*` package —
-        // otherwise the generated composer.json would carry a private repo
-        // (and the auth requirement it implies) for nothing.
+        return $this->finishComposer($composer, $hyvaProject);
+    }
+
+    /**
+     * Shared build tail (both subtractive and additive): wire in the Hyvä
+     * private composer repo, but only when the selection actually pulls a
+     * `hyva-themes/*` package — otherwise the generated composer.json would carry
+     * a private repo (and the auth requirement it implies) for nothing.
+     *
+     * @param  array<string,mixed>  $composer
+     * @return array<string,mixed>
+     */
+    private function finishComposer(array $composer, string $hyvaProject): array
+    {
         if ($hyvaProject !== '' && self::requiresHyva($composer)) {
             $repo = [
                 'type' => 'composer',
@@ -386,6 +426,22 @@ class Configurator
     }
 
     /**
+     * The single package name to ADD to `require` in additive mode. The mirror of
+     * {@see replacePackageNames()}: unlike replace (which lists both vendor names
+     * to guarantee removal), require needs exactly one installable name — under
+     * modulargento the distribution ships the module as `modulargento/*`, so map
+     * `mage-os/* → modulargento/*`; on standard Mage-OS keep the name as-is.
+     */
+    private function requirePackageName(string $name, bool $modulargento): string
+    {
+        if ($modulargento && str_starts_with($name, 'mage-os/')) {
+            return 'modulargento/'.substr($name, strlen('mage-os/'));
+        }
+
+        return $name;
+    }
+
+    /**
      * Base composer.json for the fully-modular (modulargento) distribution.
      *
      * Starts from the real published `modulargento/project-community-edition`
@@ -402,17 +458,24 @@ class Configurator
      * Falls back to a minimal hand-built base only if the template is absent
      * (it's shipped in the repo, so that path is purely defensive).
      */
-    private function modulargentoBaseComposer(string $version): array
+    private function modulargentoBaseComposer(string $version, bool $minimal = false): array
     {
         // Per-version entry (php_constraint + project_template), falling back to
         // any flat top-level fields for the legacy single-version config shape.
         $entry = ($this->modulargento['versions'][$version] ?? []) + $this->modulargento;
 
-        $edition = $entry['edition_package'] ?? 'modulargento/project-community-edition';
+        // Additive mode uses the modulargento MINIMAL edition + its template
+        // (published by the mirror-repo build; config wires it in per version).
+        if ($minimal) {
+            $edition = $entry['minimal_edition_package'] ?? 'modulargento/project-minimal-edition';
+            $template = $entry['minimal_project_template'] ?? null;
+        } else {
+            $edition = $entry['edition_package'] ?? 'modulargento/project-community-edition';
+            $template = $entry['project_template'] ?? null;
+        }
         $repoUrl = $entry['repository_url'] ?? 'https://modulargento.cresset.tools/';
         $editionVersion = $version;
         $phpConstraint = $entry['php_constraint'] ?? null;
-        $template = $entry['project_template'] ?? null;
 
         // Maker-owned config block, merged over whatever the template carries.
         $allowPlugins = [
@@ -439,7 +502,7 @@ class Configurator
             $composer['config'] = $composer['config'] ?? [];
             $composer['config']['allow-plugins'] = ($composer['config']['allow-plugins'] ?? []) + $allowPlugins;
 
-            return $composer;
+            return $this->withMinimalExtras($composer, $minimal);
         }
 
         // Defensive fallback (template not shipped): the root carries the
@@ -451,7 +514,7 @@ class Configurator
             $require['php'] = $phpConstraint;
         }
 
-        return [
+        return $this->withMinimalExtras([
             'name' => $edition,
             'description' => 'Mage-OS project tailored with mageos-maker (fully-modular distribution)',
             'type' => 'project',
@@ -487,28 +550,35 @@ class Configurator
             'config' => [
                 'allow-plugins' => $allowPlugins,
             ],
-        ];
+        ], $minimal);
     }
 
     /**
      * Pull the stock composer.json from project-community-edition's package metadata.
      * Strips dist/source/version fields that don't belong in a project's composer.json.
      */
-    private function baseComposer(string $version): array
+    private function baseComposer(string $version, bool $minimal = false): array
     {
-        $editionPackages = $this->catalog->packageVersions(config('mageos.edition_package'));
+        // Additive mode starts from the minimal edition instead of the full one.
+        $editionPackage = $minimal
+            ? config('mageos.minimal_edition_package')
+            : config('mageos.edition_package');
+        $editionPackages = $this->catalog->packageVersions($editionPackage);
         $template = $editionPackages[$version] ?? null;
 
         if ($template === null) {
-            return [
-                'name' => config('mageos.edition_package'),
+            // Defensive fallback (catalog cache empty): the root carries the
+            // project-edition name but requires the PRODUCT edition metapackage —
+            // a package can't require itself (mirrors modulargentoBaseComposer).
+            return $this->withMinimalExtras([
+                'name' => $editionPackage,
                 'description' => 'Mage-OS project tailored with mageos-maker',
                 'type' => 'project',
-                'require' => [config('mageos.edition_package') => $version],
+                'require' => [str_replace('/project-', '/product-', $editionPackage) => $version],
                 'repositories' => [['type' => 'composer', 'url' => $this->repositoryUrl]],
                 'minimum-stability' => 'stable',
                 'prefer-stable' => true,
-            ];
+            ], $minimal);
         }
 
         $skip = ['name', 'version', 'version_normalized', 'dist', 'source', 'time', 'uid', 'description'];
@@ -520,7 +590,7 @@ class Configurator
         }
 
         $composer = [
-            'name' => config('mageos.edition_package'),
+            'name' => $editionPackage,
             'description' => 'Mage-OS project tailored with mageos-maker',
         ] + $base + [
             'repositories' => [
@@ -545,6 +615,25 @@ class Configurator
         ];
         $composer['config'] ??= [];
         $composer['config']['allow-plugins'] = ($composer['config']['allow-plugins'] ?? []) + $allowPlugins;
+
+        return $this->withMinimalExtras($composer, $minimal);
+    }
+
+    /**
+     * Inject the minimal-base extra requires (the laminas/laminas-view di:compile
+     * fix) into an additive base. No-op in subtractive mode.
+     *
+     * @param  array<string,mixed>  $composer
+     * @return array<string,mixed>
+     */
+    private function withMinimalExtras(array $composer, bool $minimal): array
+    {
+        if ($minimal) {
+            $composer['require'] = array_merge(
+                $composer['require'] ?? [],
+                config('mageos.minimal_base_extra_require', []),
+            );
+        }
 
         return $composer;
     }

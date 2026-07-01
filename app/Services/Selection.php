@@ -15,6 +15,10 @@ namespace App\Services;
  *  - Subtoggles are finer-grained switches inside a set (e.g. 2FA's Duo
  *    provider). Tracked positively as `disabledSubtoggles` (default empty).
  *    Only meaningful when the parent set is enabled.
+ *
+ * In **additive** mode ({@see $mode} = 'additive') the base flips to the minimal
+ * edition and the defaults invert: sets are OFF by default and only the
+ * `enabledSets` list matters (those go to `require`, like add-ons).
  */
 class Selection
 {
@@ -53,12 +57,33 @@ class Selection
          * 'standard' otherwise.
          */
         public readonly string $distribution = 'standard',
+        /**
+         * Build strategy: 'subtractive' (default — start from the full edition
+         * and `replace` disabled sets/layers) or 'additive' (start from the
+         * minimal edition and `require` enabled sets/layers/add-ons). Only
+         * meaningful when a minimal edition exists for the version/distribution;
+         * the configurator forces it back to 'subtractive' otherwise.
+         */
+        public readonly string $mode = 'subtractive',
+        /**
+         * Sets to ADD (→ `require`) in additive mode — the mirror of
+         * {@see $disabledSets}. Only meaningful when {@see $mode} is 'additive'.
+         *
+         * @var list<string>
+         */
+        public readonly array $enabledSets = [],
     ) {}
 
     /** Whether this selection targets the fully-modular (modulargento) distribution. */
     public function isModulargento(): bool
     {
         return $this->distribution === 'modulargento';
+    }
+
+    /** Whether this selection uses the additive (minimal base + `require`) build strategy. */
+    public function isAdditive(): bool
+    {
+        return $this->mode === 'additive';
     }
 
     public static function default(string $version, Definitions $defs): self
@@ -106,6 +131,8 @@ class Selection
             enabledOptionSubtoggles: array_values($data['enabledOptionSubtoggles'] ?? $defs->defaultOnOptionSubtoggleKeys()),
             optionVariants: $data['optionVariants'] ?? [],
             distribution: $data['distribution'] ?? 'standard',
+            mode: $data['mode'] ?? 'subtractive',
+            enabledSets: array_values($data['enabledSets'] ?? []),
         );
     }
 
@@ -123,6 +150,8 @@ class Selection
             'enabledOptionSubtoggles' => $this->enabledOptionSubtoggles,
             'optionVariants' => $this->optionVariants,
             'distribution' => $this->distribution,
+            'mode' => $this->mode,
+            'enabledSets' => $this->enabledSets,
         ];
     }
 
@@ -141,6 +170,8 @@ class Selection
             enabledOptionSubtoggles: array_values(array_unique(array_merge($this->enabledOptionSubtoggles, $sel['enabledOptionSubtoggles'] ?? []))),
             optionVariants: array_merge($this->optionVariants, $sel['optionVariants'] ?? []),
             distribution: $sel['distribution'] ?? $this->distribution,
+            mode: $sel['mode'] ?? $this->mode,
+            enabledSets: array_values(array_unique(array_merge($this->enabledSets, $sel['enabledSets'] ?? []))),
         );
     }
 }

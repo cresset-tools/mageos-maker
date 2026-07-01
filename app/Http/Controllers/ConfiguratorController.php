@@ -159,6 +159,19 @@ class ConfiguratorController extends Controller
             $data['distribution'] = 'standard';
         }
 
+        // Additive mode needs a minimal edition for the chosen distribution.
+        // Standard always has one (mage-os/project-minimal-edition); modulargento
+        // only once its minimal edition is published + wired per version. Clamp
+        // back to subtractive otherwise so we never emit an unresolvable base.
+        if (($data['mode'] ?? 'subtractive') === 'additive') {
+            $additiveAvailable = ($data['distribution'] ?? 'standard') === 'modulargento'
+                ? (bool) config("mageos.modulargento.versions.{$version}.minimal_edition_package")
+                : (bool) config('mageos.minimal_edition_package');
+            if (! $additiveAvailable) {
+                $data['mode'] = 'subtractive';
+            }
+        }
+
         return Selection::fromArray($data, $version, $this->defs);
     }
 

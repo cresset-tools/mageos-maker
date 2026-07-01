@@ -1,0 +1,13 @@
+name: mageos-minimal
+label: Mage-OS Minimal
+description: The inverse of the other profiles — start from mage-os/product-minimal-edition (the leanest bootable base) and ADD only the features you tick, instead of starting full and stripping via replace. Produces an idiomatic require-only composer.json.
+selection:
+  # Additive ("inverse") mode: minimal base + require. Sets are OFF by default;
+  # only enabledSets/enabledLayers/enabledAddons matter (no replace is emitted).
+  mode: additive
+  enabledSets: []
+  enabledLayers: []
+  enabledAddons: []
+  profileGroups:
+    theme: luma
+    checkout: default
