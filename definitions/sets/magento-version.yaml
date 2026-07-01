@@ -1,0 +1,6 @@
+name: magento-version
+label: Version Endpoint
+description: Exposes the running Mage-OS/Magento version at /magento_version (Magento_Version). Strip to hide the version. Dropped by mage-os/product-minimal-edition.
+packages:
+  - mage-os/module-version
+group: Admin, Ops & Developer

@@ -1,0 +1,7 @@
+name: robots
+label: Search engine robots
+description: robots.txt admin management plus per-page meta robots tags. Complements the XML Sitemap set. Dropped by mage-os/product-minimal-edition.
+packages:
+  - mage-os/module-robots
+  - mage-os/module-meta-robots-tag
+group: Marketing & Content

@@ -46,6 +46,7 @@ selection:
     - rss
     - sample-data
     - send-friend
+    - sitemap
     - swagger
     - swatches
     - ups
@@ -54,6 +55,26 @@ selection:
     - weee
     - webapi-async
     - wishlist
+    # Extra sets modeled from mage-os/product-minimal-edition's lean keep-set
+    # (definitions/sets/*.yaml). Removability is provisional pending the
+    # modulargento removal-matrix; on standard Mage-OS the not-cleanly-removable
+    # ones are force-kept either way.
+    - admin-activity-log
+    - backup
+    - catalog-widget
+    - checkout-agreements
+    - content-security-policy
+    - custom-admin-logo
+    - extended-import-export
+    - fast-interceptors
+    - ignition-errors
+    - magento-version
+    - n98-magerun
+    - pci4-compatibility
+    - product-video
+    - robots
+    - theme-optimization
+    - varnish-extended
     # English only.
     - language-de_de
     - language-es_es

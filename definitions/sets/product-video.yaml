@@ -1,0 +1,8 @@
+name: product-video
+label: Product Video
+description: Video (YouTube/Vimeo) in the product media gallery. Dropped by mage-os/product-minimal-edition.
+removable: false  # Magento_Catalog's admin product_form.xml references its NewVideo block and Magento_ConfigurableProduct's di.xml configures its Gallery type, so removing it breaks the admin product form. Found via the standard mageos-lite boot test.
+removable_modulargento: false  # both references are still present in modulargento (ConfigurableProduct isn't decoupled — see [[no-configurable-product-decouple]]), so it can't be stripped there either.
+packages:
+  - mage-os/module-product-video
+group: Catalog & Product Types

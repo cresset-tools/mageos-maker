@@ -1,0 +1,6 @@
+name: n98-magerun
+label: n98-magerun2 CLI
+description: The n98-magerun2 swiss-army CLI for Mage-OS/Magento, bundled by Mage-OS CE. Absent from mage-os/product-minimal-edition; not required by core.
+packages:
+  - n98/magerun2-dist
+group: Admin, Ops & Developer

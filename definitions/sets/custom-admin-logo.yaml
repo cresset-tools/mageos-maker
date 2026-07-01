@@ -1,0 +1,6 @@
+name: custom-admin-logo
+label: Custom Admin Logo
+description: element119's custom admin-logo module, bundled by Mage-OS CE. Absent from mage-os/product-minimal-edition; not required by core.
+packages:
+  - element119/module-custom-admin-logo
+group: Admin, Ops & Developer
