@@ -255,7 +255,7 @@
         .switch.on::after { left: 19px; }
 
         /* ---- dock (desktop right column) ---- */
-        .dock { position: sticky; top: var(--appbar-h); height: calc(100vh - var(--appbar-h)); border-left: 1px solid var(--gray-200); background: #fff; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+        .dock { position: sticky; top: var(--appbar-h); height: calc(100vh - var(--appbar-h)); border-left: 1px solid var(--gray-200); background: #fff; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
         .dock-grab { display: none; }
         .dock-sum { padding: 16px 16px 14px; border-bottom: 1px solid var(--gray-200); }
         .dock-sum .ttl { font-size: 14px; font-weight: 800; letter-spacing: -0.01em; }
@@ -301,18 +301,14 @@
         .dock-tab:hover { background: var(--gray-100); }
         .dock-tab.active { color: #fff; background: var(--gray-900); }
         .dock-tab .n { opacity: 0.6; margin-left: 5px; }
-        .dock-tab.hyva-tab { color: var(--indigo-700); }
-        .dock-tab.hyva-tab:hover { background: var(--indigo-50); }
-        .dock-tab.hyva-tab.active { color: #fff; background: var(--indigo-600); }
-        .dock-body { flex: 1; min-height: 0; overflow-y: auto; padding: 11px 13px 13px; }
+        .dock-body { padding: 11px 13px 13px; }
         [data-opane] { display: none; }
         [data-opane].show { display: block; }
-        .dock-body .opane-composer { height: 100%; }
-        .dock-foot { border-top: 1px solid var(--gray-200); padding: 11px 13px; display: flex; gap: 9px; align-items: center; }
+        .dock-foot { position: sticky; top: 0; z-index: 5; background: #fff; border-bottom: 1px solid var(--gray-200); padding: 11px 13px; display: flex; gap: 9px; align-items: center; }
         .dock-foot .sp { flex: 1; }
 
         /* composer.json (highlight.js + diff-flash) */
-        pre.composer { padding: 0; border-radius: 10px; overflow: auto; font-size: 12.5px; line-height: 1.55; margin: 0; position: relative; height: 100%; }
+        pre.composer { padding: 0; border-radius: 10px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; margin: 0; position: relative; }
         pre.composer code.hljs { display: block; padding: 16px 18px; background: var(--code-bg); border-radius: 10px; position: relative; z-index: 1; min-height: 100%; }
         .diff-overlay { position: absolute; left: 0; right: 0; top: 16px; pointer-events: none; z-index: 2; }
         .diff-overlay .strip { position: absolute; left: 0; right: 0; background: rgba(250, 204, 21, 0.32); border-left: 2px solid rgba(250, 204, 21, 0.85); animation: diffFade 1.8s ease-out forwards; mix-blend-mode: screen; }
@@ -348,6 +344,12 @@
         .cmd-row .cmd-copy:hover { background: rgba(255,255,255,0.15); }
         .cmd-row .cmd-copy:disabled { cursor: default; opacity: 0.85; }
         .cmd-row .cmd-copy.copied { width: auto; padding: 0 8px; }
+
+        /* hyvä / loki setup (stacked above the composer.json output) */
+        .hyva-setup, .loki-setup { margin-bottom: 12px; border: 1px solid var(--indigo-100); background: var(--indigo-50); border-radius: 11px; padding: 12px 13px; }
+        .hyva-setup[hidden], .loki-setup[hidden] { display: none; }
+        .hyva-setup .hyva-setup-h, .loki-setup .loki-setup-h { font-size: 10.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--indigo-700); display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+        .hyva-setup .hyva-setup-h svg, .loki-setup .loki-setup-h svg { width: 13px; height: 13px; }
 
         /* hyvä pane (design's hy-* classes) */
         .hyva-pane { font-size: 12.5px; color: var(--gray-700); }
@@ -413,7 +415,6 @@
             .dock.open { transform: translate(-50%, 0); }
             .dock-grab { display: block; width: 38px; height: 4px; border-radius: 3px; background: var(--gray-300); margin: 9px auto 2px; flex: none; }
             .changelog, .changelog.show { display: none; }
-            .dock-foot { padding-bottom: calc(11px + env(safe-area-inset-bottom)); }
 
             .m-spacer { display: block; height: 74px; background: var(--gray-100); }
             .m-bar { display: flex; position: sticky; bottom: 0; z-index: 42; background: rgba(255,255,255,0.97); backdrop-filter: blur(12px); border-top: 1px solid var(--gray-200); padding: 11px 14px calc(11px + env(safe-area-inset-bottom)); align-items: center; gap: 11px; }

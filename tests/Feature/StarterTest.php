@@ -134,4 +134,41 @@ class StarterTest extends TestCase
         $this->assertArrayHasKey('placeholders', $json);
         $this->assertSame([], $json['placeholders']);
     }
+
+    /**
+     * An add-on's post-install `notes` (CLI steps bougie can't run for the
+     * user) ride into the manifest's `notes` when — and only when — the
+     * add-on's package actually lands in the built require map. The Hyvä Loki
+     * Checkout variant carries module:enable / hyva:config:generate / Tailwind
+     * rebuild steps; a default starter that pulls neither must not surface them.
+     */
+    public function test_loki_checkout_post_install_notes_appear_only_when_selected(): void
+    {
+        // Default starter doesn't pull Loki Checkout — none of its notes show.
+        $default = $this->getJson('/starter.json')->assertOk()->json();
+        $this->assertEmpty(array_filter(
+            $default['notes'] ?? [],
+            static fn (string $n): bool => str_contains($n, 'Loki Checkout'),
+        ), 'default starter must not carry Loki Checkout notes');
+
+        // A Hyvä theme + Loki Checkout selection forces the hyva variant, which
+        // pulls loki-checkout/magento2-hyva and thus its post-install notes.
+        $cfg = SavedConfig::create([
+            'mageos_version' => '3.0.0',
+            'selection' => [
+                'profileGroups' => ['theme' => 'hyva', 'checkout' => 'loki-checkout'],
+                'enabledAddons' => ['hyva'],
+            ],
+        ]);
+
+        $json = $this->getJson("/c/{$cfg->id}/starter.json")->assertOk()->json();
+
+        $this->assertArrayHasKey('loki-checkout/magento2-hyva', $json['composer-json']['require'] ?? []);
+
+        $notes = $json['notes'] ?? [];
+        $this->assertNotEmpty(array_filter(
+            $notes,
+            static fn (string $n): bool => str_contains($n, 'hyva:config:generate'),
+        ), 'Loki Checkout (Hyvä) post-install notes must appear when its package is required');
+    }
 }

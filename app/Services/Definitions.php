@@ -13,7 +13,7 @@ class Definitions
     /**
      * @param  array<string, array{name:string, label:string, description?:string, since?:string, until?:string, packages:list<string>}>  $sets  Stock module groups; only meaningful when DISABLED (added to `replace`). Optional `since`/`until` (inclusive lower / exclusive upper) gate the set to a version range — e.g. RMA, bundled as a removable set from 3.0.0 on.
      * @param  array<string, array{name:string, label:string, description?:string, stock?:bool, removable?:bool, removable_modulargento?:bool, packages:list<string>, repositories?:list<array<string,mixed>>}>  $layers  Stock cross-cutting concerns; only meaningful when DISABLED. Non-stock layers may declare extra composer repositories. `removable`/`removable_modulargento` gate whether a stock layer can be stripped, distribution-aware like sets (e.g. the Web API layer is locked in stock Mage-OS but removable under modulargento).
-     * @param  array<string, array{name:string, label:string, description?:string, since?:string, until?:string, packages:list<string>, repositories?:list<array<string,mixed>>}>  $addons  Extra packages NOT in stock Mage-OS; only meaningful when ENABLED (added to `require`). May declare extra composer repositories. Optional `since`/`until` gate the add-on to a version range — e.g. RMA, opt-in only before 3.0.0.
+     * @param  array<string, array{name:string, label:string, description?:string, since?:string, until?:string, packages:list<string>, repositories?:list<array<string,mixed>>, notes?:list<string>}>  $addons  Extra packages NOT in stock Mage-OS; only meaningful when ENABLED (added to `require`). May declare extra composer repositories and post-install `notes`. Optional `since`/`until` gate the add-on to a version range — e.g. RMA, opt-in only before 3.0.0.
      * @param  array<string, array{name:string, label:string, description?:string, options:list<array<string,mixed>>}>  $profileGroups
      * @param  array<string, array{name:string, label:string, description?:string, default?:bool, selection:array<string,mixed>}>  $profiles
      */
@@ -213,6 +213,20 @@ class Definitions
     public function layerRepositories(string $name): array
     {
         return $this->layers[$name]['repositories'] ?? [];
+    }
+
+    /**
+     * Post-install instructions an add-on needs the user to run by hand —
+     * CLI steps bougie can't perform on their behalf (e.g. `module:enable`,
+     * config generation, asset rebuilds). The starter manifest surfaces these
+     * verbatim in its `notes` when the add-on's package lands in the built
+     * composer.json. Each entry is one note line.
+     *
+     * @return list<string>
+     */
+    public function addonNotes(string $name): array
+    {
+        return $this->addons[$name]['notes'] ?? [];
     }
 
     /**

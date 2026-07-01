@@ -221,6 +221,20 @@ class Configurator
     }
 
     /**
+     * Whether a built composer.json pulls the Hyvä build of Loki Checkout
+     * (`loki-checkout/magento2-hyva`). Drives the on-screen "Loki Checkout
+     * setup" panel — the post-install CLI steps bougie can't run (module:enable,
+     * hyva:config:generate, Tailwind rebuild). The Luma build is a different
+     * package with different steps, so it deliberately doesn't match here.
+     *
+     * @param  array<string,mixed>  $composer
+     */
+    public static function requiresLokiCheckoutHyva(array $composer): bool
+    {
+        return isset($composer['require']['loki-checkout/magento2-hyva']);
+    }
+
+    /**
      * Add-on names forced on (locked) by the currently-selected profile-group options.
      *
      * @return list<string>

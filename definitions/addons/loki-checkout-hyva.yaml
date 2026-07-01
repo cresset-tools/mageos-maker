@@ -6,3 +6,13 @@ packages:
 repositories:
   - type: composer
     url: https://composer.yireo.com/
+# Post-install steps bougie can't run for the user (CLI commands, asset
+# rebuilds). Surfaced verbatim in the starter manifest's `notes` when this
+# add-on's package lands in the build. See docs.loki-extensions.com →
+# checkout/dev/getting-started/installation-hyva.
+notes:
+  - 'Loki Checkout (Hyvä) requires Alpine.js 3 and Hyvä Themes 1.4+ (Alpine.js 2 is not compatible).'
+  - "Loki Checkout: enable the modules — bin/magento module:enable $(bin/magento module:status | grep -E 'Yireo|Loki')"
+  - 'Loki Checkout: register the modules with Hyvä — bin/magento hyva:config:generate (writes app/etc/hyva-themes.json).'
+  - 'Loki Checkout: rebuild Tailwind in your theme — cd app/design/frontend/<Vendor>/<theme>/web/tailwind && npm run build.'
+  - 'Loki Checkout: do not enable both Hyvä Checkout and Loki Checkout at the same time.'

@@ -69,7 +69,7 @@ class BuildEndpointTest extends TestCase
         $this->assertDatabaseHas('saved_configs', ['id' => $id]);
         $this->assertSame(1, SavedConfig::query()->count());
 
-        $this->get("/c/{$id}")->assertOk()->assertSee('build canvas', false);
+        $this->get("/c/{$id}")->assertOk()->assertSee('window.MAKER', false);
     }
 
     public function test_home_page_renders_the_canvas(): void
@@ -77,6 +77,6 @@ class BuildEndpointTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee('window.MAKER', false)
-            ->assertSee('build canvas', false);
+            ->assertSee('mageos-maker', false);
     }
 }

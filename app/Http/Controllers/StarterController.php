@@ -107,6 +107,24 @@ class StarterController extends Controller
                 .'http-basic.'.self::HYVA_REPO_HOST.' token <YOUR_KEY>`.';
         }
 
+        // Add-on post-install steps (CLI commands bougie can't run for the
+        // user — module:enable, config generation, asset rebuilds). Emitted
+        // when the add-on's package actually lands in the built require map,
+        // so we never tell users to configure something they didn't install.
+        $require = $composer['require'] ?? [];
+        foreach (array_keys($this->defs->addons) as $addonName) {
+            $addonNotes = $this->defs->addonNotes($addonName);
+            if ($addonNotes === []) {
+                continue;
+            }
+            foreach ($this->defs->addonPackages($addonName) as $pkg) {
+                if (isset($require[$pkg])) {
+                    $notes = array_merge($notes, $addonNotes);
+                    break;
+                }
+            }
+        }
+
         $name = 'Mage-OS '.$sel->version.($sel->profile ? " ({$sel->profile})" : '');
 
         return response()->json([

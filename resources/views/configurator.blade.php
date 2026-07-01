@@ -9,9 +9,7 @@
 
     <div class="appbar">
         <span class="brand"><span class="glyph">M</span>mageos-maker</span>
-        <span class="tagline">· build canvas</span>
         <span class="sp"></span>
-        <a class="ghost" href="https://github.com/mage-os" target="_blank" rel="noopener">Docs</a>
         <a class="ghost" href="/">Reset</a>
     </div>
 
@@ -118,7 +116,7 @@
         </main>
 
         {{-- dock / bottom sheet --}}
-        <aside class="dock" id="dock">
+        <aside class="dock scrollbox" id="dock">
             <div class="dock-grab"></div>
             <div class="dock-sum" id="dock-sum">
                 <div class="ttl" id="dock-ttl">Build</div>
@@ -153,34 +151,6 @@ curl -LsSf https://bougie.tools/install.sh | sh</code></pre><button type="button
             <div class="dock-tabs" id="dock-tabs">
                 <div class="dock-tab active" data-otab="composer">composer.json</div>
                 <div class="dock-tab" data-otab="tree">Install tree<span class="n" id="tree-count">{{ $tree['count'] }}</span></div>
-                <div class="dock-tab hyva-tab" data-otab="hyva" id="hyva-tab" @unless ($usesHyva) style="display:none" @endunless>★ Hyvä setup</div>
-            </div>
-
-            <div class="dock-body scrollbox" id="dock-body">
-                <div data-opane="composer" class="opane-composer show">
-                    <pre class="composer"><code id="composer-out" class="composer-code language-json">{{ $composerJson }}</code></pre>
-                </div>
-                <div data-opane="tree">
-                    <div id="install-tree-pane">
-                        @include('partials.install-tree-pane', ['tree' => $tree])
-                    </div>
-                </div>
-                <div data-opane="hyva" class="hyva-pane">
-                    <p class="hy-intro">The Hyvä theme is free but requires a Packagist token. Register at <a href="https://www.hyva.io/" target="_blank" rel="noopener">hyva.io</a> for a free token + project name, then run these <b>before</b> <code>composer install</code>.</p>
-                    <div class="hy-fields">
-                        <label>Hyvä token<input class="input" id="hy-token" placeholder="YOUR_HYVA_TOKEN" autocomplete="off"></label>
-                        <label>Project name<input class="input" id="hy-project" placeholder="yourProjectName" autocomplete="off"></label>
-                    </div>
-                    <ol class="hy-steps">
-                        <li><div class="hy-st">Configure composer auth</div><div class="cmd-row"><pre class="cmd"><code>composer config --auth http-basic.hyva-themes.repo.packagist.com token <span class="hy-var" data-var="token">YOUR_HYVA_TOKEN</span></code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div></li>
-                        <li><div class="hy-st">Add the Hyvä private repository</div><div class="cmd-row"><pre class="cmd"><code>composer config repositories.hyva-private composer https://hyva-themes.repo.packagist.com/<span class="hy-var" data-var="project">yourProjectName</span>/</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div></li>
-                        <li><div class="hy-st">Install dependencies</div><div class="cmd-row"><pre class="cmd"><code>composer install</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div></li>
-                        <li><div class="hy-st">Activate the theme in Magento</div><div class="cmd-row"><pre class="cmd"><code>bin/magento setup:upgrade
-bin/magento config:set design/theme/theme_id frontend/Hyva/default
-bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div></li>
-                        <li><div class="hy-st">Disable the legacy Magento captcha</div><div class="cmd-row"><pre class="cmd"><code>bin/magento config:set customer/captcha/enable 0</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div><div class="hy-note">Hyvä doesn't support the legacy captcha; swap in Google reCAPTCHA from the admin.</div></li>
-                    </ol>
-                </div>
             </div>
 
             <div class="dock-foot">
@@ -189,6 +159,50 @@ bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" oncli
                 <span class="sp"></span>
                 <button class="btn btn-ghost btn-sm" id="dock-save">Save</button>
                 <button class="btn btn-primary btn-sm" onclick="copyComposer(this)">Copy</button>
+            </div>
+
+            <div class="dock-body" id="dock-body">
+                <div class="hyva-setup" id="hyva-setup" @unless ($usesHyva) hidden @endunless>
+                    <div class="hyva-setup-h"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5l1.8 4.2 4.7.4-3.6 3 1.1 4.5L8 11.2 3.9 13.6 5 9.1 1.4 6.1l4.7-.4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg> Hyvä setup</div>
+                    <div class="hyva-pane">
+                        <p class="hy-intro">The Hyvä theme is free but requires a Packagist token. Register at <a href="https://www.hyva.io/" target="_blank" rel="noopener">hyva.io</a> for a free token + project name, then run these <b>before</b> <code>composer install</code>.</p>
+                        <div class="hy-fields">
+                            <label>Hyvä token<input class="input" id="hy-token" placeholder="YOUR_HYVA_TOKEN" autocomplete="off"></label>
+                            <label>Project name<input class="input" id="hy-project" placeholder="yourProjectName" autocomplete="off"></label>
+                        </div>
+                        <ol class="hy-steps">
+                            <li><div class="hy-st">Configure composer auth</div><div class="cmd-row"><pre class="cmd"><code>composer config --auth http-basic.hyva-themes.repo.packagist.com token <span class="hy-var" data-var="token">YOUR_HYVA_TOKEN</span></code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div></li>
+                            <li><div class="hy-st">Add the Hyvä private repository</div><div class="cmd-row"><pre class="cmd"><code>composer config repositories.hyva-private composer https://hyva-themes.repo.packagist.com/<span class="hy-var" data-var="project">yourProjectName</span>/</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div></li>
+                            <li><div class="hy-st">Install dependencies</div><div class="cmd-row"><pre class="cmd"><code>composer install</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div></li>
+                            <li><div class="hy-st">Activate the theme in Magento</div><div class="cmd-row"><pre class="cmd"><code>bin/magento setup:upgrade
+bin/magento config:set design/theme/theme_id frontend/Hyva/default
+bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div></li>
+                            <li><div class="hy-st">Disable the legacy Magento captcha</div><div class="cmd-row"><pre class="cmd"><code>bin/magento config:set customer/captcha/enable 0</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div><div class="hy-note">Hyvä doesn't support the legacy captcha; swap in Google reCAPTCHA from the admin.</div></li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="loki-setup" id="loki-setup" @unless ($usesLokiCheckout) hidden @endunless>
+                    <div class="loki-setup-h"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5l1.8 4.2 4.7.4-3.6 3 1.1 4.5L8 11.2 3.9 13.6 5 9.1 1.4 6.1l4.7-.4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg> Loki Checkout setup</div>
+                    <div class="hyva-pane">
+                        <p class="hy-intro">Loki Checkout (Hyvä) needs <b>Alpine.js 3</b> and <b>Hyvä Themes 1.4+</b>. It installs with the composer build above; run these <b>after</b> <code>composer install</code> to finish setup. See the <a href="https://docs.loki-extensions.com/checkout/dev/getting-started/installation-hyva" target="_blank" rel="noopener">Loki docs</a>.</p>
+                        <ol class="hy-steps">
+                            <li><div class="hy-st">Enable the Loki &amp; Yireo modules</div><div class="cmd-row"><pre class="cmd"><code>bin/magento module:enable $(bin/magento module:status | grep -E 'Yireo|Loki')</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div></li>
+                            <li><div class="hy-st">Register the modules with Hyvä</div><div class="cmd-row"><pre class="cmd"><code>bin/magento hyva:config:generate
+bin/magento setup:upgrade</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div><div class="hy-note">Writes <code>app/etc/hyva-themes.json</code> so the <code>LokiCheckout_*</code> modules register with the theme.</div></li>
+                            <li><div class="hy-st">Rebuild your theme's Tailwind CSS</div><div class="cmd-row"><pre class="cmd"><code>cd app/design/frontend/&lt;Vendor&gt;/&lt;theme&gt;/web/tailwind
+npm install &amp;&amp; npm run build</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div></li>
+                        </ol>
+                        <div class="hy-note">Don't enable both Hyvä Checkout and Loki Checkout at the same time — pick one in the Checkout step.</div>
+                    </div>
+                </div>
+                <div data-opane="composer" class="opane-composer show">
+                    <pre class="composer"><code id="composer-out" class="composer-code language-json">{{ $composerJson }}</code></pre>
+                </div>
+                <div data-opane="tree">
+                    <div id="install-tree-pane">
+                        @include('partials.install-tree-pane', ['tree' => $tree])
+                    </div>
+                </div>
             </div>
         </aside>
     </div>
