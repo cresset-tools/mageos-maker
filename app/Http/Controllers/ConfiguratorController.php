@@ -90,6 +90,7 @@ class ConfiguratorController extends Controller
             'requireCount' => count($composer['require'] ?? []),
             'replaceCount' => count($composer['replace'] ?? []),
             'usesHyva' => ConfiguratorService::requiresHyva($composer),
+            'usesLokiCheckout' => ConfiguratorService::requiresLokiCheckoutHyva($composer),
         ]);
     }
 
@@ -127,6 +128,7 @@ class ConfiguratorController extends Controller
             'composerJson' => $this->renderer->render($composer),
             'tree' => $tree,
             'usesHyva' => ConfiguratorService::requiresHyva($composer),
+            'usesLokiCheckout' => ConfiguratorService::requiresLokiCheckoutHyva($composer),
             'requireCount' => count($composer['require'] ?? []),
             'replaceCount' => count($composer['replace'] ?? []),
             'packageCount' => $tree['count'],

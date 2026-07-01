@@ -46,4 +46,27 @@ class HyvaRequirementTest extends TestCase
     {
         $this->assertFalse(Configurator::requiresHyva([]));
     }
+
+    public function test_detects_the_hyva_build_of_loki_checkout(): void
+    {
+        $composer = ['require' => [
+            'mage-os/product-community-edition' => '^3.0',
+            'loki-checkout/magento2-hyva' => '^1.0',
+        ]];
+
+        $this->assertTrue(Configurator::requiresLokiCheckoutHyva($composer));
+    }
+
+    public function test_luma_build_of_loki_checkout_is_not_the_hyva_panel(): void
+    {
+        // The Luma build is a different package with different setup steps, so
+        // it must not trip the on-screen Hyvä-flavoured Loki setup panel.
+        $composer = ['require' => [
+            'mage-os/product-community-edition' => '^3.0',
+            'loki-checkout/magento2-luma' => '^1.0',
+        ]];
+
+        $this->assertFalse(Configurator::requiresLokiCheckoutHyva($composer));
+        $this->assertFalse(Configurator::requiresLokiCheckoutHyva([]));
+    }
 }

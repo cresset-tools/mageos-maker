@@ -184,13 +184,13 @@ function buildAddons() {
   const forced = E.forcedAddons();
   const defaulted = E.defaultedAddons();
   $('addon-host').innerHTML = Object.values(D.addons).filter((a) => E.isAddonAvailable(a.name)).map((a) => {
-    const isForced = forced.includes(a.name);
-    const isAuto = !isForced && defaulted.includes(a.name);
-    // Add-ons pulled in automatically by the theme/checkout (forced or
-    // soft-defaulted) are locked: greyed out and not user-toggleable.
-    const locked = isForced || isAuto;
+    // Add-ons pulled in by the theme/checkout picks (whether `forces` or
+    // `enables`) are hard requirements: auto-checked, greyed out and not
+    // user-toggleable. They all carry one "auto" badge.
+    const isAuto = forced.includes(a.name) || defaulted.includes(a.name);
+    const locked = isAuto;
     const on = locked || E.s.enabledAddons.includes(a.name);
-    const badge = isForced ? ' <span class="badge req">required</span>' : (isAuto ? ' <span class="badge auto">auto</span>' : '');
+    const badge = isAuto ? ' <span class="badge auto">auto</span>' : '';
     return '<label class="langcard addon-card' + (on ? ' on' : '') + (locked ? ' forced' : '') + '"' + (locked ? '' : ' data-addon="' + esc(a.name) + '"') + '><div class="grow"><div class="ln">' + esc(a.label) + badge + '</div><div class="lc addon-desc">' + esc(a.description) + '</div></div><span class="tick"></span></label>';
   }).join('');
 }
@@ -283,8 +283,10 @@ function buildLayers() {
       const badge = removable ? '' : ' <span class="badge req">required</span>';
       return '<label class="layerrow' + (removable ? '' : ' forced') + '"' + (removable ? ' data-layer="' + esc(l.name) + '"' : '') + '><div class="grow"><div class="lt">' + esc(l.label) + badge + '</div><div class="ld">' + esc(l.description) + '</div></div><span class="switch' + (on ? ' on' : '') + (removable ? '' : ' switch-locked') + '"></span></label>';
     }
+    // Non-stock layers are managed entirely by the theme/checkout picks
+    // (`forces`/`enables`) — auto-checked and locked, never user-toggleable.
     const isForced = forced.includes(l.name);
-    const badge = isForced ? '<span class="badge req">required</span>' : '<span class="badge auto">auto</span>';
+    const badge = '<span class="badge auto">auto</span>';
     return '<div class="layerrow forced"><div class="grow"><div class="lt">' + esc(l.label) + ' ' + badge + '</div><div class="ld">' + esc(l.description) + '</div></div><span class="switch ' + (isForced ? 'on ' : '') + 'switch-locked"></span></div>';
   }).join('');
 }
@@ -293,7 +295,7 @@ function buildLayers() {
 function renderAll() {
   buildVersion(); buildDistribution(); buildProfiles(); buildThemeCheckout();
   buildAddons(); buildModules(); buildLangs(); buildLayers();
-  updateSummary(); buildNav(); syncHyvaTab(); refreshBougie();
+  updateSummary(); buildNav(); syncSetupPanels(); refreshBougie();
   fitScrollSpacer();
 }
 
@@ -313,7 +315,7 @@ function hideToast() { $('m-toast').classList.remove('show'); }
 
 /* ---------- scroll + jump (window) ---------- */
 function jumpTo(id) {
-  if (id === 'hyva') { openSheet(); activateOutTab('hyva'); return; }
+  if (id === 'hyva') { openSheet(); const h = $('hyva-setup'); if (h) h.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
   const el = $('sec-' + id);
   if (!el || el.hidden) return;
   const offset = isMobile() ? 104 : 62;
@@ -360,11 +362,11 @@ function activateOutTab(id) {
   document.querySelectorAll('[data-otab]').forEach((t) => t.classList.toggle('active', t.getAttribute('data-otab') === id));
   document.querySelectorAll('[data-opane]').forEach((p) => p.classList.toggle('show', p.getAttribute('data-opane') === id));
 }
-function syncHyvaTab(autoOpen) {
-  const tab = $('hyva-tab');
-  if (!tab) return;
-  if (E.usesHyva()) { tab.style.display = ''; if (autoOpen && !isMobile()) activateOutTab('hyva'); }
-  else { tab.style.display = 'none'; if (tab.classList.contains('active')) activateOutTab('composer'); }
+function syncSetupPanels() {
+  const hyva = $('hyva-setup');
+  if (hyva) hyva.hidden = !E.usesHyva();
+  const loki = $('loki-setup');
+  if (loki) loki.hidden = !E.usesLokiCheckout();
 }
 function wireHyvaInputs() {
   const tok = $('hy-token'), proj = $('hy-project');
@@ -435,9 +437,10 @@ async function runBuild() {
     $('replace-count').textContent = r.replaceCount;
     $('tree-count').textContent = r.treeMeta.count;
     setPackageCount(r.packageCount);
-    const tab = $('hyva-tab');
-    if (tab && !r.usesHyva && tab.classList.contains('active')) activateOutTab('composer');
-    if (tab) tab.style.display = r.usesHyva ? '' : 'none';
+    const hyvaSec = $('hyva-setup');
+    if (hyvaSec) hyvaSec.hidden = !r.usesHyva;
+    const lokiSec = $('loki-setup');
+    if (lokiSec) lokiSec.hidden = !r.usesLokiCheckout;
   } catch (e) {
     /* leave the last good output in place */
   } finally {
@@ -532,16 +535,16 @@ function wire() {
     if (prof) { switchProfile(prof.getAttribute('data-profile')); return; }
 
     const optsub = e.target.closest('[data-optsub]');
-    if (optsub) { E.toggleOptionSubtoggle(optsub.getAttribute('data-optsub')); buildThemeCheckout(); buildAddons(); updateSummary(); syncHyvaTab(); scheduleBuild(); return; }
+    if (optsub) { E.toggleOptionSubtoggle(optsub.getAttribute('data-optsub')); buildThemeCheckout(); buildAddons(); updateSummary(); syncSetupPanels(); scheduleBuild(); return; }
     const variant = e.target.closest('[data-variant]');
-    if (variant) { const [g, o, v] = variant.getAttribute('data-variant').split('|'); E.setOptionVariant(g, o, v); buildThemeCheckout(); buildAddons(); updateSummary(); syncHyvaTab(); scheduleBuild(); return; }
+    if (variant) { const [g, o, v] = variant.getAttribute('data-variant').split('|'); E.setOptionVariant(g, o, v); buildThemeCheckout(); buildAddons(); updateSummary(); syncSetupPanels(); scheduleBuild(); return; }
     const option = e.target.closest('[data-option]');
     if (option) {
       const [g, o] = option.getAttribute('data-option').split('|');
       const prevHyva = E.usesHyva();
       E.setProfileGroup(g, o);
       renderAll();
-      if (E.usesHyva() && !prevHyva) { syncHyvaTab(true); logChange('Theme → <b>Hyvä</b> · <b>★ Hyvä setup</b> steps added', null); }
+      if (E.usesHyva() && !prevHyva) { syncSetupPanels(); logChange('Theme → <b>Hyvä</b> · <b>★ Hyvä setup</b> steps added', null); }
       else if (!E.usesHyva() && prevHyva) { logChange('Theme → <b>' + esc(optLabel('theme')) + '</b> · Hyvä setup no longer needed', null); }
       scheduleBuild();
       return;
@@ -554,7 +557,7 @@ function wire() {
     const lang = e.target.closest('[data-lang]');
     if (lang) { E.toggleModule(lang.getAttribute('data-lang')); buildLangs(); updateSummary(); buildNav(); scheduleBuild(); return; }
     const addon = e.target.closest('[data-addon]');
-    if (addon) { E.toggleAddon(addon.getAttribute('data-addon')); buildAddons(); updateSummary(); syncHyvaTab(); scheduleBuild(); return; }
+    if (addon) { E.toggleAddon(addon.getAttribute('data-addon')); buildAddons(); updateSummary(); syncSetupPanels(); scheduleBuild(); return; }
     const layer = e.target.closest('[data-layer]');
     if (layer) { E.toggleLayer(layer.getAttribute('data-layer')); buildLayers(); buildModules(); updateSummary(); buildNav(); scheduleBuild(); return; }
 

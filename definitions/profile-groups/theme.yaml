@@ -10,8 +10,10 @@ options:
     # The `luma` set still exists so other themes can list it under `disables`.
   - name: hyva
     label: Hyvä
-    # `enables` = soft default: auto-checked when hyva is selected, user can uncheck.
-    # `forces`  = hard lock: auto-checked AND disabled — user cannot override.
+    # Both `enables` and `forces` auto-check the item when hyva is selected and
+    # lock it (greyed out, not user-toggleable) — the configurator shows one
+    # "auto" badge for both. `enables` seeds the item into the selection; `forces`
+    # is recomputed from the pick. Neither can be unchecked while hyva is active.
     enables:
       addons: [hyva]
     forces:

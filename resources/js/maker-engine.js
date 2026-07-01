@@ -49,6 +49,8 @@ export const engine = {
   },
   /** Module names the user manually toggled since the last profile apply (origin pill). */
   overrides: new Set(),
+  /** Add-on names the user explicitly enabled (vs auto-enabled by a theme/checkout pick). */
+  manualAddons: new Set(),
   /** enabledSets snapshot under the current profile (origin pill baseline). */
   baseline: new Set(),
 
@@ -212,6 +214,9 @@ export const engine = {
   usesHyva() {
     return this.effectiveAddons().some((n) => D.addons[n]?.hyva && this.isAddonAvailable(n));
   },
+  usesLokiCheckout() {
+    return this.effectiveAddons().some((n) => D.addons[n]?.lokiHyva && this.isAddonAvailable(n));
+  },
 
   /* ---------- module effective state + origin pill ---------- */
   moduleOn(name) { return this.s.enabledSets.includes(name); },
@@ -313,7 +318,11 @@ export const engine = {
     this.s.enabledSubtoggles = diff(this.allSubtoggleKeys(), sel.disabledSubtoggles || []);
     this.s.enabledOptionSubtoggles = [...(sel.enabledOptionSubtoggles || [])];
     this.s.optionVariants = { ...(sel.optionVariants || {}) };
-    this.s.enabledAddons = uniq([...(sel.enabledAddons || []), ...this.defaultedAddons(), ...this.activeOptionSubtoggleAddons()]);
+    // Reconstruct manual provenance: any saved add-on that the current picks
+    // don't already pull in (soft default or forced) must be a deliberate choice.
+    const autoAddons = uniq([...this.defaultedAddons(), ...this.forcedAddons()]);
+    this.manualAddons = new Set((sel.enabledAddons || []).filter((n) => !autoAddons.includes(n)));
+    this.recomputeEnabledAddons();
 
     this.forceNonRemovableSetsOn();
     this.forceNonRemovableLayersOn();
@@ -385,12 +394,12 @@ export const engine = {
     // Clear variant picks so the new context re-snaps to its default.
     this.s.optionVariants = {};
     const notice = this.autoSnapInvalidOptions();
-    this.reapplySoftDefaults();
+    this.recomputeEnabledAddons();
     return notice;
   },
   setOptionVariant(group, option, variant) {
     this.s.optionVariants = { ...this.s.optionVariants, [`${group}.${option}`]: variant };
-    this.reapplySoftDefaults();
+    this.recomputeEnabledAddons();
   },
   autoSnapInvalidOptions() {
     const msgs = [];
@@ -405,11 +414,20 @@ export const engine = {
     }
     return msgs.length ? msgs.join(' ') : null;
   },
-  reapplySoftDefaults() {
-    // Keep forced add-ons in; merge soft defaults; drop nothing the user kept.
-    const forced = this.forcedAddons();
-    const defaulted = this.defaultedAddons();
-    this.s.enabledAddons = uniq([...this.s.enabledAddons, ...defaulted, ...forced]);
+  /**
+   * Rebuild `enabledAddons` from the user's manual picks plus the soft defaults
+   * (`enables`) and subtoggle add-ons of the *current* theme/checkout picks.
+   * Deriving (rather than accumulating) is what drops a soft default when its
+   * option is deselected — e.g. switching Hyvä Checkout → Loki Checkout unchecks
+   * the hyva-checkout add-on, unless the user had toggled it on themselves.
+   * Forced (`forces`) add-ons aren't stored here; the server recomputes them.
+   */
+  recomputeEnabledAddons() {
+    this.s.enabledAddons = uniq([
+      ...this.manualAddons,
+      ...this.defaultedAddons(),
+      ...this.activeOptionSubtoggleAddons(),
+    ]);
   },
   toggleModule(name) {
     if (!this.isSetRemovable(name)) return;
@@ -426,10 +444,12 @@ export const engine = {
     this.enforceSetRequires();
   },
   toggleAddon(name) {
-    if (this.forcedAddons().includes(name)) return;
-    this.s.enabledAddons = this.s.enabledAddons.includes(name)
-      ? this.s.enabledAddons.filter((x) => x !== name)
-      : uniq([...this.s.enabledAddons, name]);
+    // Add-ons brought in by a theme/checkout pick — via `forces` or `enables` —
+    // are hard requirements and cannot be toggled off.
+    if (this.forcedAddons().includes(name) || this.defaultedAddons().includes(name)) return;
+    if (this.manualAddons.has(name)) this.manualAddons.delete(name);
+    else this.manualAddons.add(name);
+    this.recomputeEnabledAddons();
   },
   toggleSubtoggle(key) {
     this.s.enabledSubtoggles = this.s.enabledSubtoggles.includes(key)

@@ -171,8 +171,10 @@ class DefinitionsSerializer
 
     /**
      * Add-ons keyed by name. `hyva` flags add-ons that pull a `hyva-themes/*`
-     * package so the client can optimistically reveal the Hyvä dock tab (the
-     * authoritative value still comes back from /api/build).
+     * package so the client can optimistically reveal the Hyvä dock tab;
+     * `lokiHyva` likewise flags the Hyvä build of Loki Checkout so the client
+     * can reveal its setup panel. Both are authoritatively confirmed by the
+     * value that comes back from /api/build.
      *
      * @return array<string,array<string,mixed>>
      */
@@ -181,10 +183,13 @@ class DefinitionsSerializer
         $out = [];
         foreach ($this->defs->addons as $name => $a) {
             $hyva = false;
+            $lokiHyva = false;
             foreach ($this->defs->addonPackages($name) as $pkg) {
                 if (str_starts_with((string) $pkg, 'hyva-themes/')) {
                     $hyva = true;
-                    break;
+                }
+                if ($pkg === 'loki-checkout/magento2-hyva') {
+                    $lokiHyva = true;
                 }
             }
             $out[$name] = [
@@ -194,6 +199,7 @@ class DefinitionsSerializer
                 'since' => $a['since'] ?? null,
                 'until' => $a['until'] ?? null,
                 'hyva' => $hyva,
+                'lokiHyva' => $lokiHyva,
             ];
         }
 
