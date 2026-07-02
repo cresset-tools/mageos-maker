@@ -10,6 +10,21 @@ return [
     // The package whose versions are exposed in the version dropdown.
     'edition_package' => 'mage-os/project-community-edition',
 
+    // The minimal edition used as the base in ADDITIVE ("inverse") mode: start
+    // from this lean set and `require` the features you add, instead of starting
+    // from the full edition and `replace`-ing what you remove.
+    'minimal_edition_package' => 'mage-os/project-minimal-edition',
+
+    // Packages force-added to the minimal base's `require` in additive mode.
+    // The published mage-os/product-minimal-edition 3.x drops laminas/laminas-view
+    // while keeping laminas/laminas-i18n, whose view helpers reference it — so
+    // `setup:di:compile` fatals without this. (Fixed upstream via the mirror-repo
+    // allowlist; kept here so additive builds compile regardless of which minimal
+    // metapackage version resolves.)
+    'minimal_base_extra_require' => [
+        'laminas/laminas-view' => '^2.20',
+    ],
+
     // The "fully modular" (modulargento) distribution — a flavor of a Mage-OS
     // release, served from its own Composer repo. When the user picks it in the
     // configurator (offered only when the selected version is one of the keys in
@@ -19,6 +34,23 @@ return [
     'modulargento' => [
         'repository_url' => env('MAGEOS_MODULARGENTO_REPOSITORY_URL', 'https://modulargento.cresset.tools/'),
         'edition_package' => 'modulargento/project-community-edition',
+        // `mage-os/*` packages the modulargento repo serves UN-renamed: only the
+        // lockstep monorepo (+ inventory + page-builder) packages get the
+        // modulargento vendor; these standalone forks keep their original name,
+        // so additive builds must `require` them as-is. Mirrors the mirror-repo
+        // build's product-community-edition dependencies template
+        // (cresset-tools/generate-mirror-repo-js).
+        'standalone_packages' => [
+            'mage-os/module-page-builder-widget',
+            'mage-os/module-admin-activity-log',
+            'mage-os/module-rma',
+            'mage-os/module-automatic-translation',
+            'mage-os/module-meta-robots-tag',
+            'mage-os/module-theme-optimization',
+            'mage-os/module-page-builder-template-import-export',
+            'mage-os/module-inventory-reservations-grid',
+            'mage-os/theme-adminhtml-m137',
+        ],
         // Every published modulargento release, keyed by the Mage-OS version it
         // tracks. The distribution toggle appears whenever the selected version
         // is one of these keys; each entry carries that release's PHP constraint

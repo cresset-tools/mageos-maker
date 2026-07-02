@@ -75,6 +75,14 @@ class DefinitionsSerializer
     {
         $out = [];
         foreach ($this->defs->profiles as $name => $p) {
+            // Additive-mode profiles are CLI/API-only until the Build Canvas
+            // grows a mode toggle: the client engine has no additive rendering
+            // and drops mode/enabledSets from its build posts, so surfacing
+            // e.g. mageos-minimal here would silently produce a full
+            // subtractive build — the opposite of what the card advertises.
+            if (($p['selection']['mode'] ?? 'subtractive') === 'additive') {
+                continue;
+            }
             $out[$name] = [
                 'name' => $name,
                 'label' => $p['label'] ?? $name,
