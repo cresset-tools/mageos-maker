@@ -34,6 +34,23 @@ return [
     'modulargento' => [
         'repository_url' => env('MAGEOS_MODULARGENTO_REPOSITORY_URL', 'https://modulargento.cresset.tools/'),
         'edition_package' => 'modulargento/project-community-edition',
+        // `mage-os/*` packages the modulargento repo serves UN-renamed: only the
+        // lockstep monorepo (+ inventory + page-builder) packages get the
+        // modulargento vendor; these standalone forks keep their original name,
+        // so additive builds must `require` them as-is. Mirrors the mirror-repo
+        // build's product-community-edition dependencies template
+        // (cresset-tools/generate-mirror-repo-js).
+        'standalone_packages' => [
+            'mage-os/module-page-builder-widget',
+            'mage-os/module-admin-activity-log',
+            'mage-os/module-rma',
+            'mage-os/module-automatic-translation',
+            'mage-os/module-meta-robots-tag',
+            'mage-os/module-theme-optimization',
+            'mage-os/module-page-builder-template-import-export',
+            'mage-os/module-inventory-reservations-grid',
+            'mage-os/theme-adminhtml-m137',
+        ],
         // Every published modulargento release, keyed by the Mage-OS version it
         // tracks. The distribution toggle appears whenever the selected version
         // is one of these keys; each entry carries that release's PHP constraint

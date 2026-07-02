@@ -61,8 +61,9 @@ class Selection
          * Build strategy: 'subtractive' (default — start from the full edition
          * and `replace` disabled sets/layers) or 'additive' (start from the
          * minimal edition and `require` enabled sets/layers/add-ons). Only
-         * meaningful when a minimal edition exists for the version/distribution;
-         * the configurator forces it back to 'subtractive' otherwise.
+         * available when a minimal edition exists for the version/distribution
+         * ({@see Configurator::minimalEditionPackage()}); the HTTP and CLI
+         * entry points refuse additive selections loudly otherwise.
          */
         public readonly string $mode = 'subtractive',
         /**
@@ -117,8 +118,18 @@ class Selection
         return $self;
     }
 
+    /**
+     * @throws \InvalidArgumentException when `mode` is not a known build mode —
+     *                                   a typo'd mode must fail loudly, not
+     *                                   silently produce a subtractive build.
+     */
     public static function fromArray(array $data, string $defaultVersion, Definitions $defs): self
     {
+        $mode = $data['mode'] ?? 'subtractive';
+        if (! in_array($mode, ['subtractive', 'additive'], true)) {
+            throw new \InvalidArgumentException("Unknown build mode: {$mode} (expected 'subtractive' or 'additive')");
+        }
+
         return new self(
             version: $data['version'] ?? $defaultVersion,
             profile: $data['profile'] ?? $defs->defaultProfile(),
@@ -131,7 +142,7 @@ class Selection
             enabledOptionSubtoggles: array_values($data['enabledOptionSubtoggles'] ?? $defs->defaultOnOptionSubtoggleKeys()),
             optionVariants: $data['optionVariants'] ?? [],
             distribution: $data['distribution'] ?? 'standard',
-            mode: $data['mode'] ?? 'subtractive',
+            mode: $mode,
             enabledSets: array_values($data['enabledSets'] ?? []),
         );
     }
@@ -158,6 +169,7 @@ class Selection
     public function applyProfile(array $profile): self
     {
         $sel = $profile['selection'] ?? [];
+
         return new self(
             version: $this->version,
             profile: $profile['name'] ?? $this->profile,

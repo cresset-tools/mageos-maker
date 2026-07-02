@@ -100,6 +100,26 @@ class ConfigureCommand extends Command
             $selection = $this->runInteractive($selection, $defs, $catalog, $configurator);
         }
 
+        // Validate the final selection's mode (after --interactive may have
+        // changed version/profile): a typo'd --mode must not silently produce a
+        // subtractive full build, and additive needs a published minimal edition
+        // for the distribution/version or the base won't resolve.
+        if (! in_array($selection->mode, ['subtractive', 'additive'], true)) {
+            $this->error("Unknown build mode: {$selection->mode} (expected subtractive or additive)");
+
+            return self::FAILURE;
+        }
+        if ($selection->isAdditive()
+            && $configurator->minimalEditionPackage($selection->distribution, $selection->version) === null) {
+            $this->error(sprintf(
+                'Additive mode is not available for the %s distribution on %s: no minimal edition is published/configured.',
+                $selection->distribution,
+                $selection->version,
+            ));
+
+            return self::FAILURE;
+        }
+
         $composer = $configurator->build($selection, forceRemovable: (bool) $this->option('unlock-all-sets'));
         $rendered = $renderer->render($composer);
 
@@ -131,6 +151,11 @@ class ConfigureCommand extends Command
 
     private function runInteractive(Selection $selection, Definitions $defs, CatalogRepository $catalog, Configurator $configurator): Selection
     {
+        // The flag-built selection is replaced by the interactively-chosen
+        // profile below; carry over what the prompts don't cover (distribution)
+        // and what explicit flags must win over (mode, enable-set).
+        $distribution = $selection->distribution;
+
         $versions = $catalog->availableVersions() ?: [$selection->version];
         $version = select(
             label: 'Mage-OS version',
@@ -148,6 +173,15 @@ class ConfigureCommand extends Command
             default: $selection->profile ?: $defs->defaultProfile(),
         );
         $selection = Selection::default($version, $defs)->applyProfile($defs->profiles[$profile]);
+
+        // The chosen profile resets mode/enabledSets; explicit CLI flags still
+        // take precedence over it.
+        $mode = $this->option('mode') ?: $selection->mode;
+        $additive = $mode === 'additive';
+        $enabledSets = array_values(array_unique(array_merge(
+            $selection->enabledSets,
+            $this->splitMulti($this->option('enable-set')),
+        )));
 
         $profileGroups = $selection->profileGroups;
         foreach ($defs->profileGroups as $group => $def) {
@@ -167,14 +201,25 @@ class ConfigureCommand extends Command
         foreach ($defs->setsForVersion($version) as $name => $set) {
             $setOptions[$name] = $set['label'];
         }
-        $enabledSetNames = array_diff(array_keys($setOptions), $selection->disabledSets);
+        // Same picker, inverted defaults per mode: subtractive starts full
+        // (checked = keep, unchecked → replace), additive starts minimal
+        // (checked = add to require).
+        $defaultChecked = $additive
+            ? array_values(array_intersect(array_keys($setOptions), $enabledSets))
+            : array_values(array_diff(array_keys($setOptions), $selection->disabledSets));
         $kept = multiselect(
-            label: 'Modules to keep enabled',
+            label: $additive ? 'Modules to add to the minimal base' : 'Modules to keep enabled',
             options: $setOptions,
-            default: array_values($enabledSetNames),
+            default: $defaultChecked,
             scroll: 12,
         );
-        $disabledSets = array_values(array_diff(array_keys($setOptions), $kept));
+        if ($additive) {
+            $enabledSets = array_values($kept);
+            $disabledSets = [];
+        } else {
+            $enabledSets = [];
+            $disabledSets = array_values(array_diff(array_keys($setOptions), $kept));
+        }
 
         // Stock layers: default-on, uncheck to disable.
         $stockLayerOptions = [];
@@ -201,8 +246,16 @@ class ConfigureCommand extends Command
         // Forced add-ons / non-stock layers (from current profile-group choices)
         // are excluded from their respective multiselects — they're always on.
         $tentative = new Selection(
-            $version, $profile, $disabledSets, $disabledLayers,
-            $selection->enabledLayers, $selection->enabledAddons, $profileGroups,
+            version: $version,
+            profile: $profile,
+            disabledSets: $disabledSets,
+            disabledLayers: $disabledLayers,
+            enabledLayers: $selection->enabledLayers,
+            enabledAddons: $selection->enabledAddons,
+            profileGroups: $profileGroups,
+            distribution: $distribution,
+            mode: $mode,
+            enabledSets: $enabledSets,
         );
         $forcedAddons = $configurator->forcedAddons($tentative);
         $forcedLayers = $configurator->forcedLayers($tentative);
@@ -250,6 +303,9 @@ class ConfigureCommand extends Command
             enabledLayers: array_values($enabledLayers),
             enabledAddons: array_values($enabledAddons),
             profileGroups: $profileGroups,
+            distribution: $distribution,
+            mode: $mode,
+            enabledSets: $enabledSets,
         );
     }
 }

@@ -24,13 +24,32 @@ class AdditiveModeTest extends TestCase
             sets: [
                 'paypal' => ['name' => 'paypal', 'label' => 'PayPal', 'packages' => ['mage-os/module-paypal', 'mage-os/module-paypal-graph-ql']],
                 'bundle' => ['name' => 'bundle', 'label' => 'Bundle', 'packages' => ['mage-os/module-bundle']],
+                // A set whose module ships as a STANDALONE fork under modulargento
+                // (keeps its mage-os vendor there, unlike the lockstep monorepo).
+                'page-builder' => ['name' => 'page-builder', 'label' => 'Page Builder', 'packages' => ['mage-os/module-page-builder-widget']],
+                // A set with a subtoggle whose payload arrives transitively.
+                'two-factor-auth' => [
+                    'name' => 'two-factor-auth', 'label' => '2FA',
+                    'packages' => ['mage-os/module-two-factor-auth'],
+                    'subtoggles' => [
+                        ['name' => 'duo', 'label' => 'Duo', 'packages' => ['duosecurity/duo_api_php']],
+                    ],
+                ],
             ],
             layers: [
                 // A STOCK layer — subtractive by default, but addable in additive mode.
                 'graphql' => ['name' => 'graphql', 'label' => 'GraphQL', 'packages' => ['mage-os/module-graph-ql', 'mage-os/module-catalog-graph-ql']],
             ],
             addons: [],
-            profileGroups: [],
+            profileGroups: [
+                'features' => [
+                    'name' => 'features', 'label' => 'Features',
+                    'options' => [
+                        // The additive mirror of `disables.sets`.
+                        ['name' => 'with-paypal', 'label' => 'With PayPal', 'enables' => ['sets' => ['paypal']]],
+                    ],
+                ],
+            ],
             profiles: [],
         );
     }
@@ -50,6 +69,7 @@ class AdditiveModeTest extends TestCase
                 'edition_package' => 'modulargento/project-community-edition',
                 'version' => '3.1.0',
                 'php_constraint' => '~8.4.0',
+                'standalone_packages' => ['mage-os/module-page-builder-widget'],
             ],
         );
     }
@@ -58,7 +78,9 @@ class AdditiveModeTest extends TestCase
     {
         return new Selection(
             version: '3.1.0', profile: null,
-            disabledSets: [], disabledLayers: [], enabledAddons: [], profileGroups: [],
+            disabledSets: [], disabledLayers: [], enabledAddons: [],
+            profileGroups: $extra['profileGroups'] ?? [],
+            disabledSubtoggles: $extra['disabledSubtoggles'] ?? [],
             distribution: $extra['distribution'] ?? 'standard',
             mode: $extra['mode'] ?? 'additive',
             enabledSets: $extra['enabledSets'] ?? [],
@@ -128,5 +150,70 @@ class AdditiveModeTest extends TestCase
         $this->assertSame(['paypal', 'bundle'], $sel->enabledSets);
         $this->assertSame('additive', $sel->toArray()['mode']);
         $this->assertSame(['paypal', 'bundle'], $sel->toArray()['enabledSets']);
+    }
+
+    public function test_from_array_rejects_an_unknown_mode(): void
+    {
+        // A typo'd mode must fail loudly — silently matching nothing in
+        // isAdditive() would hand back a full subtractive build.
+        $this->expectException(\InvalidArgumentException::class);
+
+        Selection::fromArray(['version' => '3.1.0', 'mode' => 'addative'], '3.1.0', $this->defs());
+    }
+
+    public function test_additive_modulargento_keeps_standalone_fork_names(): void
+    {
+        // Standalone forks (config: modulargento.standalone_packages) are served
+        // UN-renamed by the modulargento repo — requiring modulargento/* for
+        // them would point at a package that doesn't exist.
+        $composer = $this->configurator($this->defs())->build($this->selection([
+            'distribution' => 'modulargento',
+            'enabledSets' => ['paypal', 'page-builder'],
+        ]));
+
+        $this->assertArrayHasKey('modulargento/module-paypal', $composer['require'] ?? []);
+        $this->assertSame('3.1.0', $composer['require']['mage-os/module-page-builder-widget'] ?? null);
+        $this->assertArrayNotHasKey('modulargento/module-page-builder-widget', $composer['require'] ?? []);
+    }
+
+    public function test_profile_group_option_can_enable_sets_in_additive_mode(): void
+    {
+        // enables.sets is the additive mirror of disables.sets: the option pulls
+        // the set into require without the user ticking it explicitly.
+        $composer = $this->configurator($this->defs())->build($this->selection([
+            'profileGroups' => ['features' => 'with-paypal'],
+        ]));
+
+        $this->assertSame('3.1.0', $composer['require']['mage-os/module-paypal'] ?? null);
+    }
+
+    public function test_additive_disabled_subtoggle_of_an_enabled_set_goes_to_replace(): void
+    {
+        // The set's module pulls its subtoggle payload transitively, so a
+        // disabled subtoggle is the one case where additive emits replace.
+        $composer = $this->configurator($this->defs())->build($this->selection([
+            'enabledSets' => ['two-factor-auth'],
+            'disabledSubtoggles' => ['two-factor-auth.duo'],
+        ]));
+
+        $this->assertSame('3.1.0', $composer['require']['mage-os/module-two-factor-auth'] ?? null);
+        $this->assertSame('*', $composer['replace']['duosecurity/duo_api_php'] ?? null);
+
+        // A disabled subtoggle of a NOT-enabled set stays out of replace — its
+        // parent module is never required, so nothing arrives to strip.
+        $without = $this->configurator($this->defs())->build($this->selection([
+            'disabledSubtoggles' => ['two-factor-auth.duo'],
+        ]));
+        $this->assertArrayNotHasKey('replace', $without);
+    }
+
+    public function test_minimal_edition_package_availability(): void
+    {
+        $cfg = $this->configurator($this->defs());
+
+        // Standard reads config('mageos.minimal_edition_package').
+        $this->assertSame('mage-os/project-minimal-edition', $cfg->minimalEditionPackage('standard', '3.1.0'));
+        // The test's modulargento config wires no minimal edition → unavailable.
+        $this->assertNull($cfg->minimalEditionPackage('modulargento', '3.1.0'));
     }
 }
