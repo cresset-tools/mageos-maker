@@ -214,6 +214,39 @@ class AdditiveModeTest extends TestCase
         $this->assertArrayNotHasKey('replace', $without);
     }
 
+    public function test_minimal_included_and_partial_sets_derive_from_the_catalog(): void
+    {
+        $defs = $this->defs();
+        $catalog = $this->createMock(CatalogRepository::class);
+        $catalog->method('packageVersions')->willReturnCallback(fn (string $name) => $name === 'mage-os/product-minimal-edition'
+            ? ['3.1.0' => ['require' => [
+                'mage-os/module-bundle' => '3.1.0',
+                'mage-os/module-two-factor-auth' => '3.1.0',
+                'mage-os/module-paypal' => '3.1.0', // its graph-ql companion is absent → partial
+            ]]]
+            : []);
+        $cfg = new Configurator(
+            $defs,
+            $catalog,
+            new AddonVersionResolver($defs, new ComposerRepoIndex([], 'mageos-catalog'), 'mageos-catalog'),
+            'https://repo.mage-os.org/',
+            [
+                'minimal_edition_package' => 'modulargento/project-minimal-edition',
+                'minimal_removed_sets' => ['bundle'],
+            ],
+        );
+
+        $this->assertSame(['bundle', 'two-factor-auth'], $cfg->minimalIncludedSets('standard', '3.1.0'));
+        $this->assertSame(['paypal'], $cfg->minimalPartialSets('standard', '3.1.0'));
+        // The leaner modulargento minimal drops the config-listed sets from the keep-set.
+        $this->assertSame(['two-factor-auth'], $cfg->minimalIncludedSets('modulargento', '3.1.0'));
+        // GraphQL layer modules aren't in the minimal base at all — neither included nor partial.
+        $this->assertSame([], $cfg->minimalIncludedLayers('standard', '3.1.0'));
+        $this->assertSame([], $cfg->minimalPartialLayers('standard', '3.1.0'));
+        // No catalog metadata for the version → additive isn't offered (null).
+        $this->assertNull($cfg->minimalIncludedSets('standard', '3.0.0'));
+    }
+
     public function test_minimal_edition_package_availability(): void
     {
         $cfg = $this->configurator($this->defs());

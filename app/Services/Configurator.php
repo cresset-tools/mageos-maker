@@ -526,6 +526,178 @@ class Configurator
     }
 
     /**
+     * Set names whose every package ships inside the minimal edition base for
+     * the distribution/version — an additive build gets them for free, so the
+     * UI renders them as locked "included" instead of add-toggles. Null when
+     * additive shouldn't be offered there: no minimal edition wired, or no
+     * catalog metadata to derive honest included-state from (a toggle whose
+     * "off" still ships the module would lie).
+     *
+     * For modulargento the LEANER minimal drops a further batch of sets from
+     * the standard keep-set; `mageos.modulargento.minimal_removed_sets` lists
+     * them (mirroring the mirror-repo build's removeExtra list).
+     *
+     * @return list<string>|null
+     */
+    public function minimalIncludedSets(string $distribution, string $version): ?array
+    {
+        $require = $this->minimalBaseRequire($distribution, $version);
+        if ($require === null) {
+            return null;
+        }
+        $removed = $distribution === 'modulargento'
+            ? array_flip((array) ($this->modulargento['minimal_removed_sets'] ?? []))
+            : [];
+
+        $out = [];
+        foreach (array_keys($this->defs->setsForVersion($version)) as $set) {
+            if (isset($removed[$set])) {
+                continue;
+            }
+            if ($this->baseCoverage($this->defs->setPackageEntries($set), $require) === 'all') {
+                $out[] = $set;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Set names whose CORE ships in the minimal base but whose companion
+     * packages (GraphQL, import/export, MSI glue, …) don't — most classic sets
+     * on the standard minimal. They stay add-toggles in additive mode (ticking
+     * requires the full set), but the UI marks them so "off" honestly reads as
+     * "base core only", not "absent".
+     *
+     * @return list<string>|null
+     */
+    public function minimalPartialSets(string $distribution, string $version): ?array
+    {
+        $require = $this->minimalBaseRequire($distribution, $version);
+        if ($require === null) {
+            return null;
+        }
+        $removed = $distribution === 'modulargento'
+            ? array_flip((array) ($this->modulargento['minimal_removed_sets'] ?? []))
+            : [];
+
+        $out = [];
+        foreach (array_keys($this->defs->setsForVersion($version)) as $set) {
+            if (isset($removed[$set])) {
+                continue;
+            }
+            if ($this->baseCoverage($this->defs->setPackageEntries($set), $require) === 'some') {
+                $out[] = $set;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Stock layer names fully contained in the minimal edition base — the
+     * layer analog of {@see minimalIncludedSets()} (the leaner modulargento
+     * variant removes no layer modules, so no extra subtraction here).
+     *
+     * @return list<string>|null
+     */
+    public function minimalIncludedLayers(string $distribution, string $version): ?array
+    {
+        $require = $this->minimalBaseRequire($distribution, $version);
+        if ($require === null) {
+            return null;
+        }
+
+        $out = [];
+        foreach (array_keys($this->defs->layers) as $name) {
+            if (! $this->defs->isLayerStock($name)) {
+                continue;
+            }
+            if ($this->baseCoverage($this->defs->layerPackageEntries($name), $require) === 'all') {
+                $out[] = $name;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Stock layer names partially shipped by the minimal base — the layer
+     * analog of {@see minimalPartialSets()}.
+     *
+     * @return list<string>|null
+     */
+    public function minimalPartialLayers(string $distribution, string $version): ?array
+    {
+        $require = $this->minimalBaseRequire($distribution, $version);
+        if ($require === null) {
+            return null;
+        }
+
+        $out = [];
+        foreach (array_keys($this->defs->layers) as $name) {
+            if (! $this->defs->isLayerStock($name)) {
+                continue;
+            }
+            if ($this->baseCoverage($this->defs->layerPackageEntries($name), $require) === 'some') {
+                $out[] = $name;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * The require map of the minimal PRODUCT metapackage for a version, from
+     * the catalog. The modulargento repo has no synced catalog, so both
+     * distributions derive from the standard minimal metapackage (the leaner
+     * modulargento keep-set is the standard one minus minimal_removed_sets).
+     *
+     * @return array<string,string>|null
+     */
+    private function minimalBaseRequire(string $distribution, string $version): ?array
+    {
+        if ($this->minimalEditionPackage($distribution, $version) === null) {
+            return null;
+        }
+        $project = $this->minimalEditionPackage('standard', $version);
+        if ($project === null) {
+            return null;
+        }
+        $meta = $this->catalog->packageVersions(str_replace('/project-', '/product-', $project))[$version] ?? null;
+        $require = $meta['require'] ?? null;
+
+        return is_array($require) && $require !== [] ? $require : null;
+    }
+
+    /**
+     * How much of a package list the minimal base ships: 'all', 'some', or
+     * 'none'. Entries with a `requires:` gate (e.g. GraphQL companions) don't
+     * count — they follow their layer/add-on, not the base; the client posts
+     * enabled sets through the normal build path precisely so those gates
+     * still apply.
+     *
+     * @param  list<array{name:string,requires?:array<string,string>}>  $entries
+     * @param  array<string,string>  $require
+     * @return 'all'|'some'|'none'
+     */
+    private function baseCoverage(array $entries, array $require): string
+    {
+        $in = $out = 0;
+        foreach ($entries as $entry) {
+            if (isset($entry['requires'])) {
+                continue;
+            }
+            isset($require[$entry['name']]) ? $in++ : $out++;
+        }
+        if ($in === 0) {
+            return 'none';
+        }
+
+        return $out === 0 ? 'all' : 'some';
+    }
+
+    /**
      * Base composer.json for the fully-modular (modulargento) distribution.
      *
      * Starts from the real published `modulargento/project-community-edition`

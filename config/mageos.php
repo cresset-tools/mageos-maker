@@ -51,6 +51,15 @@ return [
             'mage-os/module-inventory-reservations-grid',
             'mage-os/theme-adminhtml-m137',
         ],
+        // Maker SET names the LEANER modulargento minimal edition drops from
+        // the standard minimal keep-set (mirrors removeExtra in the mirror-repo
+        // build's transformModulargentoMinimalProduct). Drives which sets the
+        // additive UI shows as locked "included" vs add-toggles.
+        'minimal_removed_sets' => [
+            'bundle', 'grouped', 'downloadable', 'swatches', 'wishlist',
+            'reviews', 'newsletter', 'gift-message', 'reports', 'product-alert',
+            'order-cancellation', 'contact',
+        ],
         // Every published modulargento release, keyed by the Mage-OS version it
         // tracks. The distribution toggle appears whenever the selected version
         // is one of these keys; each entry carries that release's PHP constraint

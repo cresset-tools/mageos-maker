@@ -42,7 +42,7 @@ export const engine = {
   D,
   /** Live UI state (the "positive" mirrors, like the old Livewire props). */
   s: {
-    version: '', profile: null, distribution: 'standard',
+    version: '', profile: null, distribution: 'standard', mode: 'subtractive',
     enabledSets: [], enabledStockLayers: [], enabledAddons: [],
     profileGroups: {}, enabledSubtoggles: [], enabledOptionSubtoggles: [],
     optionVariants: {},
@@ -65,6 +65,24 @@ export const engine = {
   modulargentoAvailable() {
     return Array.isArray(D.modulargentoVersions) && D.modulargentoVersions.includes(this.s.version);
   },
+
+  /* ---------- additive ("inverse") mode ----------
+     The minimal-base data comes from D.additive[distribution][version]:
+     `sets`/`layers` ship FULLY in the minimal base (locked "included"),
+     `partialSets`/`partialLayers` ship their core only (still add-toggles —
+     ticking requires the full set, incl. GraphQL/MSI companions). A missing
+     entry means additive isn't offered for that combo. */
+  isAdditive() { return this.s.mode === 'additive'; },
+  additiveData() { return (D.additive?.[this.s.distribution] || {})[this.s.version] || null; },
+  additiveAvailable() { return this.additiveData() !== null; },
+  minimalSets() { return this.additiveData()?.sets || []; },
+  minimalPartialSets() { return this.additiveData()?.partialSets || []; },
+  minimalLayers() { return this.additiveData()?.layers || []; },
+  minimalPartialLayers() { return this.additiveData()?.partialLayers || []; },
+  setIncludedInMinimal(name) { return this.isAdditive() && this.minimalSets().includes(name); },
+  setPartiallyInMinimal(name) { return this.isAdditive() && this.minimalPartialSets().includes(name); },
+  layerIncludedInMinimal(name) { return this.isAdditive() && this.minimalLayers().includes(name); },
+  layerPartiallyInMinimal(name) { return this.isAdditive() && this.minimalPartialLayers().includes(name); },
 
   /* ---------- version gating ---------- */
   setsForVersion() {
@@ -221,7 +239,13 @@ export const engine = {
   /* ---------- module effective state + origin pill ---------- */
   moduleOn(name) { return this.s.enabledSets.includes(name); },
   origin(name) {
-    if (!this.isSetRemovable(name)) return 'req';
+    if (this.isAdditive()) {
+      // Removability is a subtractive concept; in additive the only lock is
+      // "the minimal base already ships this".
+      if (this.setIncludedInMinimal(name)) return 'incl';
+    } else if (!this.isSetRemovable(name)) {
+      return 'req';
+    }
     if (this.overrides.has(name)) return 'you';
     return this.moduleOn(name) ? 'profile' : null;
   },
@@ -258,11 +282,15 @@ export const engine = {
     });
   },
   forceNonRemovableSetsOn() {
-    const locked = this.setNamesForVersion().filter((n) => !this.isSetRemovable(n));
+    const locked = this.isAdditive()
+      ? this.minimalSets().filter((n) => this.isSetAvailable(n))
+      : this.setNamesForVersion().filter((n) => !this.isSetRemovable(n));
     this.s.enabledSets = uniq([...this.s.enabledSets, ...locked]);
   },
   forceNonRemovableLayersOn() {
-    const locked = this.stockLayerNames().filter((n) => !this.isLayerRemovable(n));
+    const locked = this.isAdditive()
+      ? this.minimalLayers()
+      : this.stockLayerNames().filter((n) => !this.isLayerRemovable(n));
     this.s.enabledStockLayers = uniq([...this.s.enabledStockLayers, ...locked]);
   },
 
@@ -275,8 +303,8 @@ export const engine = {
       if (def !== null) pg[g.name] = def;
     }
     let sel = {
-      version: this.s.version, profile: D.defaultProfile, distribution: 'standard',
-      disabledSets: [], disabledLayers: [], enabledLayers: [], enabledAddons: [],
+      version: this.s.version, profile: D.defaultProfile, distribution: 'standard', mode: 'subtractive',
+      disabledSets: [], disabledLayers: [], enabledLayers: [], enabledAddons: [], enabledSets: [],
       profileGroups: pg, disabledSubtoggles: [], enabledOptionSubtoggles: [], optionVariants: {},
     };
     if (sel.profile && D.profiles[sel.profile]) sel = this.mergeProfile(sel, D.profiles[sel.profile].selection || {});
@@ -297,6 +325,8 @@ export const engine = {
       enabledOptionSubtoggles: u(sel.enabledOptionSubtoggles, block.enabledOptionSubtoggles),
       optionVariants: { ...sel.optionVariants, ...(block.optionVariants || {}) },
       distribution: block.distribution || sel.distribution,
+      mode: block.mode || sel.mode || 'subtractive',
+      enabledSets: u(sel.enabledSets, block.enabledSets),
     };
   },
   /** Mirrors Configurator/Livewire hydrateFromSelection(): Selection → UI mirrors. */
@@ -305,14 +335,23 @@ export const engine = {
     this.s.profile = sel.profile ?? null;
     this.s.distribution = (sel.distribution === 'modulargento' && this.modulargentoAvailable())
       ? 'modulargento' : 'standard';
+    // Additive only where the minimal-base data exists for this combo.
+    this.s.mode = (sel.mode === 'additive' && this.additiveAvailable()) ? 'additive' : 'subtractive';
 
     const allSets = this.setNamesForVersion();
-    const effDisabled = (sel.disabledSets || []).filter((n) => this.isSetRemovable(n));
-    this.s.enabledSets = diff(allSets, effDisabled);
-
     const stock = this.stockLayerNames();
-    const effDisabledLayers = (sel.disabledLayers || []).filter((n) => this.isLayerRemovable(n));
-    this.s.enabledStockLayers = diff(stock, effDisabledLayers);
+    if (this.isAdditive()) {
+      // Minimal base: included sets/layers locked on, everything else off
+      // unless the selection explicitly adds it.
+      this.s.enabledSets = uniq([...this.minimalSets(), ...(sel.enabledSets || [])]).filter((n) => allSets.includes(n));
+      this.s.enabledStockLayers = uniq([...this.minimalLayers(), ...(sel.enabledLayers || [])]).filter((n) => stock.includes(n));
+    } else {
+      const effDisabled = (sel.disabledSets || []).filter((n) => this.isSetRemovable(n));
+      this.s.enabledSets = diff(allSets, effDisabled);
+
+      const effDisabledLayers = (sel.disabledLayers || []).filter((n) => this.isLayerRemovable(n));
+      this.s.enabledStockLayers = diff(stock, effDisabledLayers);
+    }
 
     this.s.profileGroups = { ...(sel.profileGroups || {}) };
     this.s.enabledSubtoggles = diff(this.allSubtoggleKeys(), sel.disabledSubtoggles || []);
@@ -333,14 +372,28 @@ export const engine = {
   init() { this.s.version = D.initial.selection.version; this.hydrate(D.initial.selection); },
 
   /* ---------- mutations (called by the controller) ---------- */
-  /** Re-derive enabledSets from the active profile (distribution/version change). */
+  /**
+   * Re-derive enabledSets from the active profile (distribution/version
+   * change). Returns a user-facing notice when the mode had to fall back to
+   * subtractive (additive unavailable for the new combo), else null.
+   */
   reseedFromProfile() {
+    const wasAdditive = this.isAdditive();
     if (this.s.profile && D.profiles[this.s.profile]) {
       let sel = this.defaultSelection();
       sel = this.mergeProfile(sel, D.profiles[this.s.profile].selection || {});
+      this.s.mode = (sel.mode === 'additive' && this.additiveAvailable()) ? 'additive' : 'subtractive';
       const allSets = this.setNamesForVersion();
-      const effDisabled = (sel.disabledSets || []).filter((n) => this.isSetRemovable(n));
-      this.s.enabledSets = diff(allSets, effDisabled);
+      if (this.isAdditive()) {
+        this.s.enabledSets = uniq([...this.minimalSets(), ...(sel.enabledSets || [])]).filter((n) => allSets.includes(n));
+        this.s.enabledStockLayers = uniq([...this.minimalLayers(), ...(sel.enabledLayers || [])]).filter((n) => this.stockLayerNames().includes(n));
+      } else {
+        const effDisabled = (sel.disabledSets || []).filter((n) => this.isSetRemovable(n));
+        this.s.enabledSets = diff(allSets, effDisabled);
+      }
+    } else if (this.isAdditive() && !this.additiveAvailable()) {
+      this.s.mode = 'subtractive';
+      this.s.enabledSets = this.setNamesForVersion();
     }
     this.forceNonRemovableSetsOn();
     this.forceNonRemovableLayersOn();
@@ -348,24 +401,35 @@ export const engine = {
     this.enforceSubtoggleRequires();
     this.baseline = new Set(this.s.enabledSets);
     this.overrides = new Set();
+    return (wasAdditive && !this.isAdditive())
+      ? 'Additive (minimal) build is not available for this version/distribution — switched to the standard subtractive build.'
+      : null;
   },
   setVersion(v) {
     const prevAvailable = this.setNamesForVersion();
     this.s.version = v;
     const nowAvailable = this.setNamesForVersion();
-    // Newly-available version-gated sets default on.
-    this.s.enabledSets = uniq([...this.s.enabledSets, ...diff(nowAvailable, prevAvailable)]);
+    // Newly-available version-gated sets default on — subtractive only; in
+    // additive mode nothing turns itself on.
+    if (!this.isAdditive()) {
+      this.s.enabledSets = uniq([...this.s.enabledSets, ...diff(nowAvailable, prevAvailable)]);
+    }
     if (this.s.distribution === 'modulargento' && !this.modulargentoAvailable()) {
       this.s.distribution = 'standard';
       this.forceNonRemovableSetsOn();
       this.forceNonRemovableLayersOn();
     }
+    let notice = null;
+    if (this.isAdditive() && !this.additiveAvailable()) {
+      notice = this.reseedFromProfile();
+    }
     this.enforceSetRequires();
+    return notice;
   },
   setDistribution(d) {
     if (d === 'modulargento' && !this.modulargentoAvailable()) d = 'standard';
     this.s.distribution = d;
-    this.reseedFromProfile();
+    return this.reseedFromProfile();
   },
   /** Apply a profile; returns the module diff + theme change for ripple/tether. */
   applyProfile(name) {
@@ -430,7 +494,9 @@ export const engine = {
     ]);
   },
   toggleModule(name) {
-    if (!this.isSetRemovable(name)) return;
+    // Additive: the only lock is "ships with the minimal base"; removability
+    // applies to subtractive (replace) builds only.
+    if (this.isAdditive() ? this.setIncludedInMinimal(name) : !this.isSetRemovable(name)) return;
     const on = !this.s.enabledSets.includes(name);
     this.s.enabledSets = on ? uniq([...this.s.enabledSets, name]) : this.s.enabledSets.filter((x) => x !== name);
     this.overrides.add(name);
@@ -438,7 +504,8 @@ export const engine = {
     this.enforceSubtoggleRequires();
   },
   toggleLayer(name) {
-    if (!this.isLayerRemovable(name) || this.layer(name)?.stock === false) return;
+    if (this.layer(name)?.stock === false) return;
+    if (this.isAdditive() ? this.layerIncludedInMinimal(name) : !this.isLayerRemovable(name)) return;
     const on = !this.s.enabledStockLayers.includes(name);
     this.s.enabledStockLayers = on ? uniq([...this.s.enabledStockLayers, name]) : this.s.enabledStockLayers.filter((x) => x !== name);
     this.enforceSetRequires();
@@ -477,6 +544,31 @@ export const engine = {
 
   /* ---------- canonical Selection for POST /api/build + /save ---------- */
   toSelection() {
+    const base = {
+      version: this.s.version,
+      profile: this.s.profile,
+      distribution: this.s.distribution,
+      mode: this.s.mode,
+      enabledAddons: this.s.enabledAddons,
+      profileGroups: this.s.profileGroups,
+      disabledSubtoggles: diff(this.allSubtoggleKeys(), this.s.enabledSubtoggles),
+      enabledOptionSubtoggles: this.s.enabledOptionSubtoggles,
+      optionVariants: this.s.optionVariants,
+    };
+
+    if (this.isAdditive()) {
+      // Positive form: everything ON goes to require — the minimal-included
+      // sets too, so their gated companions (GraphQL, …) still flow through
+      // the server's normal per-package gates.
+      return {
+        ...base,
+        disabledSets: [],
+        disabledLayers: [],
+        enabledSets: this.s.enabledSets,
+        enabledLayers: this.s.enabledStockLayers,
+      };
+    }
+
     const allSets = this.setNamesForVersion();
     const nonRemovableSets = allSets.filter((n) => !this.isSetRemovable(n));
     const disabledSets = diff(diff(allSets, this.s.enabledSets), nonRemovableSets);
@@ -486,17 +578,11 @@ export const engine = {
     const disabledLayers = diff(diff(stock, this.s.enabledStockLayers), nonRemovableLayers);
 
     return {
-      version: this.s.version,
-      profile: this.s.profile,
-      distribution: this.s.distribution,
+      ...base,
       disabledSets,
       disabledLayers,
+      enabledSets: [],
       enabledLayers: [],
-      enabledAddons: this.s.enabledAddons,
-      profileGroups: this.s.profileGroups,
-      disabledSubtoggles: diff(this.allSubtoggleKeys(), this.s.enabledSubtoggles),
-      enabledOptionSubtoggles: this.s.enabledOptionSubtoggles,
-      optionVariants: this.s.optionVariants,
     };
   },
 };
