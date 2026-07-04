@@ -104,7 +104,7 @@ class Configurator
                 }
                 $pkg = $this->requirePackageName($entry['name'], $modulargento);
                 $composer['require'][$pkg] = $stock
-                    ? $selection->version
+                    ? $this->additiveStockConstraint($entry['name'], $selection)
                     : ($this->addonVersions->constraint($pkg) ?? '*');
             }
             $this->appendRepositories($composer, $this->defs->layerRepositories($layer));
@@ -122,7 +122,7 @@ class Configurator
                         continue;
                     }
                     $pkg = $this->requirePackageName($entry['name'], $modulargento);
-                    $composer['require'][$pkg] = $selection->version;
+                    $composer['require'][$pkg] = $this->additiveStockConstraint($entry['name'], $selection);
                 }
             }
         }
@@ -480,6 +480,19 @@ class Configurator
     private function modulargentoName(string $name): string
     {
         return 'modulargento/'.substr($name, strlen('mage-os/'));
+    }
+
+    /**
+     * The require constraint for a stock package added in additive mode.
+     * Lockstep packages pin to the edition version, but the standalone
+     * bundled-extension forks (page-builder-widget, admin-activity-log, …)
+     * version independently of the release in BOTH distributions — the repos
+     * serve them at their own tags (e.g. 1.5.x) — so an edition-version pin
+     * would never resolve for them.
+     */
+    private function additiveStockConstraint(string $declaredName, Selection $selection): string
+    {
+        return $this->isModulargentoStandalone($declaredName) ? '*' : $selection->version;
     }
 
     /**

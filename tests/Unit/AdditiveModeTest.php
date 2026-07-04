@@ -172,8 +172,15 @@ class AdditiveModeTest extends TestCase
         ]));
 
         $this->assertArrayHasKey('modulargento/module-paypal', $composer['require'] ?? []);
-        $this->assertSame('3.1.0', $composer['require']['mage-os/module-page-builder-widget'] ?? null);
+        // Standalone forks version independently (1.x, own tags), so they take
+        // any served version instead of the edition pin — in both distributions.
+        $this->assertSame('*', $composer['require']['mage-os/module-page-builder-widget'] ?? null);
         $this->assertArrayNotHasKey('modulargento/module-page-builder-widget', $composer['require'] ?? []);
+
+        $standard = $this->configurator($this->defs())->build($this->selection([
+            'enabledSets' => ['page-builder'],
+        ]));
+        $this->assertSame('*', $standard['require']['mage-os/module-page-builder-widget'] ?? null);
     }
 
     public function test_profile_group_option_can_enable_sets_in_additive_mode(): void
@@ -215,5 +222,47 @@ class AdditiveModeTest extends TestCase
         $this->assertSame('mage-os/project-minimal-edition', $cfg->minimalEditionPackage('standard', '3.1.0'));
         // The test's modulargento config wires no minimal edition → unavailable.
         $this->assertNull($cfg->minimalEditionPackage('modulargento', '3.1.0'));
+    }
+
+    public function test_wired_modulargento_minimal_edition_uses_its_template_base(): void
+    {
+        // The real config shape: minimal_edition_package + minimal_project_template
+        // wired per version (the provider decodes *_template_path files into these).
+        $defs = $this->defs();
+        $catalog = $this->createMock(CatalogRepository::class);
+        $catalog->method('packageVersions')->willReturn([]);
+        $cfg = new Configurator(
+            $defs,
+            $catalog,
+            new AddonVersionResolver($defs, new ComposerRepoIndex([], 'mageos-catalog'), 'mageos-catalog'),
+            'https://repo.mage-os.org/',
+            [
+                'repository_url' => 'https://modulargento.cresset.tools/',
+                'edition_package' => 'modulargento/project-community-edition',
+                'versions' => [
+                    '3.1.0' => [
+                        'php_constraint' => '~8.4.0',
+                        'minimal_edition_package' => 'modulargento/project-minimal-edition',
+                        'minimal_project_template' => [
+                            'name' => 'modulargento/project-minimal-edition',
+                            'require' => ['modulargento/product-minimal-edition' => '3.1.0'],
+                            'license' => ['OSL-3.0'],
+                            'type' => 'project',
+                        ],
+                    ],
+                ],
+            ],
+        );
+
+        $this->assertSame('modulargento/project-minimal-edition', $cfg->minimalEditionPackage('modulargento', '3.1.0'));
+
+        $composer = $cfg->build($this->selection(['distribution' => 'modulargento']));
+        // Template-based base: carries the template's keys, the maker's repo +
+        // php constraint overlay, and the laminas-view minimal fix.
+        $this->assertSame('modulargento/project-minimal-edition', $composer['name'] ?? null);
+        $this->assertSame('3.1.0', $composer['require']['modulargento/product-minimal-edition'] ?? null);
+        $this->assertSame(['OSL-3.0'], $composer['license'] ?? null);
+        $this->assertSame('~8.4.0', $composer['require']['php'] ?? null);
+        $this->assertArrayHasKey('laminas/laminas-view', $composer['require'] ?? []);
     }
 }

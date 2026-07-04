@@ -74,6 +74,12 @@ return [
             '3.1.0' => [
                 'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.4.0'),
                 'project_template_path' => base_path('resources/modulargento/3.1.0/project-community-edition.json'),
+                // Published by the mirror-repo build (2026-07-04) — unlocks the
+                // additive ("inverse") mode for modulargento on this version.
+                // 3.0.0 stays subtractive-only: the live repo serves one release
+                // at a time and no 3.0.0 minimal edition was ever published.
+                'minimal_edition_package' => 'modulargento/project-minimal-edition',
+                'minimal_project_template_path' => base_path('resources/modulargento/3.1.0/project-minimal-edition.json'),
             ],
         ],
     ],
