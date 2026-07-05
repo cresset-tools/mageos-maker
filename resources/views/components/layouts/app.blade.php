@@ -187,7 +187,7 @@
         .rcard .rt { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
         .rcard .rd { font-size: 12.5px; color: var(--gray-500); margin-top: 3px; line-height: 1.5; }
         .rcard code { font-family: var(--mono); font-size: 11px; }
-        .rcard .affecthint { font-size: 11px; color: var(--gray-400); margin-top: 7px; display: flex; align-items: center; gap: 5px; font-weight: 600; }
+        .rcard .affecthint { font-size: 11px; color: var(--gray-400); margin-top: 7px; display: inline; font-weight: 600; }
         .rcard .affecthint svg { width: 12px; height: 12px; }
         .rcard .big-ic { width: 34px; height: 34px; border-radius: 9px; background: var(--gray-100); color: var(--gray-500); display: flex; align-items: center; justify-content: center; flex: none; }
         .rcard.sel .big-ic { background: var(--blue-50); color: var(--blue-600); }
