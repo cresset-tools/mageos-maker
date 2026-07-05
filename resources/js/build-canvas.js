@@ -52,7 +52,8 @@ function val(id) {
   return '';
 }
 function updateSummary() {
-  const meta = `${E.s.version} · ${E.s.distribution === 'modulargento' ? 'Modular' : 'Standard'} · ${optLabel('theme')} · ${optLabel('checkout')}`;
+  const mode = E.isAdditive() ? ' · Minimal (additive)' : '';
+  const meta = `${E.s.version} · ${E.s.distribution === 'modulargento' ? 'Modular' : 'Standard'}${mode} · ${optLabel('theme')} · ${optLabel('checkout')}`;
   $('spine-meta').textContent = meta;
   $('m-meta').textContent = meta;
   $('dock-meta').textContent = meta;
@@ -125,8 +126,17 @@ function buildDistribution() {
 function buildProfiles() {
   $('profile-grid').innerHTML = Object.values(D.profiles).map((p) => {
     const sel = p.name === E.s.profile;
-    const hint = !p.default ? '<div class="affecthint"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Updates Modules below</div>' : '';
-    return '<div class="rcard' + (sel ? ' sel' : '') + '" data-profile="' + esc(p.name) + '"><span class="rdot"></span><div><div class="rt">' + esc(p.label) + '</div><div class="rd">' + esc(p.description) + '</div>' + hint + '</div></div>';
+    const additive = (p.selection?.mode || 'subtractive') === 'additive';
+    // Additive profiles need minimal-base data for the current combo — grey
+    // them out (like incompatible theme options) where it doesn't exist.
+    const unavailable = additive && !(D.additive?.[E.s.distribution] || {})[E.s.version];
+    const badge = additive ? ' <span class="badge auto">additive</span>' : '';
+    let hint = !p.default ? '<div class="affecthint"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Updates Modules below</div>' : '';
+    if (additive) {
+      hint = '<div class="affecthint"><svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Switches the build mode: starts from the minimal edition and only <b>adds</b> what you enable, instead of removing from the full edition.</div>'
+        + (unavailable ? '<div class="affecthint">Needs a version with a published minimal edition.</div>' : '');
+    }
+    return '<div class="rcard' + (sel ? ' sel' : '') + (unavailable ? ' disabled' : '') + '"' + (unavailable ? '' : ' data-profile="' + esc(p.name) + '"') + '><span class="rdot"></span><div><div class="rt">' + esc(p.label) + badge + '</div><div class="rd">' + esc(p.description) + '</div>' + hint + '</div></div>';
   }).join('');
 }
 
@@ -198,9 +208,13 @@ function buildAddons() {
 /* ---------- section: modules ---------- */
 function originPill(name) {
   const o = E.origin(name);
+  if (o === 'incl') return '<span class="origin req">in minimal base</span>';
   if (o === 'req') return '<span class="origin req">required</span>';
   if (o === 'you') return '<span class="origin you">your choice</span>';
   if (o === 'profile') return '<span class="origin profile">via ' + esc(profileLabel()) + '</span>';
+  // Additive: the minimal base ships this set's core module even when the
+  // toggle is off — enabling adds the full set (GraphQL/MSI companions).
+  if (E.setPartiallyInMinimal(name)) return '<span class="origin profile">core in base</span>';
   return '';
 }
 function buildModules() {
@@ -219,7 +233,8 @@ function buildModules() {
       const on = E.moduleOn(name);
       const reqMet = E.setRequiresMet(name);
       const removable = E.isSetRemovable(name);
-      const disabled = !removable || !reqMet;
+      const locked = E.isAdditive() ? E.setIncludedInMinimal(name) : !removable;
+      const disabled = locked || !reqMet;
       let needs = '';
       if (!reqMet) {
         const rl = E.setRequiredSet(name) ? (E.set(E.setRequiredSet(name))?.label || E.setRequiredSet(name))
@@ -238,7 +253,7 @@ function buildModules() {
           return '<label class="chk mini' + (subOn ? ' on' : '') + (subDisabled ? ' is-disabled' : '') + '"' + (subDisabled ? '' : ' data-subtoggle="' + esc(key) + '"') + '><span class="box"></span><span class="label">' + esc(sub.label) + '</span></label>';
         }).join('') + '</div>';
       }
-      return '<div class="modcard" data-mod="' + esc(name) + '" data-name="' + esc(hay) + '" data-on="' + (on ? '1' : '0') + '" data-req="' + (!removable ? '1' : '0') + '">' +
+      return '<div class="modcard" data-mod="' + esc(name) + '" data-name="' + esc(hay) + '" data-on="' + (on ? '1' : '0') + '" data-req="' + (locked ? '1' : '0') + '">' +
         '<div class="chk ' + (on ? 'on' : '') + (disabled ? ' disabled' : '') + '"' + (disabled ? '' : ' data-modtoggle="' + esc(name) + '"') + '>' +
         '<div class="box"></div><div class="mtext"><div class="label">' + esc(s.label) + ' ' + originPill(name) + needs + '</div><div class="desc">' + esc(s.description) + '</div>' + subs + '</div></div></div>';
     }).join('');
@@ -278,10 +293,15 @@ function buildLayers() {
   const forced = E.forcedLayers();
   $('layer-host').innerHTML = Object.values(D.layers).map((l) => {
     if (l.stock !== false) {
-      const removable = E.isLayerRemovable(l.name);
       const on = E.s.enabledStockLayers.includes(l.name);
-      const badge = removable ? '' : ' <span class="badge req">required</span>';
-      return '<label class="layerrow' + (removable ? '' : ' forced') + '"' + (removable ? ' data-layer="' + esc(l.name) + '"' : '') + '><div class="grow"><div class="lt">' + esc(l.label) + badge + '</div><div class="ld">' + esc(l.description) + '</div></div><span class="switch' + (on ? ' on' : '') + (removable ? '' : ' switch-locked') + '"></span></label>';
+      // Additive: the only lock is "fully in the minimal base"; removability
+      // is a subtractive (replace) concept. Partially-shipped layers stay
+      // toggleable, marked so "off" reads as "base core only".
+      const locked = E.isAdditive() ? E.layerIncludedInMinimal(l.name) : !E.isLayerRemovable(l.name);
+      const badge = locked
+        ? (E.isAdditive() ? ' <span class="badge req">in minimal base</span>' : ' <span class="badge req">required</span>')
+        : (E.layerPartiallyInMinimal(l.name) ? ' <span class="badge gray">core in base</span>' : '');
+      return '<label class="layerrow' + (locked ? ' forced' : '') + '"' + (locked ? '' : ' data-layer="' + esc(l.name) + '"') + '><div class="grow"><div class="lt">' + esc(l.label) + badge + '</div><div class="ld">' + esc(l.description) + '</div></div><span class="switch' + (on ? ' on' : '') + (locked ? ' switch-locked' : '') + '"></span></label>';
     }
     // Non-stock layers are managed entirely by the theme/checkout picks
     // (`forces`/`enables`) — auto-checked and locked, never user-toggleable.
@@ -488,8 +508,12 @@ async function doSave(btn) {
 
 /* ---------- profile switch (the headline dependency) ---------- */
 function switchProfile(name) {
+  const wasAdditive = E.isAdditive();
   const diff = E.applyProfile(name);
   if (!diff) return;
+  const modeBit = E.isAdditive() !== wasAdditive
+    ? (E.isAdditive() ? ' · mode → <b>additive</b> (minimal base — tick modules to add them)' : ' · mode → subtractive')
+    : '';
   renderAll();
   setTimeout(() => {
     diff.changed.forEach((n) => {
@@ -509,11 +533,11 @@ function switchProfile(name) {
     $('tether-td').textContent = (seg.length ? seg.join(' / ') + ' modules' : '') + (diff.themeChanged ? (seg.length ? ' · ' : '') + 'theme → ' + optLabel('theme') : '');
     tether.classList.add('show');
     tether.setAttribute('data-goto', diff.changed.length ? 'modules' : 'theme');
-    const bits = '<b>' + esc(p.label) + '</b>' + (seg.length ? ' · ' + seg.join(' / ') + ' modules' : '') + (diff.themeChanged ? ' · theme → ' + esc(optLabel('theme')) : '');
+    const bits = '<b>' + esc(p.label) + '</b>' + modeBit + (seg.length ? ' · ' + seg.join(' / ') + ' modules' : '') + (diff.themeChanged ? ' · theme → ' + esc(optLabel('theme')) : '');
     logChange(bits, diff.changed.length ? 'modules' : 'theme');
   } else {
     tether.classList.remove('show');
-    logChange('<b>' + esc(p.label) + '</b> · no module changes', null);
+    logChange('<b>' + esc(p.label) + '</b>' + (modeBit || ' · no module changes'), null);
   }
   scheduleBuild();
 }
@@ -530,7 +554,13 @@ function wire() {
     if (go && !e.target.closest('[data-option],[data-variant],[data-optsub]')) { jumpTo(go.getAttribute('data-goto')); return; }
 
     const dist = e.target.closest('[data-distribution]');
-    if (dist) { E.setDistribution(dist.getAttribute('data-distribution')); renderAll(); scheduleBuild(); return; }
+    if (dist) {
+      const notice = E.setDistribution(dist.getAttribute('data-distribution'));
+      renderAll();
+      if (notice) logChange(esc(notice), null);
+      scheduleBuild();
+      return;
+    }
     const prof = e.target.closest('[data-profile]');
     if (prof) { switchProfile(prof.getAttribute('data-profile')); return; }
 
@@ -579,7 +609,10 @@ function wire() {
   // Version <select> is re-rendered each pass, so listen via delegation.
   document.addEventListener('change', (e) => {
     if (e.target && e.target.id === 'version-select') {
-      E.setVersion(e.target.value); renderAll(); scheduleBuild();
+      const notice = E.setVersion(e.target.value);
+      renderAll();
+      if (notice) logChange(esc(notice), null);
+      scheduleBuild();
     }
   });
 }

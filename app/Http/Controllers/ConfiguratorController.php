@@ -51,11 +51,17 @@ class ConfiguratorController extends Controller
     public function show(string $id): View
     {
         $cfg = SavedConfig::findOrFail($id);
-        $sel = Selection::fromArray(
-            array_merge($cfg->selection, ['version' => $cfg->mageos_version]),
-            $cfg->mageos_version,
-            $this->defs,
-        );
+        try {
+            $sel = Selection::fromArray(
+                array_merge($cfg->selection, ['version' => $cfg->mageos_version]),
+                $cfg->mageos_version,
+                $this->defs,
+            );
+        } catch (\InvalidArgumentException $e) {
+            // A config saved before mode validation existed can carry a junk
+            // mode — surface it as a bad link rather than a server error.
+            abort(422, 'This saved configuration is invalid: '.$e->getMessage());
+        }
 
         return $this->page($sel, [
             'savedId' => $cfg->id,
@@ -89,6 +95,9 @@ class ConfiguratorController extends Controller
             'packageCount' => $tree['count'],
             'requireCount' => count($composer['require'] ?? []),
             'replaceCount' => count($composer['replace'] ?? []),
+            // Echo the effective mode so API clients can confirm the strategy
+            // that actually produced this composer.json.
+            'mode' => $sel->mode,
             'usesHyva' => ConfiguratorService::requiresHyva($composer),
             'usesLokiCheckout' => ConfiguratorService::requiresLokiCheckoutHyva($composer),
         ]);
@@ -157,6 +166,20 @@ class ConfiguratorController extends Controller
         if (($data['distribution'] ?? 'standard') === 'modulargento'
             && ! in_array($version, $modulargentoVersions, true)) {
             $data['distribution'] = 'standard';
+        }
+
+        // Reject rather than clamp: silently downgrading additive → subtractive
+        // would discard the caller's enabledSets and hand back a full build with
+        // no indication (and save() would freeze the stranded selection into the
+        // share link). The frontend never posts a mode today, so only direct API
+        // callers can hit these — and they should hear about it.
+        $mode = $data['mode'] ?? 'subtractive';
+        if (! in_array($mode, ['subtractive', 'additive'], true)) {
+            abort(422, "Unknown build mode: {$mode}");
+        }
+        if ($mode === 'additive'
+            && $this->configurator->minimalEditionPackage($data['distribution'] ?? 'standard', $version) === null) {
+            abort(422, 'Additive mode is not available for this distribution/version (no minimal edition published).');
         }
 
         return Selection::fromArray($data, $version, $this->defs);

@@ -42,6 +42,7 @@ class Configurator
                 && ($forceRemovable || $this->defs->isLayerRemovable($l, $selection->distribution)),
         ));
         $disabledSets = $this->cascadeSetRequires($disabledSets, $removedLayers, $selection->version);
+        $enabledSets = array_values(array_unique(array_merge($resolved['enableSets'], $selection->enabledSets)));
         // Forced items always go in, soft defaults only when echoed back via the form.
         $effectiveAddons = array_values(array_unique(array_merge(
             $resolved['forceAddons'],
@@ -51,9 +52,10 @@ class Configurator
         $effectiveEnabledLayers = array_values(array_unique(array_merge($resolved['forceLayers'], $selection->enabledLayers)));
 
         $modulargento = $selection->isModulargento();
+        $additive = $selection->isAdditive();
         $composer = $modulargento
-            ? $this->modulargentoBaseComposer($selection->version)
-            : $this->baseComposer($selection->version);
+            ? $this->modulargentoBaseComposer($selection->version, $additive)
+            : $this->baseComposer($selection->version, $additive);
 
         $hyvaProject = trim($hyvaProject);
 
@@ -86,28 +88,77 @@ class Configurator
             }
             $this->appendRepositories($composer, $this->defs->addonRepositories($addon));
         }
-        // Non-stock layers that are enabled: append to require.
+        // Enabled layers → require. Subtractive: only NON-stock layers (stock
+        // layers are already in the full base, so "enabled" just means "not
+        // disabled" — nothing to require). Additive: the minimal base lacks stock
+        // layers too, so an enabled stock layer (e.g. graphql) is required in,
+        // pinned to the edition version (core module) rather than the add-on map.
         foreach ($effectiveEnabledLayers as $layer) {
-            if ($this->defs->isLayerStock($layer)) {
+            $stock = $this->defs->isLayerStock($layer);
+            if (! $additive && $stock) {
                 continue;
             }
             foreach ($this->defs->layerPackageEntries($layer) as $entry) {
                 if (! $this->packageAllowed($entry, $ctx, $composer['require'])) {
                     continue;
                 }
-                $pkg = $entry['name'];
-                $composer['require'][$pkg] = $this->addonVersions->constraint($pkg) ?? '*';
+                $pkg = $this->requirePackageName($entry['name'], $modulargento);
+                $composer['require'][$pkg] = $stock
+                    ? $this->additiveStockConstraint($entry['name'], $selection)
+                    : ($this->addonVersions->constraint($pkg) ?? '*');
             }
             $this->appendRepositories($composer, $this->defs->layerRepositories($layer));
         }
+
+        // Additive mode: enabled SETS → require (the mirror of the subtractive
+        // replace path below). Core module packages pin to the edition version.
+        if ($additive) {
+            foreach ($enabledSets as $set) {
+                if (! $this->defs->isSetAvailable($set, $selection->version)) {
+                    continue;
+                }
+                foreach ($this->defs->setPackageEntries($set) as $entry) {
+                    if (! $this->packageAllowed($entry, $ctx, $composer['require'])) {
+                        continue;
+                    }
+                    $pkg = $this->requirePackageName($entry['name'], $modulargento);
+                    $composer['require'][$pkg] = $this->additiveStockConstraint($entry['name'], $selection);
+                }
+            }
+        }
         ksort($composer['require']);
+
+        $replace = $composer['replace'] ?? [];
+        if ($additive) {
+            // Additive emits no replace for sets/layers (you start minimal and
+            // add), with one exception: a disabled subtoggle of an ENABLED set.
+            // The set's module pulls its subtoggle payloads in transitively, so
+            // the same replace the subtractive path uses is the only way to keep
+            // them out.
+            $enabledSetMap = array_flip($enabledSets);
+            foreach ($selection->disabledSubtoggles as $key) {
+                [$setName, $subName] = array_pad(explode('.', $key, 2), 2, '');
+                if ($subName === '' || ! isset($enabledSetMap[$setName])) {
+                    continue;
+                }
+                foreach ($this->defs->subtogglePackageEntries($setName, $subName) as $entry) {
+                    if (! $this->packageAllowed($entry, $ctx, $composer['require'])) {
+                        continue;
+                    }
+                    foreach ($this->replacePackageNames($entry['name'], $modulargento) as $replaceName) {
+                        $replace[$replaceName] = '*';
+                    }
+                }
+            }
+
+            return $this->finishReplace($composer, $replace, $hyvaProject);
+        }
 
         // Disabled sets and disabled stock-layers: append to replace.
         // Gating on `package:` for replace entries lets a stock layer (e.g.
         // graphql) skip replacing a package whose root module has already
         // been replaced away — so the replace map only mentions packages
         // that would otherwise be installed.
-        $replace = $composer['replace'] ?? [];
         foreach ($disabledSets as $set) {
             // Version-gated sets (e.g. RMA before 3.0.0) aren't in the stock
             // distribution for this version, so disabling them is a no-op —
@@ -179,15 +230,38 @@ class Configurator
                 }
             }
         }
+
+        return $this->finishReplace($composer, $replace, $hyvaProject);
+    }
+
+    /**
+     * Shared build tail: attach the accumulated replace map (if any) and finish.
+     *
+     * @param  array<string,mixed>  $composer
+     * @param  array<string,string>  $replace
+     * @return array<string,mixed>
+     */
+    private function finishReplace(array $composer, array $replace, string $hyvaProject): array
+    {
         if ($replace !== []) {
             ksort($replace);
             $composer['replace'] = $replace;
         }
 
-        // Hyvä's theme packages live in a licensed composer repo. Only wire
-        // it in when the selection actually pulls a `hyva-themes/*` package —
-        // otherwise the generated composer.json would carry a private repo
-        // (and the auth requirement it implies) for nothing.
+        return $this->finishComposer($composer, $hyvaProject);
+    }
+
+    /**
+     * Shared build tail (both subtractive and additive): wire in the Hyvä
+     * private composer repo, but only when the selection actually pulls a
+     * `hyva-themes/*` package — otherwise the generated composer.json would carry
+     * a private repo (and the auth requirement it implies) for nothing.
+     *
+     * @param  array<string,mixed>  $composer
+     * @return array<string,mixed>
+     */
+    private function finishComposer(array $composer, string $hyvaProject): array
+    {
         if ($hyvaProject !== '' && self::requiresHyva($composer)) {
             $repo = [
                 'type' => 'composer',
@@ -379,10 +453,248 @@ class Configurator
     private function replacePackageNames(string $name, bool $modulargento): array
     {
         if ($modulargento && str_starts_with($name, 'mage-os/')) {
-            return [$name, 'modulargento/'.substr($name, strlen('mage-os/'))];
+            return [$name, $this->modulargentoName($name)];
         }
 
         return [$name];
+    }
+
+    /**
+     * The single package name to ADD to `require` in additive mode. The mirror of
+     * {@see replacePackageNames()}: unlike replace (which lists both vendor names
+     * to guarantee removal), require needs exactly one installable name — under
+     * modulargento the lockstep monorepo modules ship as `modulargento/*`, but
+     * the standalone module forks keep their `mage-os/*` vendor (config lists
+     * them), so those must be required under their original name.
+     */
+    private function requirePackageName(string $name, bool $modulargento): string
+    {
+        if ($modulargento && str_starts_with($name, 'mage-os/') && ! $this->isModulargentoStandalone($name)) {
+            return $this->modulargentoName($name);
+        }
+
+        return $name;
+    }
+
+    /** Map a stock `mage-os/*` package name to its modulargento-vendored counterpart. */
+    private function modulargentoName(string $name): string
+    {
+        return 'modulargento/'.substr($name, strlen('mage-os/'));
+    }
+
+    /**
+     * The require constraint for a stock package added in additive mode.
+     * Lockstep packages pin to the edition version, but the standalone
+     * bundled-extension forks (page-builder-widget, admin-activity-log, …)
+     * version independently of the release in BOTH distributions — the repos
+     * serve them at their own tags (e.g. 1.5.x) — so an edition-version pin
+     * would never resolve for them.
+     */
+    private function additiveStockConstraint(string $declaredName, Selection $selection): string
+    {
+        return $this->isModulargentoStandalone($declaredName) ? '*' : $selection->version;
+    }
+
+    /**
+     * Whether a `mage-os/*` package ships un-renamed in the modulargento repo.
+     * Only the lockstep monorepo (+ inventory + page-builder) packages are
+     * vendor-renamed; the standalone module forks are pulled as-is. The list in
+     * `mageos.modulargento.standalone_packages` mirrors the mirror-repo build's
+     * dependencies template.
+     */
+    private function isModulargentoStandalone(string $name): bool
+    {
+        return in_array($name, (array) ($this->modulargento['standalone_packages'] ?? []), true);
+    }
+
+    /**
+     * The minimal edition configured for a distribution/version, or null when
+     * additive mode is unavailable there. Single source of truth shared by the
+     * HTTP and CLI availability guards and the base-composer builders, so the
+     * guards can never disagree with what the builder resolves.
+     */
+    public function minimalEditionPackage(string $distribution, string $version): ?string
+    {
+        if ($distribution === 'modulargento') {
+            $entry = ($this->modulargento['versions'][$version] ?? []) + $this->modulargento;
+            $pkg = $entry['minimal_edition_package'] ?? null;
+        } else {
+            $pkg = config('mageos.minimal_edition_package');
+        }
+
+        return is_string($pkg) && $pkg !== '' ? $pkg : null;
+    }
+
+    /**
+     * Set names whose every package ships inside the minimal edition base for
+     * the distribution/version — an additive build gets them for free, so the
+     * UI renders them as locked "included" instead of add-toggles. Null when
+     * additive shouldn't be offered there: no minimal edition wired, or no
+     * catalog metadata to derive honest included-state from (a toggle whose
+     * "off" still ships the module would lie).
+     *
+     * For modulargento the LEANER minimal drops a further batch of sets from
+     * the standard keep-set; `mageos.modulargento.minimal_removed_sets` lists
+     * them (mirroring the mirror-repo build's removeExtra list).
+     *
+     * @return list<string>|null
+     */
+    public function minimalIncludedSets(string $distribution, string $version): ?array
+    {
+        $require = $this->minimalBaseRequire($distribution, $version);
+        if ($require === null) {
+            return null;
+        }
+        $removed = $distribution === 'modulargento'
+            ? array_flip((array) ($this->modulargento['minimal_removed_sets'] ?? []))
+            : [];
+
+        $out = [];
+        foreach (array_keys($this->defs->setsForVersion($version)) as $set) {
+            if (isset($removed[$set])) {
+                continue;
+            }
+            if ($this->baseCoverage($this->defs->setPackageEntries($set), $require) === 'all') {
+                $out[] = $set;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Set names whose CORE ships in the minimal base but whose companion
+     * packages (GraphQL, import/export, MSI glue, …) don't — most classic sets
+     * on the standard minimal. They stay add-toggles in additive mode (ticking
+     * requires the full set), but the UI marks them so "off" honestly reads as
+     * "base core only", not "absent".
+     *
+     * @return list<string>|null
+     */
+    public function minimalPartialSets(string $distribution, string $version): ?array
+    {
+        $require = $this->minimalBaseRequire($distribution, $version);
+        if ($require === null) {
+            return null;
+        }
+        $removed = $distribution === 'modulargento'
+            ? array_flip((array) ($this->modulargento['minimal_removed_sets'] ?? []))
+            : [];
+
+        $out = [];
+        foreach (array_keys($this->defs->setsForVersion($version)) as $set) {
+            if (isset($removed[$set])) {
+                continue;
+            }
+            if ($this->baseCoverage($this->defs->setPackageEntries($set), $require) === 'some') {
+                $out[] = $set;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Stock layer names fully contained in the minimal edition base — the
+     * layer analog of {@see minimalIncludedSets()} (the leaner modulargento
+     * variant removes no layer modules, so no extra subtraction here).
+     *
+     * @return list<string>|null
+     */
+    public function minimalIncludedLayers(string $distribution, string $version): ?array
+    {
+        $require = $this->minimalBaseRequire($distribution, $version);
+        if ($require === null) {
+            return null;
+        }
+
+        $out = [];
+        foreach (array_keys($this->defs->layers) as $name) {
+            if (! $this->defs->isLayerStock($name)) {
+                continue;
+            }
+            if ($this->baseCoverage($this->defs->layerPackageEntries($name), $require) === 'all') {
+                $out[] = $name;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Stock layer names partially shipped by the minimal base — the layer
+     * analog of {@see minimalPartialSets()}.
+     *
+     * @return list<string>|null
+     */
+    public function minimalPartialLayers(string $distribution, string $version): ?array
+    {
+        $require = $this->minimalBaseRequire($distribution, $version);
+        if ($require === null) {
+            return null;
+        }
+
+        $out = [];
+        foreach (array_keys($this->defs->layers) as $name) {
+            if (! $this->defs->isLayerStock($name)) {
+                continue;
+            }
+            if ($this->baseCoverage($this->defs->layerPackageEntries($name), $require) === 'some') {
+                $out[] = $name;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * The require map of the minimal PRODUCT metapackage for a version, from
+     * the catalog. The modulargento repo has no synced catalog, so both
+     * distributions derive from the standard minimal metapackage (the leaner
+     * modulargento keep-set is the standard one minus minimal_removed_sets).
+     *
+     * @return array<string,string>|null
+     */
+    private function minimalBaseRequire(string $distribution, string $version): ?array
+    {
+        if ($this->minimalEditionPackage($distribution, $version) === null) {
+            return null;
+        }
+        $project = $this->minimalEditionPackage('standard', $version);
+        if ($project === null) {
+            return null;
+        }
+        $meta = $this->catalog->packageVersions(str_replace('/project-', '/product-', $project))[$version] ?? null;
+        $require = $meta['require'] ?? null;
+
+        return is_array($require) && $require !== [] ? $require : null;
+    }
+
+    /**
+     * How much of a package list the minimal base ships: 'all', 'some', or
+     * 'none'. Entries with a `requires:` gate (e.g. GraphQL companions) don't
+     * count — they follow their layer/add-on, not the base; the client posts
+     * enabled sets through the normal build path precisely so those gates
+     * still apply.
+     *
+     * @param  list<array{name:string,requires?:array<string,string>}>  $entries
+     * @param  array<string,string>  $require
+     * @return 'all'|'some'|'none'
+     */
+    private function baseCoverage(array $entries, array $require): string
+    {
+        $in = $out = 0;
+        foreach ($entries as $entry) {
+            if (isset($entry['requires'])) {
+                continue;
+            }
+            isset($require[$entry['name']]) ? $in++ : $out++;
+        }
+        if ($in === 0) {
+            return 'none';
+        }
+
+        return $out === 0 ? 'all' : 'some';
     }
 
     /**
@@ -402,17 +714,26 @@ class Configurator
      * Falls back to a minimal hand-built base only if the template is absent
      * (it's shipped in the repo, so that path is purely defensive).
      */
-    private function modulargentoBaseComposer(string $version): array
+    private function modulargentoBaseComposer(string $version, bool $minimal = false): array
     {
         // Per-version entry (php_constraint + project_template), falling back to
         // any flat top-level fields for the legacy single-version config shape.
         $entry = ($this->modulargento['versions'][$version] ?? []) + $this->modulargento;
 
-        $edition = $entry['edition_package'] ?? 'modulargento/project-community-edition';
+        // Additive mode uses the modulargento MINIMAL edition + its template
+        // (published by the mirror-repo build; config wires it in per version).
+        // Callers guard availability via minimalEditionPackage(); the hardcoded
+        // name is a purely defensive fallback.
+        if ($minimal) {
+            $edition = $this->minimalEditionPackage('modulargento', $version) ?? 'modulargento/project-minimal-edition';
+            $template = $entry['minimal_project_template'] ?? null;
+        } else {
+            $edition = $entry['edition_package'] ?? 'modulargento/project-community-edition';
+            $template = $entry['project_template'] ?? null;
+        }
         $repoUrl = $entry['repository_url'] ?? 'https://modulargento.cresset.tools/';
         $editionVersion = $version;
         $phpConstraint = $entry['php_constraint'] ?? null;
-        $template = $entry['project_template'] ?? null;
 
         // Maker-owned config block, merged over whatever the template carries.
         $allowPlugins = [
@@ -439,7 +760,7 @@ class Configurator
             $composer['config'] = $composer['config'] ?? [];
             $composer['config']['allow-plugins'] = ($composer['config']['allow-plugins'] ?? []) + $allowPlugins;
 
-            return $composer;
+            return $this->withMinimalExtras($composer, $minimal);
         }
 
         // Defensive fallback (template not shipped): the root carries the
@@ -451,7 +772,7 @@ class Configurator
             $require['php'] = $phpConstraint;
         }
 
-        return [
+        return $this->withMinimalExtras([
             'name' => $edition,
             'description' => 'Mage-OS project tailored with mageos-maker (fully-modular distribution)',
             'type' => 'project',
@@ -487,28 +808,35 @@ class Configurator
             'config' => [
                 'allow-plugins' => $allowPlugins,
             ],
-        ];
+        ], $minimal);
     }
 
     /**
      * Pull the stock composer.json from project-community-edition's package metadata.
      * Strips dist/source/version fields that don't belong in a project's composer.json.
      */
-    private function baseComposer(string $version): array
+    private function baseComposer(string $version, bool $minimal = false): array
     {
-        $editionPackages = $this->catalog->packageVersions(config('mageos.edition_package'));
+        // Additive mode starts from the minimal edition instead of the full one.
+        $editionPackage = $minimal
+            ? ($this->minimalEditionPackage('standard', $version) ?? 'mage-os/project-minimal-edition')
+            : config('mageos.edition_package');
+        $editionPackages = $this->catalog->packageVersions($editionPackage);
         $template = $editionPackages[$version] ?? null;
 
         if ($template === null) {
-            return [
-                'name' => config('mageos.edition_package'),
+            // Defensive fallback (catalog cache empty): the root carries the
+            // project-edition name but requires the PRODUCT edition metapackage —
+            // a package can't require itself (mirrors modulargentoBaseComposer).
+            return $this->withMinimalExtras([
+                'name' => $editionPackage,
                 'description' => 'Mage-OS project tailored with mageos-maker',
                 'type' => 'project',
-                'require' => [config('mageos.edition_package') => $version],
+                'require' => [str_replace('/project-', '/product-', $editionPackage) => $version],
                 'repositories' => [['type' => 'composer', 'url' => $this->repositoryUrl]],
                 'minimum-stability' => 'stable',
                 'prefer-stable' => true,
-            ];
+            ], $minimal);
         }
 
         $skip = ['name', 'version', 'version_normalized', 'dist', 'source', 'time', 'uid', 'description'];
@@ -520,7 +848,7 @@ class Configurator
         }
 
         $composer = [
-            'name' => config('mageos.edition_package'),
+            'name' => $editionPackage,
             'description' => 'Mage-OS project tailored with mageos-maker',
         ] + $base + [
             'repositories' => [
@@ -546,15 +874,34 @@ class Configurator
         $composer['config'] ??= [];
         $composer['config']['allow-plugins'] = ($composer['config']['allow-plugins'] ?? []) + $allowPlugins;
 
+        return $this->withMinimalExtras($composer, $minimal);
+    }
+
+    /**
+     * Inject the minimal-base extra requires (the laminas/laminas-view di:compile
+     * fix) into an additive base. No-op in subtractive mode.
+     *
+     * @param  array<string,mixed>  $composer
+     * @return array<string,mixed>
+     */
+    private function withMinimalExtras(array $composer, bool $minimal): array
+    {
+        if ($minimal) {
+            $composer['require'] = array_merge(
+                $composer['require'] ?? [],
+                config('mageos.minimal_base_extra_require', []),
+            );
+        }
+
         return $composer;
     }
 
     /**
-     * @return array{forceAddons:list<string>, forceLayers:list<string>, defaultAddons:list<string>, defaultLayers:list<string>, disableSets:list<string>, disableLayers:list<string>}
+     * @return array{forceAddons:list<string>, forceLayers:list<string>, defaultAddons:list<string>, defaultLayers:list<string>, disableSets:list<string>, disableLayers:list<string>, enableSets:list<string>}
      */
     private function resolveProfileGroups(Selection $selection): array
     {
-        $forceAddons = $forceLayers = $defaultAddons = $defaultLayers = $disableSets = $disableLayers = [];
+        $forceAddons = $forceLayers = $defaultAddons = $defaultLayers = $disableSets = $disableLayers = $enableSets = [];
 
         foreach ($selection->profileGroups as $group => $optionName) {
             $option = $this->defs->profileGroupOption($group, $optionName);
@@ -583,6 +930,9 @@ class Configurator
             }
             $defaultAddons = array_merge($defaultAddons, $option['enables']['addons'] ?? []);
             $defaultLayers = array_merge($defaultLayers, $option['enables']['layers'] ?? []);
+            // The additive mirror of `disables.sets`: an option can pull sets
+            // into the require map when building from the minimal base.
+            $enableSets = array_merge($enableSets, $option['enables']['sets'] ?? []);
             $forceAddons = array_merge($forceAddons, $option['forces']['addons'] ?? []);
             $forceLayers = array_merge($forceLayers, $option['forces']['layers'] ?? []);
             $disableSets = array_merge($disableSets, $option['disables']['sets'] ?? []);
@@ -596,6 +946,7 @@ class Configurator
             'defaultLayers' => $defaultLayers,
             'disableSets' => $disableSets,
             'disableLayers' => $disableLayers,
+            'enableSets' => $enableSets,
         ];
     }
 

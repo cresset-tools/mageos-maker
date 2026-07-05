@@ -34,6 +34,7 @@ class DefinitionsSerializer
     public function __construct(
         private readonly Definitions $defs,
         private readonly CatalogRepository $catalog,
+        private readonly Configurator $configurator,
     ) {}
 
     /**
@@ -50,6 +51,12 @@ class DefinitionsSerializer
                 array_keys((array) config('mageos.modulargento.versions', [])),
             )),
             'defaultProfile' => $this->defs->defaultProfile(),
+            // Additive ("inverse") mode support: for each distribution, the
+            // versions where additive is offered, mapped to the set/layer names
+            // already included in that minimal base (the client locks those as
+            // "included" instead of rendering add-toggles). A version absent
+            // here isn't offered additive in the UI.
+            'additive' => $this->additive(),
             'profiles' => $this->profiles(),
             'profileGroups' => array_values($this->defs->profileGroups),
             'sets' => $this->sets(),
@@ -82,6 +89,32 @@ class DefinitionsSerializer
                 'default' => (bool) ($p['default'] ?? false),
                 'selection' => $p['selection'] ?? [],
             ];
+        }
+
+        return $out;
+    }
+
+    /** @return array<string,array<string,array{sets:list<string>,layers:list<string>}>> */
+    private function additive(): array
+    {
+        $out = ['standard' => [], 'modulargento' => []];
+        $modulargentoVersions = array_keys((array) config('mageos.modulargento.versions', []));
+        foreach ($this->catalog->availableVersions() as $version) {
+            foreach (array_keys($out) as $distribution) {
+                if ($distribution === 'modulargento' && ! in_array($version, $modulargentoVersions, true)) {
+                    continue;
+                }
+                $sets = $this->configurator->minimalIncludedSets($distribution, $version);
+                if ($sets === null) {
+                    continue;
+                }
+                $out[$distribution][$version] = [
+                    'sets' => $sets,
+                    'partialSets' => $this->configurator->minimalPartialSets($distribution, $version) ?? [],
+                    'layers' => $this->configurator->minimalIncludedLayers($distribution, $version) ?? [],
+                    'partialLayers' => $this->configurator->minimalPartialLayers($distribution, $version) ?? [],
+                ];
+            }
         }
 
         return $out;

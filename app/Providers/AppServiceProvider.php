@@ -87,17 +87,23 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(Configurator::class, function ($app) {
             $modulargento = $app['config']->get('mageos.modulargento', []);
-            // Load each modulargento version's real published
-            // project-community-edition composer.json so the generated project
+            // Load each modulargento version's real published project-edition
+            // composer.json files (community + minimal) so the generated project
             // carries every key (require-dev, autoload-dev, license, …) rather
             // than a hand-maintained subset. Decoded once per version here; the
-            // Configurator picks the one matching the selected version.
+            // Configurator picks the one matching the selected version and mode.
+            $templateKeys = [
+                'project_template_path' => 'project_template',
+                'minimal_project_template_path' => 'minimal_project_template',
+            ];
             foreach ($modulargento['versions'] ?? [] as $v => $entry) {
-                $templatePath = $entry['project_template_path'] ?? null;
-                if (is_string($templatePath) && is_file($templatePath)) {
-                    $decoded = json_decode((string) file_get_contents($templatePath), true);
-                    if (is_array($decoded)) {
-                        $modulargento['versions'][$v]['project_template'] = $decoded;
+                foreach ($templateKeys as $pathKey => $templateKey) {
+                    $templatePath = $entry[$pathKey] ?? null;
+                    if (is_string($templatePath) && is_file($templatePath)) {
+                        $decoded = json_decode((string) file_get_contents($templatePath), true);
+                        if (is_array($decoded)) {
+                            $modulargento['versions'][$v][$templateKey] = $decoded;
+                        }
                     }
                 }
             }
