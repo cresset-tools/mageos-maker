@@ -295,7 +295,11 @@
         .changelog .cl-tx b { color: var(--gray-800); font-weight: 700; }
         .changelog .cl-link { font-size: 12px; font-weight: 600; color: var(--blue-600); cursor: pointer; white-space: nowrap; flex: none; }
 
-        .dock-tabs { display: flex; gap: 3px; padding: 11px 13px 0; overflow-x: auto; scrollbar-width: none; }
+        {{-- flex:none — the dock is a fixed-height flex column, and overflow-x
+             makes this the only child whose min-height resolves to 0, so
+             without it the tab strip silently absorbs the whole squeeze (and
+             vanishes) once the dock's content outgrows the viewport. --}}
+        .dock-tabs { display: flex; flex: none; gap: 3px; padding: 11px 13px 0; overflow-x: auto; scrollbar-width: none; }
         .dock-tabs::-webkit-scrollbar { display: none; }
         .dock-tab { font-size: 12px; font-weight: 600; color: var(--gray-500); padding: 7px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; flex: none; user-select: none; }
         .dock-tab:hover { background: var(--gray-100); }
