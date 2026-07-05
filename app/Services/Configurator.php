@@ -648,6 +648,60 @@ class Configurator
     }
 
     /**
+     * Root package names for an ADDITIVE selection's install-tree walk: the
+     * minimal base's require keys (minus, under modulargento, the leaner
+     * edition's removed sets) plus the enabled sets' and enabled stock
+     * layers' packages. Names stay `mage-os/*` — the baked graphs are built
+     * from the Mage-OS repo for both distributions, and the minimal
+     * metapackage itself isn't a graph node (it's not reachable from the full
+     * edition), so the walk is rooted at its dependencies instead. Null when
+     * no minimal metadata exists for the version.
+     *
+     * @return list<string>|null
+     */
+    public function additiveRootPackages(Selection $selection): ?array
+    {
+        $require = $this->minimalBaseRequire($selection->distribution, $selection->version);
+        if ($require === null) {
+            return null;
+        }
+        // Composer package names only — the graphs strip platform deps
+        // (php, ext-*, lib-*), so those would show up as phantom nodes.
+        $roots = array_values(array_filter(array_keys($require), fn ($n) => str_contains($n, '/')));
+
+        if ($selection->isModulargento()) {
+            $drop = [];
+            foreach ((array) ($this->modulargento['minimal_removed_sets'] ?? []) as $set) {
+                foreach ($this->defs->setPackageEntries($set) as $entry) {
+                    $drop[$entry['name']] = true;
+                }
+            }
+            $roots = array_values(array_filter($roots, fn ($n) => ! isset($drop[$n])));
+        }
+
+        foreach ($selection->enabledSets as $set) {
+            if (! $this->defs->isSetAvailable($set, $selection->version)) {
+                continue;
+            }
+            foreach ($this->defs->setPackageEntries($set) as $entry) {
+                $roots[] = $entry['name'];
+            }
+        }
+        foreach ($selection->enabledLayers as $layer) {
+            // Non-stock layers keep their baked-delta path in the resolver.
+            if (! $this->defs->isLayerStock($layer)) {
+                continue;
+            }
+            foreach ($this->defs->layerPackageEntries($layer) as $entry) {
+                $roots[] = $entry['name'];
+            }
+        }
+        $roots = array_merge($roots, array_keys((array) config('mageos.minimal_base_extra_require', [])));
+
+        return array_values(array_unique($roots));
+    }
+
+    /**
      * The require map of the minimal PRODUCT metapackage for a version, from
      * the catalog. The modulargento repo has no synced catalog, so both
      * distributions derive from the standard minimal metapackage (the leaner

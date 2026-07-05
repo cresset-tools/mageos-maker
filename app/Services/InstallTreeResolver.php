@@ -22,6 +22,7 @@ class InstallTreeResolver
     public function __construct(
         private readonly Definitions $defs,
         private readonly string $graphsDir = 'graphs',
+        private readonly ?Configurator $configurator = null,
     ) {}
 
     /**
@@ -63,6 +64,18 @@ class InstallTreeResolver
 
         $rootRequires = $base['rootRequires'];
         $packages = $base['packages'];
+
+        // Additive mode: root the walk at the minimal base + explicit adds
+        // instead of the full edition. The full graph's package map is a
+        // superset of any additive tree, so no separate baked graph is needed
+        // — only the roots change. Falls back to the full-edition roots when
+        // no minimal metadata exists (additive isn't offered there anyway).
+        if ($sel->isAdditive()) {
+            $additiveRoots = $this->configurator?->additiveRootPackages($sel);
+            if ($additiveRoots !== null) {
+                $rootRequires = $additiveRoots;
+            }
+        }
 
         // Apply add-on (additive) requires from non-default profile-group options.
         foreach ($sel->profileGroups as $group => $option) {
@@ -145,6 +158,7 @@ class InstallTreeResolver
             $node = $packages[$name] ?? [];
             $kids = $children[$name] ?? [];
             sort($kids);
+
             return [
                 'name' => $name,
                 'version' => $node['version'] ?? '?',
@@ -153,6 +167,7 @@ class InstallTreeResolver
                 'children' => array_map($build, $kids),
             ];
         };
+
         return array_map($build, $roots);
     }
 
@@ -195,6 +210,7 @@ class InstallTreeResolver
                 $out[$pkg] = true;
             }
         }
+
         return $out;
     }
 
@@ -226,6 +242,7 @@ class InstallTreeResolver
             $seen[$r] = true;
             if (isset($disabled[$r])) {
                 $hits[$r] = true;
+
                 continue;
             }
             $queue[] = $r;
@@ -242,12 +259,14 @@ class InstallTreeResolver
                 $seen[$dep] = true;
                 if (isset($disabled[$dep])) {
                     $hits[$dep] = true;
+
                     continue;
                 }
                 $queue[] = $dep;
                 $children[$name][] = $dep;
             }
         }
+
         return [$visited, $hits, $children];
     }
 
@@ -304,6 +323,7 @@ class InstallTreeResolver
         }
         $raw = $disk->get($full);
         $data = json_decode($raw, true, flags: JSON_THROW_ON_ERROR);
+
         return self::$graphCache[$relativePath] = $data;
     }
 
@@ -324,6 +344,7 @@ class InstallTreeResolver
             return null;
         }
         usort($versions, 'version_compare');
+
         return end($versions);
     }
 

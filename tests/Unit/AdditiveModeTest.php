@@ -247,6 +247,57 @@ class AdditiveModeTest extends TestCase
         $this->assertNull($cfg->minimalIncludedSets('standard', '3.0.0'));
     }
 
+    public function test_additive_root_packages_for_the_install_tree(): void
+    {
+        $defs = $this->defs();
+        $catalog = $this->createMock(CatalogRepository::class);
+        $catalog->method('packageVersions')->willReturnCallback(fn (string $name) => $name === 'mage-os/product-minimal-edition'
+            ? ['3.1.0' => ['require' => [
+                'php' => '~8.4.0', // platform deps are filtered out (not graph nodes)
+                'ext-intl' => '*',
+                'mage-os/module-catalog' => '3.1.0',
+                'mage-os/module-bundle' => '3.1.0',
+            ]]]
+            : []);
+        $cfg = new Configurator(
+            $defs,
+            $catalog,
+            new AddonVersionResolver($defs, new ComposerRepoIndex([], 'mageos-catalog'), 'mageos-catalog'),
+            'https://repo.mage-os.org/',
+            [
+                'minimal_edition_package' => 'modulargento/project-minimal-edition',
+                'minimal_removed_sets' => ['bundle'],
+            ],
+        );
+
+        $standard = $cfg->additiveRootPackages($this->selection([
+            'enabledSets' => ['paypal'],
+            'enabledLayers' => ['graphql'],
+        ]));
+        $this->assertContains('mage-os/module-catalog', $standard);
+        $this->assertContains('mage-os/module-bundle', $standard);
+        $this->assertContains('mage-os/module-paypal', $standard); // enabled set
+        $this->assertContains('mage-os/module-graph-ql', $standard); // enabled stock layer
+        $this->assertContains('laminas/laminas-view', $standard); // minimal_base_extra_require
+        $this->assertNotContains('php', $standard);
+        $this->assertNotContains('ext-intl', $standard);
+
+        // The leaner modulargento minimal drops the removed sets' packages
+        // from the base roots (names stay mage-os/* — graphs are Mage-OS).
+        $modulargento = $cfg->additiveRootPackages($this->selection(['distribution' => 'modulargento']));
+        $this->assertContains('mage-os/module-catalog', $modulargento);
+        $this->assertNotContains('mage-os/module-bundle', $modulargento);
+
+        // No minimal metadata for the version → null (resolver keeps the
+        // full-edition roots).
+        $none = new Selection(
+            version: '3.0.0', profile: null,
+            disabledSets: [], disabledLayers: [], enabledLayers: [], enabledAddons: [], profileGroups: [],
+            mode: 'additive',
+        );
+        $this->assertNull($cfg->additiveRootPackages($none));
+    }
+
     public function test_minimal_edition_package_availability(): void
     {
         $cfg = $this->configurator($this->defs());

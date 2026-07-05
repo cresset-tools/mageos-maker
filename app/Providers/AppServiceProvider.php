@@ -120,6 +120,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(InstallTreeResolver::class, fn ($app) => new InstallTreeResolver(
             $app->make(Definitions::class),
             $app['config']->get('mageos.graphs_dir', 'graphs'),
+            $app->make(Configurator::class),
         ));
 
         $this->app->singleton(GraphBaker::class, fn ($app) => new GraphBaker(

@@ -2,6 +2,10 @@
 
 namespace Tests\Unit;
 
+use App\Services\AddonVersionResolver;
+use App\Services\CatalogRepository;
+use App\Services\ComposerRepoIndex;
+use App\Services\Configurator;
 use App\Services\Definitions;
 use App\Services\InstallTreeResolver;
 use App\Services\Selection;
@@ -203,6 +207,58 @@ class InstallTreeResolverTest extends TestCase
         $perIterMicros = ((hrtime(true) - $start) / 50) / 1000;
 
         $this->assertLessThan(5000, $perIterMicros, "resolve() took $perIterMicros µs/iter, budget is 5000 µs");
+    }
+
+    public function test_additive_mode_roots_the_walk_at_the_minimal_base(): void
+    {
+        // One full-edition graph; the additive walk only swaps the roots.
+        $this->writeBase('3.1.0', [
+            'rootRequires' => ['acme/full-root'],
+            'packages' => [
+                'acme/full-root' => ['version' => '3.1.0', 'type' => 'metapackage', 'requires' => ['acme/catalog', 'acme/wishlist', 'acme/paypal'], 'replaces' => []],
+                'acme/catalog' => ['version' => '3.1.0', 'type' => 'magento2-module', 'requires' => ['acme/framework'], 'replaces' => []],
+                'acme/framework' => ['version' => '3.1.0', 'type' => 'magento2-library', 'requires' => [], 'replaces' => []],
+                'acme/wishlist' => ['version' => '3.1.0', 'type' => 'magento2-module', 'requires' => [], 'replaces' => []],
+                'acme/paypal' => ['version' => '3.1.0', 'type' => 'magento2-module', 'requires' => ['acme/paypal-graphql'], 'replaces' => []],
+                'acme/paypal-graphql' => ['version' => '3.1.0', 'type' => 'magento2-module', 'requires' => [], 'replaces' => []],
+                'laminas/laminas-view' => ['version' => '2.36.0', 'type' => 'library', 'requires' => [], 'replaces' => []],
+            ],
+        ]);
+
+        $defs = new Definitions(
+            sets: ['paypal' => ['name' => 'paypal', 'label' => 'PayPal', 'packages' => ['acme/paypal']]],
+            layers: [], addons: [], profileGroups: [], profiles: [],
+        );
+        $catalog = $this->createMock(CatalogRepository::class);
+        $catalog->method('packageVersions')->willReturnCallback(fn (string $name) => $name === 'mage-os/product-minimal-edition'
+            ? ['3.1.0' => ['require' => ['php' => '~8.4.0', 'acme/catalog' => '3.1.0']]]
+            : []);
+        $configurator = new Configurator(
+            $defs,
+            $catalog,
+            new AddonVersionResolver($defs, new ComposerRepoIndex([], 'mageos-catalog'), 'mageos-catalog'),
+            'https://repo.mage-os.org/',
+        );
+        $resolver = new InstallTreeResolver($defs, $this->graphsDir, $configurator);
+
+        // Additive, pure minimal + the paypal set: only the minimal roots and
+        // the added set are reachable — NOT the full edition (wishlist stays out).
+        $additive = $resolver->resolve(new Selection(
+            version: '3.1.0', profile: null,
+            disabledSets: [], disabledLayers: [], enabledLayers: [], enabledAddons: [], profileGroups: [],
+            mode: 'additive', enabledSets: ['paypal'],
+        ));
+        $names = array_column($additive['packages'], 'name');
+        $this->assertEqualsCanonicalizing(
+            ['acme/catalog', 'acme/framework', 'acme/paypal', 'acme/paypal-graphql', 'laminas/laminas-view'],
+            $names,
+        );
+        $this->assertNotContains('acme/full-root', $names);
+        $this->assertNotContains('acme/wishlist', $names);
+
+        // The same graph resolved subtractively still walks the full edition.
+        $subtractive = $resolver->resolve(new Selection('3.1.0', null, [], [], [], [], []));
+        $this->assertSame(6, $subtractive['count']);
     }
 
     private function emptyDefinitions(): Definitions
