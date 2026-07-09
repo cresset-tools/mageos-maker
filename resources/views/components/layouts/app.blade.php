@@ -341,6 +341,7 @@
         /* shared command block (bougie + hyvä) */
         pre.cmd { background: var(--code-bg); color: #e6e6e6; padding: 10px 12px; margin: 0; border-radius: 8px; font-size: 12px; line-height: 1.45; overflow-x: auto; white-space: pre; }
         pre.cmd code { font-family: var(--mono); }
+        pre.cmd .cmd-cmt { color: #8a8f98; }
         .cmd-row { position: relative; }
         .cmd-row pre.cmd { padding-right: 40px; }
         .cmd-row .cmd-copy { position: absolute; top: 6px; right: 6px; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; background: rgba(255,255,255,0.08); color: #e6e6e6; border: 1px solid rgba(255,255,255,0.15); border-radius: 3px; font-size: 11px; cursor: pointer; }
@@ -542,9 +543,12 @@
         }
     };
     window.copyCmd = function (btn) {
-        const pre = btn.closest('.cmd-row')?.querySelector('pre.cmd code');
-        if (!pre) return;
-        navigator.clipboard.writeText(pre.textContent);
+        const code = btn.closest('.cmd-row')?.querySelector('pre.cmd code');
+        if (!code) return;
+        const clone = code.cloneNode(true);
+        clone.querySelectorAll('.cmd-cmt').forEach(n => n.remove());
+        const text = clone.textContent.replace(/\n{2,}/g, '\n').replace(/^\n+|\n+$/g, '');
+        navigator.clipboard.writeText(text);
         const original = btn.innerHTML;
         btn.textContent = 'Copied';
         btn.classList.add('copied');

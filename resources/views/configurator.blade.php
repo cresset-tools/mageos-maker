@@ -132,15 +132,15 @@
                     <button class="save-btn" id="bougie-save"><svg viewBox="0 0 16 16" fill="none"><path d="M3 2.5h7.5L13.5 5.5V13a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M5 2.5v3h5v-3M5 13v-3.5h6V13" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg> Save &amp; get install command</button>
                     <details class="bougie-default" style="margin-top:11px">
                         <summary class="alt">▶ Or run the default Mage-OS starter now</summary>
-                        <div class="cmd-row" style="margin-top:8px"><pre class="cmd"><code># Install bougie if you don't have it yet
+                        <div class="cmd-row" style="margin-top:8px"><pre class="cmd"><code><span class="cmd-cmt"># Install bougie if you don't have it yet</span>
 curl -LsSf https://bougie.tools/install.sh | sh</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy install command">{!! $copyIcon !!}</button></div>
-                        <div class="cmd-row" style="margin-top:7px"><pre class="cmd"><code># Stock Mage-OS, not the build above
+                        <div class="cmd-row" style="margin-top:7px"><pre class="cmd"><code><span class="cmd-cmt"># Stock Mage-OS, not the build above</span>
 bougie new bougie-store --starter mageos --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy start command">{!! $copyIcon !!}</button></div>
                     </details>
                 </div>
                 <div class="bg-result" id="bg-result" @unless ($savedId) style="display:none" @endunless>
                     <p>Run <b>this exact configuration</b> with bougie — no clone:</p>
-                    <div class="cmd-row"><pre class="cmd"><code># Install bougie if you don't have it yet
+                    <div class="cmd-row"><pre class="cmd"><code><span class="cmd-cmt"># Install bougie if you don't have it yet</span>
 curl -LsSf https://bougie.tools/install.sh | sh</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy install command">{!! $copyIcon !!}</button></div>
                     <div class="cmd-row" style="margin-top:7px"><pre class="cmd"><code>bougie new bougie-store --starter <span id="bougie-starter">{{ $starterArg }}</span> --start</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy start command">{!! $copyIcon !!}</button></div>
                     <small class="bougie-note">Shareable link to this build: <code id="bougie-share">{{ $savedId ? $starterArg : '' }}</code></small>
