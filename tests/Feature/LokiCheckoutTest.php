@@ -23,7 +23,7 @@ class LokiCheckoutTest extends TestCase
 
         $this->assertArrayHasKey('loki-checkout/magento2-hyva', $composer['require']);
         $this->assertContains(
-            ['type' => 'composer', 'url' => 'https://composer.yireo.com/'],
+            ['type' => 'composer', 'url' => 'https://repo.packagist.org'],
             $composer['repositories'],
         );
     }

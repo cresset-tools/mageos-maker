@@ -184,7 +184,7 @@ bin/magento cache:flush</code></pre><button type="button" class="cmd-copy" oncli
                 <div class="loki-setup" id="loki-setup" @unless ($usesLokiCheckout) hidden @endunless>
                     <div class="loki-setup-h"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5l1.8 4.2 4.7.4-3.6 3 1.1 4.5L8 11.2 3.9 13.6 5 9.1 1.4 6.1l4.7-.4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg> Loki Checkout setup</div>
                     <div class="hyva-pane">
-                        <p class="hy-intro">Loki Checkout (Hyvä) needs <b>Alpine.js 3</b> and <b>Hyvä Themes 1.4+</b>. It installs with the composer build above; run these <b>after</b> <code>composer install</code> to finish setup. See the <a href="https://docs.loki-extensions.com/checkout/dev/getting-started/installation-hyva" target="_blank" rel="noopener">Loki docs</a>.</p>
+                        <p class="hy-intro">Loki Checkout is open source (OSL-3.0) and installs from Packagist — no license key needed. The Hyvä variant needs <b>Alpine.js 3</b> and <b>Hyvä Themes 1.4+</b>. It installs with the composer build above; run these <b>after</b> <code>composer install</code> to finish setup. See the <a href="https://docs.loki-extensions.com/checkout/dev/getting-started/installation-hyva" target="_blank" rel="noopener">Loki docs</a>.</p>
                         <ol class="hy-steps">
                             <li><div class="hy-st">Enable the Loki &amp; Yireo modules</div><div class="cmd-row"><pre class="cmd"><code>bin/magento module:enable $(bin/magento module:status | grep -E 'Yireo|Loki')</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div></li>
                             <li><div class="hy-st">Register the modules with Hyvä</div><div class="cmd-row"><pre class="cmd"><code>bin/magento hyva:config:generate
@@ -192,6 +192,7 @@ bin/magento setup:upgrade</code></pre><button type="button" class="cmd-copy" onc
                             <li><div class="hy-st">Rebuild your theme's Tailwind CSS</div><div class="cmd-row"><pre class="cmd"><code>cd app/design/frontend/&lt;Vendor&gt;/&lt;theme&gt;/web/tailwind
 npm install &amp;&amp; npm run build</code></pre><button type="button" class="cmd-copy" onclick="copyCmd(this)" aria-label="Copy">{!! $copyIcon !!}</button></div></li>
                         </ol>
+                        <div class="hy-note">If you use <code>Hyva_ThemeFallback</code>, make sure “Apply fallback to requests containing” does not include <code>checkout/index</code>.</div>
                         <div class="hy-note">Don't enable both Hyvä Checkout and Loki Checkout at the same time — pick one in the Checkout step.</div>
                     </div>
                 </div>

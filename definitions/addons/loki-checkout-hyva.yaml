@@ -1,11 +1,12 @@
 name: loki-checkout-hyva
 label: Loki Checkout (Hyvä)
-description: Loki Checkout for Hyvä themes (commercial)
+description: Loki Checkout for Hyvä themes (open source, OSL-3.0)
 packages:
   - loki-checkout/magento2-hyva
+# Open source (OSL-3.0) since the Loki core was published on Packagist.
 repositories:
   - type: composer
-    url: https://composer.yireo.com/
+    url: https://repo.packagist.org
 # Post-install steps bougie can't run for the user (CLI commands, asset
 # rebuilds). Surfaced verbatim in the starter manifest's `notes` when this
 # add-on's package lands in the build. See docs.loki-extensions.com →
@@ -15,4 +16,5 @@ notes:
   - "Loki Checkout: enable the modules — bin/magento module:enable $(bin/magento module:status | grep -E 'Yireo|Loki')"
   - 'Loki Checkout: register the modules with Hyvä — bin/magento hyva:config:generate (writes app/etc/hyva-themes.json).'
   - 'Loki Checkout: rebuild Tailwind in your theme — cd app/design/frontend/<Vendor>/<theme>/web/tailwind && npm run build.'
+  - 'Loki Checkout: if you use Hyva_ThemeFallback, make sure "Apply fallback to requests containing" does not include checkout/index.'
   - 'Loki Checkout: do not enable both Hyvä Checkout and Loki Checkout at the same time.'

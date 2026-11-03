@@ -1,8 +1,9 @@
 name: loki-checkout-luma
 label: Loki Checkout (Luma)
-description: Loki Checkout for the stock Luma theme (commercial)
+description: Loki Checkout for the stock Luma theme (open source, OSL-3.0)
 packages:
   - loki-checkout/magento2-luma
+# Open source (OSL-3.0) since the Loki core was published on Packagist.
 repositories:
   - type: composer
-    url: https://composer.yireo.com/
+    url: https://repo.packagist.org

@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Storage;
 /**
  * Aggregator over a list of "eager" composer repositories — those that
  * expose a `packages.json` (optionally with `includes`) listing every
- * package and version. Hyvä's private Packagist and yireo.com both
- * publish in this format. Lazy-provider repos (Packagist itself, with
+ * package and version. Hyvä's private Packagist publishes in this
+ * format. Lazy-provider repos (Packagist itself, with
  * `metadata-url` / `provider-includes`) are out of scope here; callers
  * fall back to per-package fetches for those.
  *

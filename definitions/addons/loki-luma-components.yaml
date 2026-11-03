@@ -3,6 +3,7 @@ label: LokiTheme LumaComponents
 description: Strips unused Luma JavaScript for Loki Checkout (Luma)
 packages:
   - loki-theme/magento2-luma-components
+# Open source (OSL-3.0) since the Loki core was published on Packagist.
 repositories:
   - type: composer
-    url: https://composer.yireo.com/
+    url: https://repo.packagist.org
