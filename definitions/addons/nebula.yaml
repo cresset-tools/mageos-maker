@@ -1,8 +1,20 @@
 name: nebula
 label: Nebula Admin Theme
-description: Modern Magento admin theme by qoliber (Alpine.js + Tailwind, replaces the legacy RequireJS/Knockout admin)
+description: Modern Magento admin theme by qoliber (Alpine.js + Tailwind, replaces the legacy RequireJS/Knockout admin). Free, but needs a Composer key from qoliber.com.
+# Nebula 1.0+ requires magento/framework ~103.0.9, which Mage-OS ships from
+# 3.5.0 (the release qoliber tests against). The old Packagist package
+# (qoliber/nebula-admin-theme 0.9.x) is abandoned in favour of this one.
+since: "3.5.0"
 packages:
-  - qoliber/nebula-admin-theme
+  - nebula/admin
+# qoliber's registry needs a free key, sent as a Composer bearer token. The
+# catalog update can't read it without one, so the require falls back to `*`.
 repositories:
   - type: composer
-    url: https://repo.packagist.org
+    url: https://composer.qoliber.com/r/nebula
+# See qoliber.com/nebula-docs → getting-started/install.
+notes:
+  - 'Nebula is free but needs a Composer key: check out Nebula at €0 on https://qoliber.com/nebula-admin.html, then copy the key from My Account → Nebula Keys.'
+  - 'Nebula: add the key before composer install — composer config --global --auth bearer.composer.qoliber.com <YOUR_NEBULA_KEY>'
+  - 'Nebula: run bin/magento setup:upgrade, then bin/magento nebula:media:index. In production mode also run bin/magento nebula:compile after setup:di:compile.'
+  - 'Nebula: needs Magento_TwoFactorAuth enabled and script-src ''unsafe-eval'' in the admin CSP. Check the install with bin/magento nebula:doctor.'
