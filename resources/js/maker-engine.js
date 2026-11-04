@@ -107,14 +107,9 @@ export const engine = {
   isSetRemovable(name) {
     const s = D.sets[name];
     if (!s) return true;
-    if (this.s.distribution !== 'modulargento') return s.removable !== false;
-    if (s.removable_modulargento === false) return false;
-    // Decoupled only from a later modulargento release on: compare with the
-    // release backing the chosen Mage-OS version (Definitions::isSetRemovable).
-    const since = s.removable_modulargento_since ?? null;
-    if (since === null) return true;
-    const release = D.modulargentoReleases?.[this.s.version];
-    return !!release && cmp(release, since) >= 0;
+    return this.s.distribution === 'modulargento'
+      ? s.removable_modulargento !== false
+      : s.removable !== false;
   },
   isLayerRemovable(name) {
     const l = D.layers[name];

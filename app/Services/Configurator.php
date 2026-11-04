@@ -172,7 +172,7 @@ class Configurator
             // install. Skip it (keep the module). This lets a profile list every
             // set it would ideally drop: the locked ones are no-ops on standard
             // Mage-OS but really come out under the fully-modular distribution.
-            if (! $forceRemovable && ! $this->defs->isSetRemovable($set, $selection->distribution, $this->modulargentoRelease($selection->version))) {
+            if (! $forceRemovable && ! $this->defs->isSetRemovable($set, $selection->distribution)) {
                 continue;
             }
             foreach ($this->defs->setPackageEntries($set) as $entry) {
@@ -501,25 +501,7 @@ class Configurator
             return '*';
         }
 
-        if ($this->isModulargentoStandalone($declaredName)) {
-            return '*';
-        }
-
-        return $selection->distribution === 'modulargento'
-            ? $this->modulargentoRelease($selection->version)
-            : $selection->version;
-    }
-
-    /**
-     * The modulargento release that backs a Mage-OS version. Usually the same
-     * number, but a fork-only fix ships as a patch release Mage-OS doesn't have
-     * (4.0.2 on Mage-OS 4.0.0), set by the version entry's `release` key.
-     */
-    public function modulargentoRelease(string $version): string
-    {
-        $release = $this->modulargento['versions'][$version]['release'] ?? null;
-
-        return is_string($release) && $release !== '' ? $release : $version;
+        return $this->isModulargentoStandalone($declaredName) ? '*' : $selection->version;
     }
 
     /**
@@ -813,7 +795,7 @@ class Configurator
             $template = $entry['project_template'] ?? null;
         }
         $repoUrl = $entry['repository_url'] ?? 'https://modulargento.cresset.tools/';
-        $editionVersion = $this->modulargentoRelease($version);
+        $editionVersion = $version;
         $phpConstraint = $entry['php_constraint'] ?? null;
 
         // Maker-owned config block, merged over whatever the template carries.

@@ -67,11 +67,9 @@ class ModulargentoFlavorTest extends TestCase
                 "modulargento $version should strip the locked gift-message set",
             );
             // The per-version template resolves end-to-end: the project pins the
-            // product edition of the modulargento release backing the version
-            // (usually the same number; see the `release` key).
-            $release = (string) (config('mageos.modulargento.versions')[$version]['release'] ?? $version);
+            // matching product edition for the selected version.
             $this->assertSame(
-                $release,
+                $version,
                 $composer['require']['modulargento/product-community-edition'] ?? null,
                 "modulargento $version should pin the matching product edition",
             );
