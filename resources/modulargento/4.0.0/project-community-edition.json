@@ -1,15 +1,16 @@
 {
     "name": "modulargento/project-community-edition",
     "require": {
-        "modulargento/product-community-edition": "3.0.0"
+        "modulargento/product-community-edition": "4.0.0"
     },
     "require-dev": {
         "allure-framework/allure-phpunit": "^3.2",
         "dealerdirect/phpcodesniffer-composer-installer": "^0.7 || ^1.0",
         "dg/bypass-finals": "^1.4",
         "friendsofphp/php-cs-fixer": "^3.22",
-        "modulargento/magento-coding-standard": "3.0.0",
-        "modulargento/magento2-functional-testing-framework": "3.0.0",
+        "inchoo/magento-bricklayer": "^1.18",
+        "modulargento/magento-coding-standard": "4.0.0",
+        "modulargento/magento2-functional-testing-framework": "4.0.0",
         "pdepend/pdepend": "^3@dev",
         "phpmd/phpmd": "^3@dev",
         "phpstan/phpstan": "^1.9",

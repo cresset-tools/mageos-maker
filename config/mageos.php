@@ -70,37 +70,45 @@ return [
         // verbatim as the base so the generated project carries every key a
         // Mage-OS project does (require-dev, autoload-dev, license, …). Add a new
         // entry (and its template under resources/modulargento/<version>/) when a
-        // new modulargento release ships. 3.0.0, 3.1.0 and 3.2.0 all target PHP
+        // new modulargento release ships. Every release so far targets PHP
         // 8.4: their published packages inherit the Magento 2.4.9 base's
         // ~8.2.0||~8.3.0||~8.4.0 ceiling (e.g. modulargento/framework-graph-ql),
         // so the project must NOT advertise 8.5 — composer would refuse to
         // install it on 8.5.
         'versions' => [
-            '3.0.0' => [
-                'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.4.0'),
-                'project_template_path' => base_path('resources/modulargento/3.0.0/project-community-edition.json'),
-            ],
             '3.1.0' => [
                 'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.4.0'),
                 'project_template_path' => base_path('resources/modulargento/3.1.0/project-community-edition.json'),
-                // Published by the mirror-repo build (2026-07-04) — unlocks the
-                // additive ("inverse") mode for modulargento on this version.
-                // 3.0.0 stays subtractive-only: the live repo serves one release
-                // at a time and no 3.0.0 minimal edition was ever published.
+                // Oldest release modulargento.cresset.tools still serves (3.0.0
+                // was dropped from the repo, so it is no longer offered here).
                 'minimal_edition_package' => 'modulargento/project-minimal-edition',
                 'minimal_project_template_path' => base_path('resources/modulargento/3.1.0/project-minimal-edition.json'),
             ],
             '3.2.0' => [
                 'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.4.0'),
                 'project_template_path' => base_path('resources/modulargento/3.2.0/project-community-edition.json'),
-                // Current release. Built from the fork's upstream sync that
-                // carries Mage-OS 3.2.0 (Adobe isolated security patch
-                // 249-2026-07-001). Like 3.1.0 it ships a published minimal
+                // Built from the fork's upstream sync that carries Mage-OS
+                // 3.2.0 (Adobe isolated security patch 249-2026-07-001). Like 3.1.0 it ships a published minimal
                 // edition, so additive ("inverse") mode is available; and like
                 // 3.1.0 its framework-graph-ql caps PHP at 8.4 despite the core
                 // packages advertising 8.5, so php_constraint stays ~8.4.0.
                 'minimal_edition_package' => 'modulargento/project-minimal-edition',
                 'minimal_project_template_path' => base_path('resources/modulargento/3.2.0/project-minimal-edition.json'),
+            ],
+            '3.5.0' => [
+                // Mage-OS 3.5.0, on the Magento 2.4.9 base.
+                'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.4.0'),
+                'project_template_path' => base_path('resources/modulargento/3.5.0/project-community-edition.json'),
+                'minimal_edition_package' => 'modulargento/project-minimal-edition',
+                'minimal_project_template_path' => base_path('resources/modulargento/3.5.0/project-minimal-edition.json'),
+            ],
+            '4.0.0' => [
+                // Mage-OS 4.0.0 (current release). Its replace map is still
+                // Magento 2.4.9, so the PHP ceiling is unchanged.
+                'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.4.0'),
+                'project_template_path' => base_path('resources/modulargento/4.0.0/project-community-edition.json'),
+                'minimal_edition_package' => 'modulargento/project-minimal-edition',
+                'minimal_project_template_path' => base_path('resources/modulargento/4.0.0/project-minimal-edition.json'),
             ],
         ],
     ],
