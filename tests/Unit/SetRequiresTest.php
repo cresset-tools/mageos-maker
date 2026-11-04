@@ -40,6 +40,18 @@ class SetRequiresTest extends TestCase
                     'requires' => ['set' => 'luma'],
                     'packages' => ['acme/theme-child'],
                 ],
+                'reviews' => [
+                    'name' => 'reviews',
+                    'label' => 'Reviews',
+                    'packages' => ['acme/module-review'],
+                ],
+                // A list of required sets: removing ANY of them cascades.
+                'feed' => [
+                    'name' => 'feed',
+                    'label' => 'Feed',
+                    'requires' => ['set' => ['webapi', 'reviews']],
+                    'packages' => ['acme/module-feed'],
+                ],
             ],
             layers: [], addons: [], profileGroups: [], profiles: [],
         );
@@ -61,8 +73,24 @@ class SetRequiresTest extends TestCase
     public function test_set_required_set_accessor(): void
     {
         $defs = $this->defs();
-        $this->assertSame('webapi', $defs->setRequiredSet('luma'));
-        $this->assertNull($defs->setRequiredSet('webapi'));
+        $this->assertSame(['webapi'], $defs->setRequiredSets('luma'));
+        $this->assertSame([], $defs->setRequiredSets('webapi'));
+        $this->assertSame(['webapi', 'reviews'], $defs->setRequiredSets('feed'));
+    }
+
+    public function test_disabling_any_of_several_required_sets_cascades(): void
+    {
+        $defs = $this->defs();
+        $cfg = $this->configurator($defs);
+
+        // feed needs webapi AND reviews: dropping only reviews must take it out.
+        $composer = $cfg->build(new Selection('1.0.0', null, ['reviews'], [], [], [], [], []));
+        $this->assertArrayHasKey('acme/module-feed', $composer['replace']);
+        $this->assertArrayNotHasKey('acme/theme-frontend-luma', $composer['replace']);
+
+        // With both kept, feed stays.
+        $composer = $cfg->build(new Selection('1.0.0', null, [], [], [], [], [], []));
+        $this->assertArrayNotHasKey('acme/module-feed', $composer['replace'] ?? []);
     }
 
     public function test_disabling_required_set_cascades_to_dependent(): void

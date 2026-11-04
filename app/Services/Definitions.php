@@ -60,29 +60,47 @@ class Definitions
     }
 
     /**
-     * The set this set depends on, if any. A set declaring
-     * `requires: { set: <name> }` can't function when that set is removed, so
-     * the configurator force-disables it (and the UI greys it out) when the
-     * required set is gone. One level deep is enough for the cases we model;
-     * {@see Configurator::cascadeSetRequires()} loops to a fixpoint to also
-     * cover chains.
+     * The sets this set depends on. A set declaring `requires: { set: <name> }`
+     * (or a list, `set: [a, b]`) can't function when any of them is removed, so
+     * the configurator force-disables it (and the UI greys it out) when a
+     * required set is gone. {@see Configurator::cascadeSetRequires()} loops to
+     * a fixpoint to also cover chains.
+     *
+     * @return list<string>
      */
-    public function setRequiredSet(string $name): ?string
+    public function setRequiredSets(string $name): array
     {
-        return $this->sets[$name]['requires']['set'] ?? null;
+        return self::nameList($this->sets[$name]['requires']['set'] ?? null);
     }
 
     /**
-     * The layer this set depends on, if any. A set declaring
-     * `requires: { layer: <name> }` can't function when that layer is removed,
-     * so the configurator force-disables it (and the UI greys it out) when the
-     * required layer is gone — e.g. the Luma theme needs the Web API layer for
-     * its storefront (checkout/customer-data REST calls). Handled alongside
-     * `requires.set` by {@see Configurator::cascadeSetRequires()}.
+     * The layers this set depends on. A set declaring
+     * `requires: { layer: <name> }` (or a list) can't function when any of them
+     * is removed, so the configurator force-disables it (and the UI greys it
+     * out) when a required layer is gone — e.g. the Luma theme needs the Web
+     * API layer for its storefront (checkout/customer-data REST calls). Handled
+     * alongside `requires.set` by {@see Configurator::cascadeSetRequires()}.
+     *
+     * @return list<string>
      */
-    public function setRequiredLayer(string $name): ?string
+    public function setRequiredLayers(string $name): array
     {
-        return $this->sets[$name]['requires']['layer'] ?? null;
+        return self::nameList($this->sets[$name]['requires']['layer'] ?? null);
+    }
+
+    /**
+     * Normalise a `requires.set` / `requires.layer` value, which may be a single
+     * name or a list of names, to a list.
+     *
+     * @return list<string>
+     */
+    public static function nameList(mixed $value): array
+    {
+        if ($value === null || $value === '') {
+            return [];
+        }
+
+        return array_values(array_map('strval', (array) $value));
     }
 
     public function subtogglePackages(string $set, string $sub): array
@@ -155,6 +173,11 @@ class Definitions
      *                                 the running require map (i.e. its base
      *                                 module hasn't been replaced away)
      *
+     * An entry may also carry `since` / `until` (inclusive lower / exclusive
+     * upper) to limit it to the Mage-OS versions that ship it — e.g.
+     * module-meta-robots-tag, dropped in 4.0.0, where the SEO module conflicts
+     * with it.
+     *
      * Entries without `requires` always contribute, preserving the legacy
      * "list of strings" behaviour.
      *
@@ -176,6 +199,11 @@ class Definitions
             $entry = ['name' => $e['name']];
             if (isset($e['requires']) && is_array($e['requires'])) {
                 $entry['requires'] = $e['requires'];
+            }
+            foreach (['since', 'until'] as $bound) {
+                if (isset($e[$bound])) {
+                    $entry[$bound] = (string) $e[$bound];
+                }
             }
             $out[] = $entry;
         }
@@ -271,7 +299,7 @@ class Definitions
      *
      * @param  array<string,mixed>  $def
      */
-    private function versionInRange(array $def, string $version): bool
+    public function versionInRange(array $def, string $version): bool
     {
         $since = $def['since'] ?? null;
         $until = $def['until'] ?? null;

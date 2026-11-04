@@ -124,4 +124,29 @@ class PackageGateTest extends TestCase
         $this->assertArrayHasKey('mage-os/module-graph-ql', $composer['replace']);
         $this->assertArrayNotHasKey('mage-os/module-paypal-graph-ql', $composer['replace']);
     }
+
+    public function test_package_entry_until_gates_it_out_from_that_version(): void
+    {
+        $defs = new Definitions(
+            sets: [
+                'robots' => [
+                    'name' => 'robots',
+                    'label' => 'Robots',
+                    'packages' => [
+                        'mage-os/module-robots',
+                        ['name' => 'mage-os/module-meta-robots-tag', 'until' => '4.0.0'],
+                    ],
+                ],
+            ],
+            layers: [], addons: [], profileGroups: [], profiles: [],
+        );
+        $cfg = $this->configurator($defs);
+
+        $old = $cfg->build(new Selection('3.5.0', null, ['robots'], [], [], [], [], []));
+        $this->assertArrayHasKey('mage-os/module-meta-robots-tag', $old['replace']);
+
+        $new = $cfg->build(new Selection('4.0.0', null, ['robots'], [], [], [], [], []));
+        $this->assertArrayHasKey('mage-os/module-robots', $new['replace']);
+        $this->assertArrayNotHasKey('mage-os/module-meta-robots-tag', $new['replace']);
+    }
 }

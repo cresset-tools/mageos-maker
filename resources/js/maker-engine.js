@@ -120,8 +120,15 @@ export const engine = {
   },
 
   /* ---------- requires accessors ---------- */
-  setRequiredSet(name) { return D.sets[name]?.requires?.set ?? null; },
-  setRequiredLayer(name) { return D.sets[name]?.requires?.layer ?? null; },
+  setRequiredSets(name) { return D.sets[name]?.requires?.sets ?? []; },
+  setRequiredLayers(name) { return D.sets[name]?.requires?.layers ?? []; },
+  /** The required sets/layers of a module that are currently off, as {kind, name}. */
+  setMissingRequires(name) {
+    return [
+      ...this.setRequiredSets(name).filter((s) => !this.s.enabledSets.includes(s)).map((s) => ({ kind: 'set', name: s })),
+      ...this.setRequiredLayers(name).filter((l) => !this.s.enabledStockLayers.includes(l)).map((l) => ({ kind: 'layer', name: l })),
+    ];
+  },
   subtoggleRequiredSet(set, sub) {
     return (D.sets[set]?.subtoggles || []).find((x) => x.name === sub)?.requires?.set ?? null;
   },
@@ -249,13 +256,9 @@ export const engine = {
     if (this.overrides.has(name)) return 'you';
     return this.moduleOn(name) ? 'profile' : null;
   },
-  /** Whether a module's requires.set / requires.layer dependency is satisfied. */
+  /** Whether every requires.set / requires.layer dependency of a module is satisfied. */
   setRequiresMet(name) {
-    const rs = this.setRequiredSet(name);
-    if (rs !== null && !this.s.enabledSets.includes(rs)) return false;
-    const rl = this.setRequiredLayer(name);
-    if (rl !== null && !this.s.enabledStockLayers.includes(rl)) return false;
-    return true;
+    return this.setMissingRequires(name).length === 0;
   },
 
   /* ---------- cascade enforcement (UI) ---------- */
@@ -263,13 +266,7 @@ export const engine = {
     let changed = true;
     while (changed) {
       const before = this.s.enabledSets.length;
-      this.s.enabledSets = this.s.enabledSets.filter((set) => {
-        const rs = this.setRequiredSet(set);
-        if (rs !== null && !this.s.enabledSets.includes(rs)) return false;
-        const rl = this.setRequiredLayer(set);
-        if (rl !== null && !this.s.enabledStockLayers.includes(rl)) return false;
-        return true;
-      });
+      this.s.enabledSets = this.s.enabledSets.filter((set) => this.setRequiresMet(set));
       changed = this.s.enabledSets.length !== before;
     }
   },

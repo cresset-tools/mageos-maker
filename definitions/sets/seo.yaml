@@ -1,0 +1,11 @@
+name: seo
+label: Mage-OS SEO
+description: JSON-LD structured data, meta tags and canonical URL management (MageOS_Seo). Bundled in stock Mage-OS from 4.0.0; the AEO and FAQ modules build on it.
+category: module
+since: 4.0.0
+requires:
+  set: [reviews, sitemap]
+  layer: message-queue
+packages:
+  - mage-os/module-seo
+group: Marketing & Content

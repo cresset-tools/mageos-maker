@@ -1,0 +1,10 @@
+name: shopping-feed
+label: Shopping feeds
+description: Product feed generation for Google Shopping and other channels (MageOS_ShoppingFeed). Bundled in stock Mage-OS from 4.0.0. Covers every product type, so it goes when any of them is removed.
+category: module
+since: 4.0.0
+requires:
+  set: [bundle, downloadable, grouped, msrp, reviews, weee]
+packages:
+  - mage-os/module-shopping-feed
+group: Marketing & Content

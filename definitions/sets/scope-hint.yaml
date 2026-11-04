@@ -1,0 +1,8 @@
+name: scope-hint
+label: Config scope hints
+description: Admin hint when a configuration value is overridden at website or store-view scope (AvS_ScopeHint). Bundled in stock Mage-OS from 4.0.0.
+category: module
+since: 4.0.0
+packages:
+  - avstudnitz/scopehint2
+group: Admin, Ops & Developer

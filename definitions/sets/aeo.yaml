@@ -1,0 +1,10 @@
+name: aeo
+label: AI discoverability (AEO)
+description: llms.txt, llms-full.txt and llms.jsonl feeds plus AI crawler directives (MageOS_Aeo). Bundled in stock Mage-OS from 4.0.0.
+category: module
+since: 4.0.0
+requires:
+  set: [seo, aws-s3, robots, sitemap]
+packages:
+  - mage-os/module-aeo
+group: Marketing & Content

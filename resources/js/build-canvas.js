@@ -237,8 +237,9 @@ function buildModules() {
       const disabled = locked || !reqMet;
       let needs = '';
       if (!reqMet) {
-        const rl = E.setRequiredSet(name) ? (E.set(E.setRequiredSet(name))?.label || E.setRequiredSet(name))
-          : (E.layer(E.setRequiredLayer(name))?.label || E.setRequiredLayer(name));
+        const rl = E.setMissingRequires(name)
+          .map((r) => (r.kind === 'set' ? E.set(r.name)?.label : E.layer(r.name)?.label) || r.name)
+          .join(', ');
         needs = ' <span class="badge gray">needs ' + esc(rl) + '</span>';
       }
       const hay = (name + ' ' + s.label + ' ' + s.description).toLowerCase().replace(/[^a-z0-9 ]/g, '');

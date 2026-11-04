@@ -68,6 +68,7 @@ class Configurator
             'layers' => array_flip($effectiveEnabledLayers),
             'disabledSets' => array_flip($disabledSets),
             'disabledLayers' => array_flip($disabledLayers),
+            'version' => $selection->version,
         ];
 
         // Add-ons: append to require, pinning to the latest known version
@@ -374,6 +375,9 @@ class Configurator
      */
     private function packageAllowed(array $entry, array $ctx, array $require): bool
     {
+        if (! $this->defs->versionInRange($entry, $ctx['version'] ?? '')) {
+            return false;
+        }
         $req = $entry['requires'] ?? null;
         if (! is_array($req)) {
             return true;
@@ -416,10 +420,9 @@ class Configurator
                 if (isset($disabled[$set])) {
                     continue;
                 }
-                $neededSet = $this->defs->setRequiredSet($set);
-                $neededLayer = $this->defs->setRequiredLayer($set);
-                if (($neededSet !== null && isset($disabled[$neededSet]))
-                    || ($neededLayer !== null && isset($removedLayerMap[$neededLayer]))) {
+                $missingSet = array_filter($this->defs->setRequiredSets($set), fn ($s) => isset($disabled[$s]));
+                $missingLayer = array_filter($this->defs->setRequiredLayers($set), fn ($l) => isset($removedLayerMap[$l]));
+                if ($missingSet !== [] || $missingLayer !== []) {
                     $disabled[$set] = true;
                     $added = true;
                 }
@@ -488,10 +491,16 @@ class Configurator
      * bundled-extension forks (page-builder-widget, admin-activity-log, …)
      * version independently of the release in BOTH distributions — the repos
      * serve them at their own tags (e.g. 1.5.x) — so an edition-version pin
-     * would never resolve for them.
+     * would never resolve for them. The same goes for third-party packages the
+     * edition bundles (avstudnitz/scopehint2, mago-assistant/*): anything
+     * outside the `mage-os/` vendor has its own version line.
      */
     private function additiveStockConstraint(string $declaredName, Selection $selection): string
     {
+        if (! str_starts_with($declaredName, 'mage-os/')) {
+            return '*';
+        }
+
         return $this->isModulargentoStandalone($declaredName) ? '*' : $selection->version;
     }
 

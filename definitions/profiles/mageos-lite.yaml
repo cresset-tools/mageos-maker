@@ -75,6 +75,15 @@ selection:
     - robots
     - theme-optimization
     - varnish-extended
+    # Bundled from Mage-OS 4.0.0 (ignored on older versions).
+    - aeo
+    - extension-directory
+    - faq
+    - mago-assistant
+    - passkey-auth
+    - scope-hint
+    - seo
+    - shopping-feed
     # English only.
     - language-de_de
     - language-es_es

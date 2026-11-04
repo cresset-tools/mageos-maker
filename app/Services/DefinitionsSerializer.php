@@ -141,8 +141,8 @@ class DefinitionsSerializer
                 'removable' => ($s['removable'] ?? true) !== false,
                 'removable_modulargento' => ($s['removable_modulargento'] ?? true) !== false,
                 'requires' => [
-                    'set' => $s['requires']['set'] ?? null,
-                    'layer' => $s['requires']['layer'] ?? null,
+                    'sets' => Definitions::nameList($s['requires']['set'] ?? null),
+                    'layers' => Definitions::nameList($s['requires']['layer'] ?? null),
                 ],
                 'subtoggles' => array_map(fn ($sub) => [
                     'name' => $sub['name'],

@@ -1,0 +1,12 @@
+name: mago-assistant
+label: Mago AI assistant
+description: AI admin assistant that chats with your store through Anthropic, OpenAI and other providers (MagoAssistant_Mago), with the Mage-OS AI base it runs on. Bundled in stock Mage-OS from 4.0.0.
+category: module
+since: 4.0.0
+requires:
+  set: reports
+  layer: webapi
+packages:
+  - mago-assistant/magento2-mago
+  - mage-os/module-ai-base
+group: Admin, Ops & Developer

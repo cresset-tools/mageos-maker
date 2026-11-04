@@ -1,0 +1,10 @@
+name: passkey-auth
+label: Passkey login
+description: Passkey (WebAuthn) authentication for customer accounts (MageOS_PasskeyAuth). Bundled in stock Mage-OS from 4.0.0; modulargento 4.0.0 does not ship it.
+category: module
+since: 4.0.0
+requires:
+  set: two-factor-auth
+packages:
+  - mage-os/module-passkey-auth
+group: Security

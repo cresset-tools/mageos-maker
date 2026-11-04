@@ -59,8 +59,8 @@ class LayerRequiresTest extends TestCase
     public function test_set_required_layer_accessor(): void
     {
         $defs = $this->defs();
-        $this->assertSame('webapi', $defs->setRequiredLayer('luma'));
-        $this->assertNull($defs->setRequiredLayer('webapi'));
+        $this->assertSame(['webapi'], $defs->setRequiredLayers('luma'));
+        $this->assertSame([], $defs->setRequiredLayers('webapi'));
     }
 
     public function test_layer_removability_is_distribution_aware(): void

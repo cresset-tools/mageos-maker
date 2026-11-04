@@ -1,0 +1,10 @@
+name: faq
+label: FAQ
+description: FAQ entries with an admin manager, a widget and a Page Builder content type (MageOS_Faq). Bundled in stock Mage-OS from 4.0.0.
+category: module
+since: 4.0.0
+requires:
+  set: [seo, page-builder]
+packages:
+  - mage-os/module-faq
+group: Marketing & Content

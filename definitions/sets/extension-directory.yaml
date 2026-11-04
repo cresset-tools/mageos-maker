@@ -1,0 +1,8 @@
+name: extension-directory
+label: Extension Directory
+description: Browse the Mage-OS Extension Directory from the admin panel (MageOS_ExtensionDirectory). Bundled in stock Mage-OS from 4.0.0.
+category: module
+since: 4.0.0
+packages:
+  - mage-os/module-extension-directory
+group: Admin, Ops & Developer

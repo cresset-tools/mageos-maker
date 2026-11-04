@@ -50,6 +50,17 @@ return [
             'mage-os/module-page-builder-template-import-export',
             'mage-os/module-inventory-reservations-grid',
             'mage-os/theme-adminhtml-m137',
+            // Bundled from 4.0.0, required un-renamed by
+            // modulargento/product-community-edition 4.0.0.
+            'mage-os/module-seo',
+            'mage-os/module-aeo',
+            'mage-os/module-faq',
+            'mage-os/module-shopping-feed',
+            'mage-os/module-extension-directory',
+            'mage-os/module-ai-base',
+            // Not in modulargento 4.0.0, but versioned on its own line in
+            // stock Mage-OS, so additive builds must not pin it to the release.
+            'mage-os/module-passkey-auth',
         ],
         // Maker SET names the LEANER modulargento minimal edition drops from
         // the standard minimal keep-set (mirrors removeExtra in the mirror-repo
