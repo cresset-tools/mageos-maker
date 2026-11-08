@@ -272,16 +272,27 @@ class Definitions
      * Under the fully-modular (modulargento) distribution every set the removal
      * matrix covers is decoupled, so a set that's locked in stock Mage-OS
      * becomes removable — unless it explicitly opts out via
-     * `removable_modulargento: false`.
+     * `removable_modulargento: false`, or is decoupled only from a later
+     * modulargento release on (`removable_modulargento_since`, compared with
+     * `$modulargentoRelease`; an unknown release keeps the set locked).
      */
-    public function isSetRemovable(string $name, string $distribution = 'standard'): bool
+    public function isSetRemovable(string $name, string $distribution = 'standard', string $modulargentoRelease = ''): bool
     {
         if (! array_key_exists($name, $this->sets)) {
             return true;
         }
 
         if ($distribution === 'modulargento') {
-            return ($this->sets[$name]['removable_modulargento'] ?? true) !== false;
+            if (($this->sets[$name]['removable_modulargento'] ?? true) === false) {
+                return false;
+            }
+            $since = $this->sets[$name]['removable_modulargento_since'] ?? null;
+            if ($since === null) {
+                return true;
+            }
+
+            return $modulargentoRelease !== ''
+                && $this->versionInRange(['since' => (string) $since], $modulargentoRelease);
         }
 
         return ($this->sets[$name]['removable'] ?? true) !== false;

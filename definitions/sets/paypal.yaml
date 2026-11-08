@@ -1,6 +1,8 @@
 name: paypal
 label: PayPal
 description: PayPal payment integration
+requires:
+  set: content-security-policy  # PayPal uses Csp nonces for its inline scripts
 packages:
   - mage-os/module-paypal
   - mage-os/module-paypal-captcha

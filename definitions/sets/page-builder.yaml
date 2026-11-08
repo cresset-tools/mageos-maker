@@ -1,6 +1,8 @@
 name: page-builder
 label: Page Builder
 description: Drag-and-drop content builder for CMS, products and categories
+requires:
+  set: catalog-widget  # Page Builder's Products content type is built on CatalogWidget
 packages:
   - mage-os/page-builder
   - mage-os/module-page-builder

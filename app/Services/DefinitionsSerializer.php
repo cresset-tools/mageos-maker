@@ -50,6 +50,9 @@ class DefinitionsSerializer
                 'strval',
                 array_keys((array) config('mageos.modulargento.versions', [])),
             )),
+            // Mage-OS version => the modulargento release backing it, for the
+            // client's `removable_modulargento_since` gating.
+            'modulargentoReleases' => $this->modulargentoReleases(),
             'defaultProfile' => $this->defs->defaultProfile(),
             // Additive ("inverse") mode support: for each distribution, the
             // versions where additive is offered, mapped to the set/layer names
@@ -75,6 +78,17 @@ class DefinitionsSerializer
                 'savedSnapshot' => $savedMeta['savedSnapshot'] ?? null,
             ],
         ];
+    }
+
+    /** @return array<string,string> */
+    private function modulargentoReleases(): array
+    {
+        $out = [];
+        foreach (array_keys((array) config('mageos.modulargento.versions', [])) as $version) {
+            $out[(string) $version] = $this->configurator->modulargentoRelease((string) $version);
+        }
+
+        return $out;
     }
 
     /** @return array<string,array<string,mixed>> */
@@ -140,6 +154,7 @@ class DefinitionsSerializer
                 'until' => $s['until'] ?? null,
                 'removable' => ($s['removable'] ?? true) !== false,
                 'removable_modulargento' => ($s['removable_modulargento'] ?? true) !== false,
+                'removable_modulargento_since' => $s['removable_modulargento_since'] ?? null,
                 'requires' => [
                     'sets' => Definitions::nameList($s['requires']['set'] ?? null),
                     'layers' => Definitions::nameList($s['requires']['layer'] ?? null),
