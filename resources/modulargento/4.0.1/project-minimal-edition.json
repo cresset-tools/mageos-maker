@@ -1,7 +1,7 @@
 {
-    "name": "modulargento/project-community-edition",
+    "name": "modulargento/project-minimal-edition",
     "require": {
-        "modulargento/product-community-edition": "4.0.0"
+        "modulargento/product-minimal-edition": "4.0.1"
     },
     "require-dev": {
         "allure-framework/allure-phpunit": "^3.2",
@@ -9,8 +9,8 @@
         "dg/bypass-finals": "^1.4",
         "friendsofphp/php-cs-fixer": "^3.22",
         "inchoo/magento-bricklayer": "^1.18",
-        "modulargento/magento-coding-standard": "4.0.0",
-        "modulargento/magento2-functional-testing-framework": "4.0.0",
+        "modulargento/magento-coding-standard": "4.0.1",
+        "modulargento/magento2-functional-testing-framework": "4.0.1",
         "pdepend/pdepend": "^3@dev",
         "phpmd/phpmd": "^3@dev",
         "phpstan/phpstan": "^1.9",
@@ -61,5 +61,5 @@
         "OSL-3.0",
         "AFL-3.0"
     ],
-    "description": "Community-built eCommerce Platform for Growth"
+    "description": "Modulargento Minimal Edition Project"
 }

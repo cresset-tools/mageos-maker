@@ -37,6 +37,14 @@ class ModulargentoDistributionTest extends TestCase
                     'removable_modulargento' => false,
                     'packages' => ['mage-os/module-core-thing'],
                 ],
+                // Decoupled only from modulargento 4.0.1 on.
+                'csp' => [
+                    'name' => 'csp',
+                    'label' => 'CSP',
+                    'removable' => false,
+                    'removable_modulargento_since' => '4.0.1',
+                    'packages' => ['mage-os/module-csp'],
+                ],
                 // Removable under both distributions (an optional feature).
                 'paypal' => [
                     'name' => 'paypal',
@@ -268,5 +276,46 @@ class ModulargentoDistributionTest extends TestCase
                 "build $version should use the $version php constraint",
             );
         }
+    }
+
+    public function test_removable_modulargento_since_gates_on_the_backing_release(): void
+    {
+        $defs = $this->defs();
+
+        $this->assertFalse($defs->isSetRemovable('csp', 'standard', '4.0.1'));
+        $this->assertFalse($defs->isSetRemovable('csp', 'modulargento', '4.0.0'));
+        $this->assertTrue($defs->isSetRemovable('csp', 'modulargento', '4.0.1'));
+        $this->assertTrue($defs->isSetRemovable('csp', 'modulargento', '4.1.0'));
+        // An unknown release keeps the set locked.
+        $this->assertFalse($defs->isSetRemovable('csp', 'modulargento'));
+    }
+
+    public function test_a_release_override_backs_the_mageos_version_with_a_patch_release(): void
+    {
+        $template = fn (string $v): array => [
+            'name' => 'modulargento/project-community-edition',
+            'type' => 'project',
+            'require' => ['modulargento/product-community-edition' => $v],
+        ];
+        $cfg = $this->configurator($this->defs(), [
+            'versions' => [
+                '3.5.0' => ['project_template' => $template('3.5.0')],
+                '4.0.0' => ['release' => '4.0.1', 'project_template' => $template('4.0.1')],
+            ],
+        ]);
+
+        $this->assertSame('4.0.1', $cfg->modulargentoRelease('4.0.0'));
+        $this->assertSame('3.5.0', $cfg->modulargentoRelease('3.5.0'));
+
+        $build = fn (string $version) => $cfg->build(new Selection(
+            version: $version, profile: null,
+            disabledSets: ['csp'], disabledLayers: [], enabledLayers: [], enabledAddons: [], profileGroups: [],
+            distribution: 'modulargento',
+        ));
+
+        // Mage-OS 4.0.0 is backed by modulargento 4.0.1, where CSP is decoupled.
+        $this->assertArrayHasKey('modulargento/module-csp', $build('4.0.0')['replace'] ?? []);
+        // 3.5.0 has no override, so CSP stays locked there.
+        $this->assertArrayNotHasKey('modulargento/module-csp', $build('3.5.0')['replace'] ?? []);
     }
 }
