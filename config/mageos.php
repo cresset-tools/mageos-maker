@@ -72,7 +72,7 @@ return [
             'order-cancellation', 'contact',
         ],
         // Every published modulargento release, keyed by the Mage-OS version it
-        // tracks. The distribution toggle appears whenever the selected version
+        // tracks (a fork-only patch release sets `release`, see 4.0.0). The distribution toggle appears whenever the selected version
         // is one of these keys; each entry carries that release's PHP constraint
         // and its published project-community-edition template.
         //
@@ -116,10 +116,17 @@ return [
             '4.0.0' => [
                 // Mage-OS 4.0.0 (current release). Its replace map is still
                 // Magento 2.4.9, so the PHP ceiling is unchanged.
+                //
+                // Backed by modulargento 4.0.2: 4.0.0 plus the fork-only change
+                // that lets CSP and catalog widgets be removed. (4.0.1 shipped
+                // the same sources but its archives dropped empty directories,
+                // so installs lack bin/magento.) Mage-OS has neither, so
+                // `release` maps this version onto it.
+                'release' => '4.0.2',
                 'php_constraint' => env('MAGEOS_MODULARGENTO_PHP', '~8.4.0'),
-                'project_template_path' => base_path('resources/modulargento/4.0.0/project-community-edition.json'),
+                'project_template_path' => base_path('resources/modulargento/4.0.2/project-community-edition.json'),
                 'minimal_edition_package' => 'modulargento/project-minimal-edition',
-                'minimal_project_template_path' => base_path('resources/modulargento/4.0.0/project-minimal-edition.json'),
+                'minimal_project_template_path' => base_path('resources/modulargento/4.0.2/project-minimal-edition.json'),
             ],
         ],
     ],
